@@ -255,6 +255,7 @@ input[type=time]::-webkit-date-and-time-value{text-align:left}
 .step input{min-height:0;text-align:center}
 .toast{visibility:hidden;opacity:0;transition:transform .3s,opacity .3s,visibility .3s}
 .toast.on{visibility:visible;opacity:1}
+.mchip.ev{color:#b193ff;border-color:color-mix(in srgb,#b193ff 50%,transparent);background:transparent}
 </style>
 </head>
 <body>
@@ -327,12 +328,15 @@ function buildMissions(c){return[
   mk({id:"volei",kind:"presence",name:"Vôlei",fixed:true,time:"19:00",until:"23:00",days:[4],stat:"AGI",xp:40,loss:30,lastMin:90}),
   mk({id:"sleep",kind:"sleep",name:"Dormir no horário",stat:"VIT",xp:15,loss:15})]}
 function defaultState(){const d=new Date(),iso=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-  return{v:4,updatedAt:Date.now(),accepted:false,name:"",level:1,xp:0,rank:"E",streak:0,best:0,sound:true,demo:false,offset:0,
+  return{v:5,paused:null,integ:{email:"",gymLoc:null,gcid:"",gcal:false,gsync:0},updatedAt:Date.now(),accepted:false,name:"",level:1,xp:0,rank:"E",streak:0,best:0,sound:true,demo:false,offset:0,
     statXP:{STR:0,VIT:0,AGI:0,INT:0,PER:0},sched:clone(DEF_SCHED),week:{key:weekKey(iso),shields:1},flashRate:3,
     trail:0,trailLog:[],missions:buildMissions({pages:10,water:2.5}),history:[],log:[],today:{date:iso,e:{},flash:[],sp:false,bi:-1,warned:false},report:null}}
 const LS="evolucao-v4";let S,dbRef=null,saveT=null,sampleFn=null;
 try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
-if(!S||S.v!==4)S=defaultState();
+function migrate(d){if(!d||typeof d!=="object")return null;
+  if(d.v===4){d.v=5;d.paused=null;d.integ={email:"",gymLoc:null,gcid:"",gcal:false,gsync:0}}
+  if(d.v!==5||!Array.isArray(d.missions))return null;d.integ=Object.assign({email:"",gymLoc:null,gcid:"",gcal:false,gsync:0},d.integ||{});return d}
+S=migrate(S)||defaultState();
 function save(){S.updatedAt=Date.now();const j=JSON.stringify(S);try{localStorage.setItem(LS,j)}catch(e){}
   if(dbRef){clearTimeout(saveT);saveT=setTimeout(()=>dbRef.set({json:j,updatedAt:S.updatedAt}).catch(()=>{}),700)}}
 (async()=>{try{if(!window.claude)return;
@@ -351,8 +355,8 @@ const dueOn=(m,date)=>m.days.includes(dow(date));
 function blocks(date){const out=[];const add=(id,a,b,label)=>{a=Math.max(a,out.length?out[out.length-1].b:0);b=Math.min(b,1440);if(b>a)out.push({id,a,b,label})};
   if(isWork(date)){const d=S.sched.wd,W=toMin(d.wake),L=toMin(d.leave),WS=toMin(d.workStart),LU=toMin(d.lunch),LE=LU+(+d.lunchDur||60),WE=toMin(d.workEnd),C=Math.max(10,WS-L),SL=toMin(d.sleep);
     add("sono",0,W,"Dormindo");add("casa",W,L,"Manhã em casa");add("onibus",L,WS,"Ônibus · ida");add("trabalho",WS,LU,"Trabalho");add("almoco",LU,LE,"Almoço");
-    add("trabalho",LE,WE,"Trabalho");add("onibus",WE,WE+C,"Ônibus · volta");
-    const g=M("gym");if(g&&dueOn(g,date)){const G=toMin(d.gym);if(G>out[out.length-1].b)add("noite",out[out.length-1].b,G,"Em casa");add("academia",G,G+(+d.gymDur||90),"Academia")}
+    const g=M("gym"),gt=!!(g&&dueOn(g,date)),G=toMin(d.gym),GD=+d.gymDur||90;add("trabalho",LE,WE,"Trabalho");add("onibus",WE,gt&&G>WE?Math.min(WE+C,G):WE+C,"Ônibus · volta");
+    if(gt){const lb=out[out.length-1].b;if(G>lb)add("noite",lb,G,"Em casa");if(G>=out[out.length-1].b)out.push({id:"academia",a:G,b:Math.min(1440,G+GD),label:"Academia"});else add("academia",G,G+GD,"Academia")}
     add("noite",out[out.length-1].b,SL,"Noite em casa");add("sono",SL,1440,"Dormindo")}
   else{const d=S.sched.we,W=toMin(d.wake),SL=toMin(d.sleep);add("sono",0,W,"Dormindo");add("livre",W,720,"Manhã livre");add("livre",720,1080,"Tarde livre");add("noite",1080,SL,"Noite");add("sono",SL,1440,"Dormindo")}
   return out}
@@ -399,7 +403,7 @@ function challenge(n){const t=Math.floor(n/5)+1,boss=n%5===4,r=seeded("no"+n);co
 /* Missões relâmpago: chegam no horário de trabalho, 20 min para fazer, não tiram ponto */
 const FLASH=[["Beba um copo de água","VIT","water"],["Alongue pescoço e ombros por 1 min","VIT"],["Levante e caminhe 2 min","AGI"],["Corrija a postura e respire fundo 5 vezes","PER"],
   ["Olhe para longe da tela por 20 s","PER"],["10 agachamentos, se der","STR"],["Anote uma coisa que aprendeu hoje","INT"],["Suba um lance de escada","AGI"],["Leia 2 páginas no intervalo","INT","read"]];
-function genFlash(date){if(!isWork(date))return[];const ws=blocks(date).filter(b=>b.id==="trabalho");const total=ws.reduce((s,b)=>s+b.b-b.a,0);if(total<60)return[];
+function genFlash(date){if(S.paused||!isWork(date))return[];const ws=blocks(date).filter(b=>b.id==="trabalho");const total=ws.reduce((s,b)=>s+b.b-b.a,0);if(total<60)return[];
   const r=seeded("f"+date),pool=[...FLASH],n=S.flashRate,out=[];
   for(let k=0;k<n;k++){let t=(k+.2+.6*r())/n*total,at=0;for(const b of ws){const len=b.b-b.a;if(t<=len){at=b.a+t;break}t-=len}at=Math.round(Math.min(at,ws[ws.length-1].b-25));
     const[text,stat,link]=pool.splice(Math.floor(r()*pool.length),1)[0];out.push({id:"f"+k,text,stat,link:link||null,at,exp:at+20,xp:10,st:"wait"})}
@@ -409,7 +413,8 @@ function newDay(date){return{date,e:{},flash:genFlash(date),sp:false,bi:-1,warne
 /* ---------- 6. Motor ---------- */
 const ev=[];const emit=(t,x={})=>ev.push({t,...x});
 function tick(now,silent){const t=S.today;let ch=false;
-  const{i,b}=blockAt(t.date,now);if(i!==t.bi){t.bi=i;ch=true;if(!silent&&b)emit("block",{b})}
+  const{i,b}=blockAt(t.date,now);if(i!==t.bi){t.bi=i;ch=true;if(!silent&&b&&!S.paused)emit("block",{b})}
+  if(S.paused)return ch;
   for(const m of dueToday()){const e=ent(m);if(resolved(e))continue;const w=win(m);
     if(now>=w.end){e.failed=true;addXP(-m.loss,m.stat);log(`${title(m)}: prazo encerrado. −${m.loss} XP.`);ch=true;if(!silent)emit("fail",{m});continue}
     if(isFixed(m)&&now>=w.start&&!e.pinged){e.pinged=true;ch=true;if(!silent)emit("start",{m})}}
@@ -418,7 +423,10 @@ function tick(now,silent){const t=S.today;let ch=false;
   for(const f of t.flash){if(f.st==="wait"&&now>=f.at){f.st=now>=f.exp?"miss":"live";ch=true;if(f.st==="live"&&!silent)emit("flash",{f})}
     else if(f.st==="live"&&now>=f.exp){f.st="miss";log(`Relâmpago expirou: ${f.text}.`);ch=true}}
   return ch}
-function closeDay(){const t=S.today,due=dueToday();let n=0,d=0;
+function closeDayPaused(){const t=S.today;S.history.push({date:t.date,due:0,done:0,fl:0,fd:0,sp:t.sp,paused:true});const next=addDays(t.date,1);
+  if(weekKey(next)!==S.week.key)S.week={key:weekKey(next),shields:1};if(S.paused.until&&next>S.paused.until){S.paused=null;log("Pausa encerrada. O Sistema voltou.")}
+  S.today=newDay(next);return{date:t.date,n:0,d:0,fl:0,fd:0,sp:t.sp,paused:true}}
+function closeDay(){if(S.paused)return closeDayPaused();const t=S.today,due=dueToday();let n=0,d=0;
   for(const m of due){const e=t.e[m.id]||{};if(e.excused)continue;n++;if(e.done)d++;
     if(m.kind==="qty"&&m.auto){m.since.push(e.done?1:0);if(m.since.length>=7){const rate=m.since.reduce((s,x)=>s+x,0)/7,old=m.target;
       if(rate>=.8)m.target=Math.ceil(m.target*1.1);else if(rate<=.3)m.target=Math.max(1,Math.floor(m.target*.9));
@@ -433,11 +441,11 @@ function closeDay(){const t=S.today,due=dueToday();let n=0,d=0;
 function rollover(){const vd=vdate();if(S.today.date>=vd)return false;const reps=[];let g=0;
   while(S.today.date<vd&&g++<60){tick(1440,true);reps.push(closeDay())}
   const r=reps[reps.length-1],L=[];if(reps.length>1)L.push(`${reps.length} dias processados enquanto você esteve fora.`);
-  L.push(r.n?(r.d===r.n?`Rotina completa: ${r.d}/${r.n}. Sequência de ${S.streak} dia(s).`:`Rotina: ${r.d}/${r.n}. Sequência zerada.`):"Dia sem rotina.");
+  if(r.paused)L.push("Dia em pausa: sem perdas, sequência mantida.");else L.push(r.n?(r.d===r.n?`Rotina completa: ${r.d}/${r.n}. Sequência de ${S.streak} dia(s).`:`Rotina: ${r.d}/${r.n}. Sequência zerada.`):"Dia sem rotina.");
   if(r.fl)L.push(`Relâmpagos: ${r.fd}/${r.fl}.`);L.push(r.sp?"Missão especial concluída.":"Missão especial não foi feita.");
-  if(S.streak&&S.streak%7===0)L.push(`Marco: ${S.streak} dias seguidos.`);
+  if(S.streak&&S.streak%7===0)L.push(`Marco: ${S.streak} dias seguidos.`);if(dow(S.today.date)===1&&S.history.length>=3)L.push("Semana nova. Dá para mandar o resumo da semana pelo e-mail em Rotina → Integrações.");
   tick(vmin(),true);save();queue({k:"msg",tab:"Relatório",title:`Relatório · ${fmt(r.date)}`,lines:L},true);return true}
-function loop(){if(!S.accepted)return;const r=rollover();const ch=S.today.date===vdate()&&tick(vmin(),false);flush();if(r||ch){save();render()}else live()}
+function loop(){if(!S.accepted)return;geoCheck();const r=rollover();const ch=S.today.date===vdate()&&tick(vmin(),false);flush();if(r||ch){save();render()}else live()}
 
 /* ---------- 7. Efeitos ---------- */
 let AC;
@@ -447,7 +455,10 @@ function tone(fs,d=.09){if(!S.sound)return;try{AC=AC||new(window.AudioContext||w
 const SFX={ok:()=>{tone([880,1320]);navigator.vibrate?.(25)},ping:()=>{tone([1175,1175],.07);navigator.vibrate?.([30,40,30])},flash:()=>{tone([1320,1760,1320,1760],.06);navigator.vibrate?.([60,40,60,40,60])},
   lvl:()=>{tone([660,880,1100,1320,1760],.12);navigator.vibrate?.([40,40,80])},bad:()=>{tone([300,200],.18);navigator.vibrate?.([80,60,80])}};
 const fx=k=>S.sound&&SFX[k]&&SFX[k]();
-let tT;function toast(t,kind){const e=$("#toast");e.textContent=t;e.style.borderColor=kind==="red"?"var(--red)":kind==="gold"?"var(--gold)":"";e.classList.add("on");clearTimeout(tT);tT=setTimeout(()=>e.classList.remove("on"),3200)}
+const TQ=[];let tBusy=false;
+function toast(t,kind){TQ.push([t,kind]);if(TQ.length>4)TQ.splice(0,TQ.length-4);if(!tBusy)nextToast()}
+function nextToast(){const x=TQ.shift(),e=$("#toast");if(!x){tBusy=false;e.classList.remove("on");return}tBusy=true;e.textContent=x[0];
+  e.style.borderColor=x[1]==="red"?"var(--red)":x[1]==="gold"?"var(--gold)":"";e.classList.add("on");setTimeout(nextToast,2800)}
 function flush(){for(const x of ev.splice(0)){switch(x.t){
   case"block":{const b=x.b;if(b.id==="sono")break;if(b.id==="trabalho"){fx("ping");toast("Modo trabalho · o Sistema fica em silêncio, só relâmpagos");break}
     const s=dueToday().filter(m=>suggested(m,b.a+1));if(s.length){fx("ping");toast(`${b.label}: ${s.map(m=>m.kind==="qty"?`${m.name.toLowerCase()} ${num(m.target)} ${m.unit}`:m.name.toLowerCase()).slice(0,2).join(" e ")}`)}break}
@@ -496,17 +507,20 @@ function viewAgora(){const t=S.today,now=vmin(),{b,bl,i}=blockAt(t.date,now),nb=
   h+=`<section class="win ctx"><div class="tab"><span>Agora</span></div><div class="bd"><div class="where">${b?esc(b.label):"—"}</div><div class="sub">${b?`${hm(b.a)} – ${hm(b.b)}`:""}${nb?` · depois: ${esc(nb.label.toLowerCase())} às ${hm(nb.a)}`:""}</div></div></section>`;
   for(const f of live)h+=`<section class="win flash"><div class="tab"><span>Missão relâmpago</span></div><div class="bd"><p class="txt">${esc(f.text)}</p><p class="quiet"><span data-fexp="${f.exp}"></span> · +${f.xp} XP · não tira ponto</p>
     <div class="btns"><button class="btn solid full xl" data-do="flash" data-v="${f.id}" style="background:var(--gold);border-color:var(--gold);color:#1a1000">Feito</button></div></div></section>`;
-  const sug=due.filter(m=>suggested(m,now)).sort((a,b)=>win(a).end-win(b).end);
-  if(b&&b.id==="trabalho")h+=`<section class="win"><div class="bd"><p class="quiet">Modo trabalho. O Sistema só chama para missões relâmpago rápidas.</p>${sug.length?"":`${nextTxt(due,now)}`}</div></section>`;
+  const gnow=(t.gev||[]).find(g=>now>=g.a&&now<g.b);const sug=S.paused||gnow?[]:due.filter(m=>suggested(m,now)).sort((a,b)=>win(a).end-win(b).end);
+  if(S.paused)h+=`<section class="win"><div class="tab"><span>Sistema pausado</span></div><div class="bd"><p class="quiet">${S.paused.until?`Até ${fmt(S.paused.until)}`:"Até você voltar"}. Nenhuma missão tira ponto e a sequência fica congelada.</p><div class="btns"><button class="btn solid full" data-do="resume">Retomar agora</button></div></div></section>`;
+  if(gnow&&!S.paused)h+=`<section class="win"><div class="bd"><p class="quiet">Compromisso da agenda: <b style="color:var(--ink)">${esc(gnow.t)}</b> até ${hm(gnow.b)}. O Sistema espera você terminar.</p></div></section>`;
+  if(S.integ.gcal&&S.integ.gsyncDate!==t.date)h+=`<div class="btns" style="margin:0 0 14px"><button class="btn full" data-do="gsync">Sincronizar Google Agenda de hoje</button></div>`;
+  if(b&&b.id==="trabalho"&&!S.paused&&!gnow)h+=`<section class="win"><div class="bd"><p class="quiet">Modo trabalho. O Sistema só chama para missões relâmpago rápidas.</p>${sug.length?"":`${nextTxt(due,now)}`}</div></section>`;
   if(b&&b.id==="sono"&&!sug.length)h+=`<section class="win"><div class="bd"><p class="quiet">Descanse. ${nextTxt(due,now)}</p></div></section>`;
-  if(sug.length)h+=`<section class="win"><div class="tab"><span>Para agora</span></div><div class="bd">${sug.map(card).join("")}</div></section>`;
+  if(S.paused||gnow){}else if(sug.length)h+=`<section class="win"><div class="tab"><span>Para agora</span></div><div class="bd">${sug.map(card).join("")}</div></section>`;
   else if(b&&!["trabalho","sono"].includes(b.id))h+=`<section class="win"><div class="bd"><p class="quiet">Nada pendente para este momento.</p>${nextTxt(due,now)}</div></section>`;
   const c=challenge(S.trail);
   h+=`<section class="win sp"><div class="tab"><span>${c.boss?"Chefe do andar":"Missão especial"}</span></div><div class="bd"><p class="ttl">${t.sp?"Concluída. O próximo desafio abre amanhã.":esc(c.text)}</p>
     ${t.sp?"":`<div style="display:flex;gap:8px;justify-content:center"><span class="tag">${esc(c.cat)} · andar ${c.t}</span><span class="tag g">+${c.xp} XP extra</span></div><div class="btns"><button class="btn full" data-do="spopen" style="border-color:var(--gold);color:var(--gold)">Ver desafio</button></div>`}</div></section>`;
-  h+=`<section class="win"><div class="tab"><span>Plano do dia</span></div><div class="bd">${bl.filter(x=>!(x.id==="sono"&&x.a>0)).map((x,k)=>{const idx=bl.indexOf(x),ms=due.filter(m=>homeBlock(m,bl)===idx);const fl=t.flash.filter(f=>f.at>=x.a&&f.at<x.b);
-    return`<div class="blk ${idx<i?"past":idx===i?"cur":""}"><span class="tm">${hm(x.a)}</span><div><div class="lb">${esc(x.label)}</div>${ms.length||fl.length?`<div class="mchips">${ms.map(m=>{const e=ent(m),st=e.done?"done":e.failed?"fail":e.excused?"exc":"";
-      return`<button class="mchip ${st}" data-do="open" data-id="${m.id}">${e.done?"✓ ":e.failed?"✕ ":""}${esc(m.kind==="qty"?`${m.name} ${num(ent(m).value||0)}/${num(m.target)}`:m.kind==="wake"?"Acordar":m.kind==="sleep"?"Dormir":m.name)}</button>`}).join("")}${fl.length?`<span class="mchip fl">${fl.filter(f=>f.st==="done").length}/${fl.length} relâmpagos</span>`:""}</div>`:""}</div></div>`}).join("")}
+  h+=`<section class="win"><div class="tab"><span>Plano do dia</span></div><div class="bd">${bl.filter(x=>x.id!=="sono").map((x,k)=>{const idx=bl.indexOf(x),ms=due.filter(m=>homeBlock(m,bl)===idx);const fl=t.flash.filter(f=>f.at>=x.a&&f.at<x.b),gv=(t.gev||[]).filter(g=>g.a>=x.a&&g.a<x.b);
+    return`<div class="blk ${idx<i?"past":idx===i?"cur":""}"><span class="tm">${hm(x.a)}</span><div><div class="lb">${esc(x.label)}</div>${ms.length||fl.length||gv.length?`<div class="mchips">${ms.map(m=>{const e=ent(m),st=e.done?"done":e.failed?"fail":e.excused?"exc":"";
+      return`<button class="mchip ${st}" data-do="open" data-id="${m.id}">${e.done?"✓ ":e.failed?"✕ ":""}${esc(m.kind==="qty"?`${m.name} ${num(ent(m).value||0)}/${num(m.target)}`:m.kind==="wake"?"Acordar":m.kind==="sleep"?"Dormir":m.name)}</button>`}).join("")}${fl.length?`<span class="mchip fl">${fl.filter(f=>f.st==="done").length}/${fl.length} relâmpagos</span>`:""}${gv.map(g=>`<span class="mchip ev">${hm(g.a)} ${esc(g.t)}</span>`).join("")}</div>`:""}</div></div>`}).join("")}
     <p class="warn" style="margin-top:10px">Rotina não cumprida até o prazo tira pontos e zera a sequência.</p></div></section>`;
   if(S.demo)h+=`<div class="demo"><span>Modo demo · relógio simulado <b id="clk"></b> · ${fmt(t.date)}</span><button class="btn" data-do="jump">Próximo momento</button><button class="btn" data-do="adv" data-v="15">+15 min</button><button class="btn" data-do="adv" data-v="60">+1 h</button><button class="btn" data-do="nextday">Próximo dia</button></div>`;
   return h}
@@ -530,7 +544,7 @@ function viewStatus(){const h30=S.history.slice(-30).filter(x=>x.due>0),rate=h30
   ${sampleFn?`<div class="btns"><button class="btn full" data-do="report">${S.report?"Gerar novo relatório":"Gerar relatório"}</button></div>`:`<p class="mute">Chega na próxima etapa, com o servidor da IA.</p>`}</div></section>
   <section class="win"><div class="tab"><span>Registro</span></div><div class="bd log">${S.log.length?S.log.map(l=>`<p><span class="mute">${fmt(l.d)} · ${l.h}</span><br>${esc(l.t)}</p>`).join(""):`<p class="mute">Nada ainda.</p>`}</div></section>
   <section class="win"><div class="tab"><span>Ajustes</span></div><div class="bd form"><label>Nome do jogador<input id="sName" value="${esc(S.name)}"></label>
-  <div class="two"><button class="btn full" data-do="export">Exportar backup</button><button class="btn full" data-do="importb">Importar backup</button></div><input type="file" id="impFile" accept="application/json,.json" class="hide"><p class="mute" style="margin:0">Seus dados ficam só neste iPhone. Exporte um backup de vez em quando.</p><label class="check"><input type="checkbox" id="sSound" ${S.sound?"checked":""}> Som e vibração</label><label class="check"><input type="checkbox" id="sDemo" ${S.demo?"checked":""}> Modo demo (relógio simulado)</label>
+  <div class="two"><button class="btn full" data-do="export">Exportar backup</button><button class="btn full" data-do="importb">Importar backup</button></div><input type="file" id="impFile" accept="application/json,.json" class="hide"><p class="mute" style="margin:0">Seus dados ficam só neste iPhone. Exporte um backup de vez em quando.</p>${S.paused?`<button class="btn full" data-do="resume">Retomar o Sistema</button>`:`<label>Pausar o Sistema (férias, doença, viagem)</label><div class="chips" style="margin-top:-6px">${[[1,"Hoje"],[3,"3 dias"],[7,"7 dias"],[0,"Até eu voltar"]].map(([v,l])=>`<button class="chip" data-do="pause" data-v="${v}">${l}</button>`).join("")}</div>`}<label class="check"><input type="checkbox" id="sSound" ${S.sound?"checked":""}> Som e vibração</label><label class="check"><input type="checkbox" id="sDemo" ${S.demo?"checked":""}> Modo demo (relógio simulado)</label>
   ${S.demo?`<button class="btn solid full" data-do="golive">${confirmLive?"Toque de novo: zera XP e histórico e usa o relógio real":"Começar para valer"}</button><p class="mute" style="margin:0">Mantém seus horários e missões, zera o progresso da demo e desliga o relógio simulado.</p>`:""}<button class="btn red full" data-do="reset">${confirmReset?"Toque de novo para apagar tudo":"Reiniciar do zero"}</button></div></section>`}
 function viewRotina(){const w=S.sched.wd,we=S.sched.we;return`<section class="win"><div class="tab"><span>Seus horários</span></div><div class="bd">
   <div class="srow"><span>Dias de trabalho</span><b>${daysTxt(S.sched.work)}</b></div><div class="srow"><span>Acordar · sair de casa</span><b>${w.wake} · ${w.leave}</b></div>
@@ -538,7 +552,21 @@ function viewRotina(){const w=S.sched.wd,we=S.sched.we;return`<section class="wi
   <div class="srow"><span>Academia</span><b>${w.gym} · ${w.gymDur} min</b></div><div class="srow"><span>Dormir</span><b>${w.sleep}</b></div><div class="srow"><span>Fim de semana</span><b>${we.wake} – ${we.sleep}</b></div>
   <div class="btns"><button class="btn full" data-do="sched">Editar horários</button></div></div></section>
   <section class="win"><div class="tab"><span>Missões de rotina</span></div><div class="bd">${S.missions.map(m=>`<button class="ri" data-do="edit" data-id="${m.id}"><span><b>${esc(title(m))}</b><br><span class="mute">${isFixed(m)?`${hm(win(m).start)} – ${hm(win(m).end)}`:CTX[m.ctx]} · ${daysTxt(m.days)} · +${m.xp}/−${m.loss}</span></span><span class="tag">${STATS[m.stat]}</span></button>`).join("")}
-  <div class="btns"><button class="btn solid full" data-do="new">Nova missão de rotina</button></div></div></section>`}
+  <div class="btns"><button class="btn solid full" data-do="new">Nova missão de rotina</button></div></div></section>${viewInteg()}`}
+function viewInteg(){const base=location.origin+location.pathname,I=S.integ,links=[["Acordei","acordei","Automação: Alarme → Ao parar"],["Cheguei na academia","academia","Automação: Chegar → local da academia"],["+250 ml de água","agua","Atalho na Tela de Início ou widget"],["Li 10 páginas","ler&v=10","Atalho no widget ou Botão de Ação"],["Indo dormir","dormir","Automação: Modo Sono → Ao ativar"]];
+  return`<section class="win"><div class="tab"><span>Integrações</span></div><div class="bd">
+  <p style="margin:0"><b>Calendário do iPhone</b></p><p class="mute" style="margin:2px 0 8px">Cria um evento com alerta nativo para cada missão, mesmo com o app fechado. O evento traz o link que já marca a missão no app. Ao importar, escolha um calendário novo chamado Evolução. Se mudar horários, apague esse calendário e importe de novo.</p>
+  <div class="two"><button class="btn full" data-do="ics">Compartilhar arquivo</button><button class="btn full" data-do="icsopen">Abrir direto</button></div>
+  <p style="margin:18px 0 0"><b>E-mail</b></p><p class="mute" style="margin:2px 0 8px">Resumo da semana pronto no app Mail: rotina, falhas, relâmpagos e trilha.</p>
+  <label class="form" style="display:grid;gap:8px"><input id="iEmail" type="email" inputmode="email" placeholder="seu@email.com" value="${esc(I.email)}"></label><div class="btns"><button class="btn full" data-do="mail">Enviar resumo da semana</button></div>
+  <p style="margin:18px 0 0"><b>Localização da academia</b></p><p class="mute" style="margin:2px 0 8px">${I.gymLoc?"Local salvo. Com o app aberto no horário da academia, o Sistema marca sua presença sozinho quando você chega.":"Salve o local uma vez, estando na academia. Depois o Sistema reconhece quando você chega (com o app aberto)."}</p>
+  <div class="btns" style="margin-top:0"><button class="btn full" data-do="gymhere">${I.gymLoc?"Atualizar local (estou na academia)":"Estou na academia: salvar local"}</button></div>
+  <p style="margin:18px 0 0"><b>Atalhos do iPhone</b></p><p class="mute" style="margin:2px 0 8px">No app Atalhos → Automação → Nova automação, escolha o gatilho e adicione a ação Abrir URL com o link.</p>
+  ${links.map(([l,a,h])=>`<div class="srow" style="align-items:center;gap:8px"><span><b>${l}</b><br><span class="mute">${h}</span></span><button class="btn small" style="padding:6px 12px" data-do="copy" data-v="${base}?acao=${a}">Copiar</button></div>`).join("")}
+  <p style="margin:18px 0 0"><b>Google Agenda</b> <span class="tag">beta</span></p><p class="mute" style="margin:2px 0 8px">Mostra seus compromissos no Plano do dia e o Sistema fica em silêncio durante eles. Precisa de um Client ID gratuito do Google (configuração única).</p>
+  <input id="iGcid" placeholder="Client ID do Google" value="${esc(I.gcid)}" autocapitalize="off" autocorrect="off" spellcheck="false">
+  <div class="two" style="margin-top:8px"><button class="btn full" data-do="gsync">${I.gcal?"Sincronizar hoje":"Conectar"}</button><button class="btn full" data-do="ghelp">Como criar</button></div>
+  ${I.gsync?`<p class="mute" style="margin:6px 0 0">Última sincronização: ${new Date(I.gsync).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}</p>`:""}</div></section>`}
 function schedForm(){const w=S.sched.wd,we=S.sched.we,f=(id,l,v,t="time")=>`<label>${l}<input id="${id}" type="${t}" value="${v}"></label>`;
   return`<div class="form" style="text-align:left"><div class="two">${f("hWake","Acordar",w.wake)}${f("hLeave","Sair de casa",w.leave)}</div><div class="two">${f("hWs","Entrar no trabalho",w.workStart)}${f("hWe","Sair do trabalho",w.workEnd)}</div>
   <div class="two">${f("hLu","Almoço",w.lunch)}${f("hLd","Almoço (min)",w.lunchDur,"number")}</div><div class="two">${f("hGym","Academia",w.gym)}${f("hGd","Academia (min)",w.gymDur,"number")}</div>${f("hSl","Dormir",w.sleep)}
@@ -570,6 +598,7 @@ function openMission(id){const m=M(id),e=ent(m),w=win(m);let h=`<h3>${esc(title(
     else if(m.kind==="presence"&&e.asking)h+=`<p style="margin:0 0 8px">Quanto tempo durou?</p><div style="display:flex;gap:10px;align-items:center">${stepper("pm",m.lastMin||60,false,5)}<span class="mute">min</span></div><div class="btns"><button class="btn solid full" data-do="pres2" data-id="${m.id}">Registrar presença</button></div>`;
     else h+=inlineActs(m)}
   else if(!resolved(e))h+=`<p class="mute">Libera às ${hm(w.open)}.</p>`;
+  if(e.done&&!e.logged)h+=`<div class="btns"><button class="btn ghost full" data-do="undo" data-id="${m.id}">Marquei errado: desfazer (−${e.xp} XP)</button></div>`;
   if(m.kind==="gym"&&e.done&&!e.logged)h+=`<div class="btns"><button class="btn full" data-do="gymlog" data-id="${m.id}">Registrar cargas (+10 XP, opcional)</button></div>`;
   if(!resolved(e))h+=`<div class="btns"><button class="btn ghost full" data-do="shield" data-id="${m.id}" ${S.week.shields<1?"disabled":""}>Usar escudo · sem perda (${S.week.shields} na semana)</button></div>`;
   openSheet(h+`<div class="btns"><button class="btn ghost full" data-do="close">Fechar</button></div>`,id)}
@@ -650,6 +679,27 @@ const A={
     const target=c==null?1440:c;S.offset+=(target-now)*60000+2000;loop();save();render()},
   nextday(){const n=vnow(),mid=new Date(n);mid.setHours(24,0,5,0);S.offset+=mid-n;loop();save();render()},
   report:b=>askReport(b),
+  undo(b){const m=M(b.dataset.id),e=ent(m);if(!e.done||e.logged)return;addXP(-(e.xp||0),m.stat);Object.assign(e,{done:false,xp:0,hidden:false,auto:false,asking:false});if(m.kind==="qty"||m.kind==="presence")e.value=0;
+    log(`${title(m)}: desfeita.`);toast("Desfeito");closeSheet();commit()},
+  pause(b){const v=+b.dataset.v;S.paused={from:S.today.date,until:v>0?addDays(S.today.date,v-1):null};log(v?`Sistema pausado por ${v} dia(s).`:"Sistema pausado até você voltar.");save();render();toast("Sistema pausado · sem perdas")},
+  resume(){S.paused=null;const now=vmin();for(const m of dueToday()){const e=ent(m);if(!resolved(e)&&now>=win(m).end)Object.assign(e,{excused:true,late:true})}
+    S.today.flash=genFlash(S.today.date).filter(f=>f.at>now);log("Sistema retomado.");save();render();toast("Sistema retomado")},
+  copy(b){const v=b.dataset.v;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast("Link copiado")).catch(()=>{prompt("Copie o link:",v)})},
+  ics(){const f=new File([buildICS()],"evolucao.ics",{type:"text/calendar"});if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],title:"Evolução · rotina"}).catch(()=>{});else A.icsopen()},
+  icsopen(){location.href="data:text/calendar;charset=utf-8,"+encodeURIComponent(buildICS())},
+  mail(){const to=($("#iEmail")?.value||S.integ.email||"").trim();S.integ.email=to;save();
+    location.href=`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(`Evolução · semana até ${fmt(S.today.date)}`)}&body=${encodeURIComponent(weekSummary())}`},
+  gymhere(){if(!navigator.geolocation)return toast("Localização indisponível neste aparelho","red");toast("Pegando sua localização…");
+    navigator.geolocation.getCurrentPosition(p=>{S.integ.gymLoc={lat:p.coords.latitude,lng:p.coords.longitude};log("Local da academia salvo.");save();render();toast("Local da academia salvo")},
+    ()=>toast("Permita a localização para o Evolução nos Ajustes do iPhone","red"),{enableHighAccuracy:true,timeout:15000})},
+  gsync(){const v=$("#iGcid")?.value.trim();if(v!=null&&v!==S.integ.gcid){S.integ.gcid=v;save()}gConnect()},
+  ghelp(){openSheet(`<h3>Client ID do Google (grátis)</h3><p class="mute">Configuração única, melhor fazer no computador.</p>
+    <p>1. Acesse console.cloud.google.com e crie um projeto chamado Evolução.</p><p>2. Em APIs e serviços → Biblioteca, ative a Google Calendar API.</p>
+    <p>3. Em Tela de consentimento OAuth, escolha Externo, preencha nome e e-mail e adicione seu próprio e-mail em Usuários de teste.</p>
+    <p>4. Em Credenciais → Criar credenciais → ID do cliente OAuth → Aplicativo da Web. Em Origens JavaScript autorizadas, coloque <b>https://daelton.github.io</b>.</p>
+    <p>5. Copie o ID do cliente (termina com .apps.googleusercontent.com), cole aqui e toque em Conectar.</p>
+    <p class="mute">O acesso é só de leitura da agenda. O login vale por 1 hora; depois, um toque em Sincronizar renova.</p>
+    <div class="btns"><button class="btn ghost full" data-do="close">Fechar</button></div>`)},
   export(){const blob=new Blob([JSON.stringify(S)],{type:"application/json"}),f=new File([blob],`evolucao-backup-${S.today.date}.json`,{type:"application/json"});
     if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],title:"Backup Evolução"}).catch(()=>{});
     else{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=f.name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}},
@@ -679,6 +729,51 @@ const A={
     S.today.flash=S.today.flash.filter(f=>f.st!=="wait").concat(genFlash(S.today.date).filter(f=>f.at>now));
     log("Horários atualizados.");save();closeSheet();render();toast("Horários salvos")}
 };
+/* ---------- Integrações ---------- */
+function nextDow(from,d){return addDays(from,(d-dow(from)+7)%7)}
+function icsEsc(x){return String(x).replace(/\\/g,"\\\\").replace(/[;,]/g,m=>"\\"+m).replace(/\n/g,"\\n")}
+function buildICS(){const base=location.origin+location.pathname,BY=["SU","MO","TU","WE","TH","FR","SA"],today=S.today.date,LINK={wake:"acordei",sleep:"dormir",gym:"academia",water:"agua",read:"ler&v=10"},G={};
+  const put=(key,o,d)=>{(G[key]=G[key]||Object.assign(o,{days:[]})).days.push(d)};
+  for(const m of S.missions)for(const d of m.days){const date=nextDow(today,d),w=win(m,date);let a,b;
+    if(isFixed(m)){a=w.start;b=Math.max(a+15,Math.min(w.end,a+60))}else{if(m.ctx==="any")continue;const bl=blocks(date),x=bl.find(x=>x.id===m.ctx)||bl.find(x=>x.id==="noite"||x.id==="livre");if(!x)continue;a=x.a;b=Math.min(x.b,a+60)}
+    put(`${m.id}|${a}|${b}`,{m,a,b},d)}
+  for(const d of ALL){const SL=toMin(daySched(nextDow(today,d)).sleep);put(`fechamento|${SL-45}`,{m:null,a:SL-45,b:SL-30},d)}
+  const st=new Date().toISOString().replace(/[-:]/g,"").slice(0,15)+"Z",dt=(date,min)=>date.replace(/-/g,"")+"T"+hm(min).replace(":","")+"00";
+  const L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Evolucao//PT-BR","CALSCALE:GREGORIAN","METHOD:PUBLISH","X-WR-CALNAME:Evolução"];
+  for(const k in G){const g=G[k],first=g.days.map(d=>nextDow(today,d)).sort()[0],m=g.m;
+    const sum=m?(m.kind==="qty"?`${m.name} ${num(m.target)} ${m.unit}`:m.kind==="wake"?"Acordar":m.kind==="sleep"?"Dormir no horário":m.name):"Fechamento do dia";
+    const url=m&&LINK[m.id]?`${base}?acao=${LINK[m.id]}`:base;
+    const desc=m?`Missão de rotina · +${m.xp} XP / −${m.loss} XP se falhar. Toque no link para marcar: ${url}`:`Veja o que falta antes de dormir: ${url}`;
+    L.push("BEGIN:VEVENT",`UID:${k.replace(/\|/g,"-")}@evolucao`,`DTSTAMP:${st}`,`DTSTART:${dt(first,g.a)}`,`DTEND:${dt(first,g.b)}`,`RRULE:FREQ=WEEKLY;BYDAY=${g.days.map(d=>BY[d]).join(",")}`,
+      `SUMMARY:${icsEsc("⚔ "+sum)}`,`DESCRIPTION:${icsEsc(desc)}`,`URL:${url}`,"BEGIN:VALARM","ACTION:DISPLAY",`DESCRIPTION:${icsEsc(sum)}`,"TRIGGER:-PT0M","END:VALARM","END:VEVENT")}
+  L.push("END:VCALENDAR");return L.join("\r\n")}
+function weekSummary(){const h=S.history.slice(-7),sum=k=>h.reduce((s,x)=>s+(x[k]||0),0),due=sum("due"),done=sum("done"),dates=new Set(h.map(x=>x.date)),fails={};
+  S.log.filter(l=>/prazo encerrado/.test(l.t)&&dates.has(l.d)).forEach(l=>{const n=l.t.split(": prazo")[0];fails[n]=(fails[n]||0)+1});
+  const worst=Object.entries(fails).sort((a,b)=>b[1]-a[1]).slice(0,2);
+  return[`Relatório semanal · ${S.name||"Jogador"}`,"",`Nível ${S.level} · Rank ${S.rank} (${TITLE[S.rank]})`,`Rotina: ${done}/${due} missões (${due?Math.round(done/due*100):0}%)`,
+    `Sequência: ${S.streak} dia(s) · recorde ${S.best}`,`Relâmpagos: ${sum("fd")}/${sum("fl")}`,`Missões especiais: ${h.filter(x=>x.sp).length} · trilha no andar ${Math.floor(S.trail/5)+1}`,
+    worst.length?`Mais falhou: ${worst.map(([n,c])=>`${n} (${c}x)`).join(", ")}`:"Nenhuma falha de rotina na semana.",
+    `Metas atuais: ${S.missions.filter(m=>m.kind==="qty").map(m=>`${m.name} ${num(m.target)} ${m.unit}`).join(", ")}`,
+    `Academia: ${(M("gym")?.exercises||[]).map(x=>`${x.name} ${x.weight} kg`).join(", ")}`,"",`Abrir o app: ${location.origin+location.pathname}`].join("\n")}
+let lastGeo=0;
+function geoCheck(){const I=S.integ;if(!I.gymLoc||S.paused||document.hidden||!navigator.geolocation||Date.now()-lastGeo<180000)return;const g=M("gym");
+  if(!g||!dueOn(g,S.today.date)||S.today.date!==vdate())return;const e=ent(g);if(resolved(e)||!canAct(g))return;lastGeo=Date.now();
+  navigator.geolocation.getCurrentPosition(p=>{const R=6371e3,r=x=>x*Math.PI/180,dl=r(p.coords.latitude-I.gymLoc.lat),dn=r(p.coords.longitude-I.gymLoc.lng),
+    a=Math.sin(dl/2)**2+Math.cos(r(I.gymLoc.lat))*Math.cos(r(p.coords.latitude))*Math.sin(dn/2)**2,dist=2*R*Math.asin(Math.sqrt(a));
+    if(dist<200&&!resolved(ent(g))){complete(g,0,`Detectei você na academia · +${g.xp} XP`);ent(g).auto=true;log("Presença na academia detectada pela localização.");commit();setTimeout(()=>openGym(g.id),700)}},()=>{},{enableHighAccuracy:true,timeout:15000,maximumAge:60000})}
+let gTok=null,gExp=0;
+function gLoad(){return new Promise((res,rej)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return res();const x=document.createElement("script");x.src="https://accounts.google.com/gsi/client";x.onload=res;x.onerror=rej;document.head.appendChild(x)})}
+async function gConnect(){if(!S.integ.gcid)return toast("Cole o Client ID do Google primeiro","red");if(gTok&&Date.now()<gExp)return gFetch();
+  try{await gLoad()}catch(e){return toast("Não consegui carregar o login do Google","red")}
+  try{google.accounts.oauth2.initTokenClient({client_id:S.integ.gcid,scope:"https://www.googleapis.com/auth/calendar.readonly",
+    callback:r=>{if(r.error){toast("Google recusou: "+r.error,"red");return}gTok=r.access_token;gExp=Date.now()+((+r.expires_in||3600)-60)*1000;S.integ.gcal=true;save();gFetch()},
+    error_callback:()=>toast("Login do Google cancelado ou bloqueado","red")}).requestAccessToken()}catch(e){toast("Client ID inválido","red")}}
+async function gFetch(){const d=S.today.date,t0=new Date(d+"T00:00:00"),t1=new Date(d+"T23:59:59");
+  try{const r=await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?singleEvents=true&orderBy=startTime&maxResults=30&timeMin=${encodeURIComponent(t0.toISOString())}&timeMax=${encodeURIComponent(t1.toISOString())}`,{headers:{Authorization:"Bearer "+gTok}});
+    if(r.status===401){gTok=null;return toast("Login do Google expirou. Toque em Sincronizar de novo.","red")}if(!r.ok)throw 0;const j=await r.json(),mm=x=>x.getHours()*60+x.getMinutes();
+    S.today.gev=(j.items||[]).filter(x=>x.status!=="cancelled"&&x.start&&x.start.dateTime).map(x=>{const a=new Date(x.start.dateTime),b=new Date(x.end.dateTime);return{t:String(x.summary||"Compromisso").slice(0,40),a:mm(a),b:Math.max(mm(a)+5,b.toDateString()!==a.toDateString()?1439:mm(b))}});
+    S.integ.gsync=Date.now();S.integ.gsyncDate=d;log(`Agenda sincronizada: ${S.today.gev.length} compromisso(s) hoje.`);save();render();toast(`Agenda: ${S.today.gev.length} compromisso(s) hoje`)}
+  catch(e){toast("Não consegui ler a Google Agenda","red")}}
 async function askReport(btn){btn.disabled=true;btn.textContent="Analisando sua semana…";
   const data={nivel:S.level,rank:S.rank,sequencia:S.streak,trilha:S.trail,relampagosPorDia:S.flashRate,horarios:S.sched,rotina:S.missions.map(m=>`${title(m)} (${isFixed(m)?"horário fixo":CTX[m.ctx]})`),
     ultimosDias:S.history.slice(-14).map(h=>`${h.date}: rotina ${h.done}/${h.due}, relâmpagos ${h.fd||0}/${h.fl||0}${h.sp?", especial":""}`),registro:S.log.slice(0,30).map(l=>`${l.d} ${l.h} ${l.t}`)};
@@ -688,8 +783,8 @@ async function askReport(btn){btn.disabled=true;btn.textContent="Analisando sua 
 
 $("#nav").onclick=e=>{const b=e.target.closest("button");if(!b)return;tab=b.dataset.tab;confirmReset=false;confirmLive=false;render();scrollTo(0,0)};
 document.addEventListener("click",e=>{const b=e.target.closest("[data-do]");if(!b||b.closest("#nav"))return;const f=A[b.dataset.do];if(f)f(b)});
-document.addEventListener("change",e=>{const t=e.target;if(t.id==="impFile"&&t.files[0]){t.files[0].text().then(tx=>{try{const d=JSON.parse(tx);if(d.v!==4||!d.missions)throw 0;S=d;save();render();toast("Backup restaurado")}catch(x){toast("Arquivo de backup inválido","red")}});return}if(t.id==="sSound"){S.sound=t.checked;save()}if(t.id==="sDemo"){S.demo=t.checked;save()}
-  if(t.id==="sName"){S.name=t.value.trim().slice(0,30);save();hud()}if(t.dataset.re&&draft){readEdit();renderEdit()}});
+document.addEventListener("change",e=>{const t=e.target;if(t.id==="impFile"&&t.files[0]){t.files[0].text().then(tx=>{try{const d=migrate(JSON.parse(tx));if(!d)throw 0;S=d;save();render();toast("Backup restaurado")}catch(x){toast("Arquivo de backup inválido","red")}});return}if(t.id==="sSound"){S.sound=t.checked;save()}if(t.id==="sDemo"){S.demo=t.checked;save()}
+  if(t.id==="iEmail"){S.integ.email=t.value.trim();save()}if(t.id==="iGcid"){S.integ.gcid=t.value.trim();save()}if(t.id==="sName"){S.name=t.value.trim().slice(0,30);save();hud()}if(t.dataset.re&&draft){readEdit();renderEdit()}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&sheetOpen){closeSheet();delete S.sched._draft}});
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)loop()});
 function urlAction(){const q=new URLSearchParams(location.search);if(!q.toString())return;history.replaceState(null,"",location.pathname);if(!S.accepted)return;loop();
