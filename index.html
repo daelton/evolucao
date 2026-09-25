@@ -400,13 +400,21 @@ function challenge(n){const t=Math.floor(n/5)+1,boss=n%5===4,r=seeded("no"+n);co
   if(boss){const a=pick(n%4),b=pick((n+1)%4);return{n,t,boss,cat:"Chefe do andar",stat:a.stat,text:`${a.text} e ${b.text.charAt(0).toLowerCase()+b.text.slice(1)}`,xp:(50+(t-1)*15)*2}}
   return{n,t,boss,...pick(n%4),xp:50+(t-1)*15}}
 
-/* Missões relâmpago: chegam no horário de trabalho, 20 min para fazer, não tiram ponto */
-const FLASH=[["Beba um copo de água","VIT","water"],["Alongue pescoço e ombros por 1 min","VIT"],["Levante e caminhe 2 min","AGI"],["Corrija a postura e respire fundo 5 vezes","PER"],
-  ["Olhe para longe da tela por 20 s","PER"],["10 agachamentos, se der","STR"],["Anote uma coisa que aprendeu hoje","INT"],["Suba um lance de escada","AGI"],["Leia 2 páginas no intervalo","INT","read"]];
-function genFlash(date){if(S.paused||!isWork(date))return[];const ws=blocks(date).filter(b=>b.id==="trabalho");const total=ws.reduce((s,b)=>s+b.b-b.a,0);if(total<60)return[];
-  const r=seeded("f"+date),pool=[...FLASH],n=S.flashRate,out=[];
-  for(let k=0;k<n;k++){let t=(k+.2+.6*r())/n*total,at=0;for(const b of ws){const len=b.b-b.a;if(t<=len){at=b.a+t;break}t-=len}at=Math.round(Math.min(at,ws[ws.length-1].b-25));
-    const[text,stat,link]=pool.splice(Math.floor(r()*pool.length),1)[0];out.push({id:"f"+k,text,stat,link:link||null,at,exp:at+20,xp:10,st:"wait"})}
+/* Missões relâmpago: chegam do nada em qualquer horário acordado (dias úteis e fim de semana), 20 min para fazer, não tiram ponto.
+   Discretas ("d") servem em qualquer lugar; as de corpo e casa ("c") só fora do trabalho e do ônibus. */
+const FLASH=[["Beba um copo de água","VIT","water","d"],["Alongue pescoço e ombros por 1 min","VIT",null,"d"],["Levante e caminhe 2 min","AGI",null,"d"],
+  ["Corrija a postura e respire fundo 5 vezes","PER",null,"d"],["Olhe para longe da tela por 20 s","PER",null,"d"],["Anote uma coisa que aprendeu hoje","INT",null,"d"],
+  ["Suba um lance de escada","AGI",null,"d"],["Leia 2 páginas agora","INT","read","d"],["Escreva uma meta para amanhã","INT",null,"d"],
+  ["15 flexões agora","STR",null,"c"],["20 agachamentos agora","STR",null,"c"],["Prancha de 40 s","VIT",null,"c"],["30 polichinelos","AGI",null,"c"],
+  ["Arrume uma coisa fora do lugar","PER",null,"c"],["10 min sem celular","PER",null,"c"],["Saia e pegue 5 min de sol","VIT",null,"c"],
+  ["Mande mensagem para alguém que você não fala há tempos","PER",null,"c"]];
+function genFlash(date){if(S.paused)return[];const d=daySched(date),W=toMin(d.wake)+20,SL=toMin(d.sleep)-40;
+  const rs=blocks(date).filter(b=>b.id!=="sono"&&b.id!=="academia").map(b=>({id:b.id,a:Math.max(b.a,W),b:Math.min(b.b,SL)})).filter(x=>x.b-x.a>=25);
+  const total=rs.reduce((s,x)=>s+x.b-x.a,0);if(total<60)return[];const r=seeded("f"+date),used=new Set(),out=[],n=S.flashRate;
+  for(let k=0;k<n;k++){let t=(k+.15+.7*r())/n*total,at=0,bid="";for(const x of rs){const len=x.b-x.a;if(t<=len){at=x.a+t;bid=x.id;break}t-=len}
+    at=Math.round(Math.min(at,SL-20));const discreet=bid==="trabalho"||bid==="onibus";
+    const want=discreet?"d":(r()<.7?"c":"d");let pool=FLASH.filter(f=>!used.has(f[0])&&f[3]===want);if(!pool.length)pool=FLASH.filter(f=>!used.has(f[0])&&(discreet?f[3]==="d":true));const[text,stat,link]=pool[Math.floor(r()*pool.length)];used.add(text);
+    out.push({id:"f"+k,text,stat,link,at,exp:at+20,xp:10,st:"wait"})}
   return out.sort((a,b)=>a.at-b.at)}
 function newDay(date){return{date,e:{},flash:genFlash(date),sp:false,bi:-1,warned:false}}
 
@@ -433,7 +441,7 @@ function closeDay(){if(S.paused)return closeDayPaused();const t=S.today,due=dueT
       if(m.target!==old)log(`${m.name}: meta ${m.target>old?"sobe":"desce"} de ${num(old)} para ${num(m.target)} ${m.unit}.`);m.since=[]}}}
   const fl=t.flash.length,fd=t.flash.filter(f=>f.st==="done").length;
   if(fl){const old=S.flashRate;if(fd===fl)S.flashRate=Math.min(5,S.flashRate+1);else if(fd===0)S.flashRate=Math.max(1,S.flashRate-1);
-    if(S.flashRate!==old)log(`Relâmpagos por dia de trabalho: ${old} → ${S.flashRate}.`)}
+    if(S.flashRate!==old)log(`Relâmpagos por dia: ${old} → ${S.flashRate}.`)}
   S.history.push({date:t.date,due:n,done:d,fl,fd,sp:t.sp});
   if(n){if(d===n){S.streak++;S.best=Math.max(S.best,S.streak)}else S.streak=0}
   const next=addDays(t.date,1);if(weekKey(next)!==S.week.key)S.week={key:weekKey(next),shields:1};
@@ -460,7 +468,7 @@ function toast(t,kind){TQ.push([t,kind]);if(TQ.length>4)TQ.splice(0,TQ.length-4)
 function nextToast(){const x=TQ.shift(),e=$("#toast");if(!x){tBusy=false;e.classList.remove("on");return}tBusy=true;e.textContent=x[0];
   e.style.borderColor=x[1]==="red"?"var(--red)":x[1]==="gold"?"var(--gold)":"";e.classList.add("on");setTimeout(nextToast,2800)}
 function flush(){for(const x of ev.splice(0)){switch(x.t){
-  case"block":{const b=x.b;if(b.id==="sono")break;if(b.id==="trabalho"){fx("ping");toast("Modo trabalho · o Sistema fica em silêncio, só relâmpagos");break}
+  case"block":{const b=x.b;if(b.id==="sono")break;if(b.id==="trabalho"){fx("ping");toast("Modo trabalho · o Sistema fica em silêncio, só relâmpagos discretos");break}
     const s=dueToday().filter(m=>suggested(m,b.a+1));if(s.length){fx("ping");toast(`${b.label}: ${s.map(m=>m.kind==="qty"?`${m.name.toLowerCase()} ${num(m.target)} ${m.unit}`:m.name.toLowerCase()).slice(0,2).join(" e ")}`)}break}
   case"start":fx("ping");toast(`Notificação do Sistema · ${title(x.m)}`);break;
   case"fail":fx("bad");toast(`Missão falhou: ${x.m.name} · −${x.m.loss} XP`,"red");break;
@@ -650,7 +658,7 @@ const A={
     S.accepted=true;S.today=newDay(vdate());S.week={key:weekKey(S.today.date),shields:1};const now=vmin();
     for(const m of dueToday()){const w2=win(m);if(now>=w2.end)Object.assign(ent(m),{excused:true,late:true});else if(isFixed(m)&&now>=w2.start)ent(m).pinged=true}
     tick(now,true);log(`${S.name} se tornou um Jogador.`);save();fx("lvl");render();
-    queue({k:"msg",tab:"Missão diária",title:"Missão diária chegou",lines:["A tela Agora mostra onde você está no dia e só o que cabe nesse momento.","No trabalho o Sistema fica quieto e só manda missões relâmpago.","Na demo, use “Próximo momento” para ver o dia passar."]})},
+    queue({k:"msg",tab:"Missão diária",title:"Missão diária chegou",lines:["A tela Agora mostra onde você está no dia e só o que cabe nesse momento.","Missões relâmpago chegam do nada, a qualquer hora. No trabalho elas são discretas.","Na demo, use “Próximo momento” para ver o dia passar."]})},
   open:b=>openMission(b.dataset.id),close:closeSheet,
   st(b){const i=$("#"+b.dataset.t);i.value=Math.max(0,+((+i.value||0)+ +b.dataset.d).toFixed(2))},
   done(b){const m=M(b.dataset.id);if(!canAct(m))return;complete(m,0,m.kind==="gym"?`Presença na academia · +${m.xp} XP`:m.kind==="sleep"?`Boa noite · +${m.xp} XP`:null);commit();if(m.kind==="gym")setTimeout(()=>openGym(m.id),350)},

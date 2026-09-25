@@ -1,6 +1,6 @@
 # Evolução
 
-App pessoal de rotina inspirado no Sistema de Solo Leveling: nível, rank, missões de rotina com horário, missões relâmpago e trilha de desafios.
+App pessoal de rotina inspirado no Sistema de Solo Leveling: nível, rank, missões de rotina com horário, missões relâmpago (a qualquer hora acordado) e trilha de desafios.
 
 **Abrir:** https://daelton.github.io/evolucao
 
