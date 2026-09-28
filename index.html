@@ -432,6 +432,8 @@ button.dw-hd{width:100%;background:none;border:0;border-bottom:1px solid var(--h
 .recap div{border-radius:12px}
 .hrow,.task{border-radius:12px}
 .chips{gap:8px}
+.ringw.full .rfg{stroke:#ffd166}.ringw.full b{color:#ffd166}
+.sumt small{display:block}
 </style>
 </head>
 <body>
@@ -610,15 +612,20 @@ const estMin=s=>Math.round(s.ex.reduce((a,x)=>a+x.sets*2.5,0)+10);
 
 /* ---------- 3. Motor ---------- */
 function log(t){S.log.unshift({d:S.today.date,h:hm(vmin()%1440),t});S.log=S.log.slice(0,200)}
-function addXP(n){S.xp+=n;while(S.xp>=need(S.level)){S.xp-=need(S.level);S.level++;S.stats.levels++;log(`Nível ${S.level}.`);lore("⭐",`Chegou ao nível ${S.level}`,"lv"+S.level);queue({k:"lvl",up:true})}
+function addXP(n){S.xp+=n;if(S.week)S.week.xp=(S.week.xp||0)+n;while(S.xp>=need(S.level)){S.xp-=need(S.level);S.level++;S.stats.levels++;log(`Nível ${S.level}.`);lore("⭐",`Chegou ao nível ${S.level}`,"lv"+S.level);queue({k:"lvl",up:true})}
   while(S.xp<0&&S.level>1){S.level--;S.xp+=need(S.level);log(`Caiu para o nível ${S.level}.`);queue({k:"lvl",up:false})}if(S.xp<0)S.xp=0}
 function hit(area,ok,n=1){if(!AREAS[area])return;const a=S.today.ah[area]||(S.today.ah[area]=[0,0]);ok?a[0]+=n:a[1]+=n}
 function unhit(area){const a=S.today.ah[area];if(a)a[0]=Math.max(0,a[0]-1)}
 function complete(h,xp,msg){const e=ent(h);if(e.done)return;e.done=true;e.at=hm(vmin()%1440);e.xp=xp;addXP(xp);hit(h.area,true);S.stats.habits++;log(`${h.name}: feito. +${xp} XP.`);fx("ok");toast(msg||`${h.name} · +${xp} XP`)}
 function failH(h,why,date){addXP(-h.loss);hit(h.area,false);log(`${h.name}${date?` (${fmt(date)})`:""}: não cumprido${why?` · ${why}`:""}. −${h.loss} XP.`)}
 function hist(date){return S.history.find(x=>x.date===date)}
-function recomputeStreak(){let s=0;for(let i=S.history.length-1;i>=0;i--){const x=S.history[i];if(x.paused||!x.due)continue;if(x.done+(x.pend||0)>=x.due)s++;else break}
-  if(s>S.streak&&[7,30,100,365].includes(s))lore("🔥",`${s} dias seguidos cumprindo tudo`,"st"+s);S.streak=s;S.best=Math.max(S.best,s)}
+function dayOk(x){if(!x||x.paused||!x.due)return null;return !!x.sh||(x.done+(x.pend||0))>=Math.ceil(x.due/2)}
+function streakBefore(i){let n=0;for(let k=i-1;k>=0;k--){const ok=dayOk(S.history[k]);if(ok===null)continue;if(ok)n++;else break}return n}
+const shieldReady=()=>!S.shieldAt||addDays(S.shieldAt,7)<=S.today.date;
+function tryShield(x){if(!x||dayOk(x)!==false)return false;const i=S.history.indexOf(x),b=streakBefore(i);if(b<1)return false;if(S.shieldAt&&addDays(S.shieldAt,7)>x.date)return false;
+  x.sh=true;S.shieldAt=x.date;log(`Escudo protegeu a sequência (${fmt(x.date)}).`);S.shieldMsg=`Escudo usado: sua sequência de ${b} dia(s) foi protegida. O próximo escudo fica pronto em 7 dias.`;return true}
+function recomputeStreak(){let n=0;for(let k=S.history.length-1;k>=0;k--){const ok=dayOk(S.history[k]);if(ok===null)continue;if(ok)n++;else break}
+  if(n>S.streak&&[7,30,100,365].includes(n))lore("🔥",`${n} dias seguidos`,"st"+n);S.streak=n;S.best=Math.max(S.best,n)}
 /* Quantidade (leitura, estudo…) */
 /* Água em rodadas */
 function addWater(v){const h=H("agua");if(!h)return;const e=ent(h);e.log=e.log||[];const now=vmin();e.log.push({t:now,v});e.value=+((e.value||0)+v).toFixed(3);S.stats.water=+(S.stats.water+v).toFixed(3);
@@ -641,10 +648,14 @@ function logWeight(kg){const p=S.profile,old=p.weight;p.weight=r1(kg);S.body.log
 /* Revisão: o que ficou sem marcar ontem */
 function resolvePending(p,ok){const h=H(p.id),x=hist(p.date);S.pending=S.pending.filter(q=>q!==p);if(!h)return;if(x)x.pend=Math.max(0,(x.pend||0)-1);
   if(ok){addXP(h.xp);hit(h.area,true);S.stats.habits++;if(x){x.done++;if(x.a&&x.a[h.area])x.a[h.area][0]++}log(`${h.name} (${fmt(p.date)}): confirmado. +${h.xp} XP.`);toast(`${h.name} de ontem · +${h.xp} XP`)}
-  else{failH(h,null,p.date);toast(`${h.name} de ontem · −${h.loss} XP`,"red")}recomputeStreak()}
+  else{failH(h,null,p.date);toast(`${h.name} de ontem · −${h.loss} XP`,"red");tryShield(x)}recomputeStreak();if(S.shieldMsg){toast("Escudo protegeu sua sequência","gold");S.lastShieldMsg=S.shieldMsg;delete S.shieldMsg}}
 function newDay(date){return{date,e:{},ah:{},trained:false,rv:false,wr:{}}}
 function updateAttrs(){for(const a of S.areas){const t=S.attrs[a]||(S.attrs[a]={ema:.17,prev:.17}),x=S.today.ah[a];t.prev=t.ema;if(!x||x[0]+x[1]===0)continue;t.ema=t.ema*.93+.07*(x[0]/(x[0]+x[1]))}}
-function weekClose(lines){for(const h of weeklies()){const x=hist(S.today.date);
+function logWeek(){const wk=S.week.key,days=S.history.filter(x=>weekKey(x.date)===wk),e={key:wk,xp:S.week.xp||0,ok:days.filter(x=>x.due&&(x.sh||x.done>=Math.ceil(x.due/2))).length,full:days.filter(x=>x.due&&x.done>=x.due).length,n:days.filter(x=>x.due).length,s:{},m:{},q:{}};
+  for(const h of weeklies())if(h.kind==="minutes")e.m[h.id]=[wMin(h),wReq(h)];else e.s[h.id]=[wCount(h),wReq(h)];
+  for(const h of S.habits.filter(x=>x.kind==="qty"||x.kind==="water")){const L=days.map(x=>x.v&&x.v[h.id]).filter(Boolean);if(L.length)e.q[h.id]={due:L.length,done:L.filter(v=>v[2]).length,avg:+(L.reduce((a,v)=>a+v[0],0)/L.length).toFixed(2),t:L[L.length-1][1]}}
+  S.weekLog=(S.weekLog||[]).concat([e]).slice(-26)}
+function weekClose(lines){logWeek();for(const h of weeklies()){const x=hist(S.today.date);
     if(h.kind==="minutes"){const g=wReq(h),m=wMin(h);if(!g)continue;if(x){x.due++;if(m>=g)x.done++}
       if(m>=g){addXP(h.bonus);hit(h.area,true);lines.push(`${h.name}: ${m}/${g} min · meta batida · +${h.bonus} XP`)}else{const l=Math.round(h.loss*(1-m/g));addXP(-l);hit(h.area,false);log(`${h.name}: ${m}/${g} min na semana. −${l} XP.`);lines.push(`${h.name}: ${m}/${g} min · −${l} XP`)}continue}
     const r=wReq(h),c=wCount(h);if(!r)continue;if(x){x.due+=r;x.done+=Math.min(c,r)}
@@ -655,15 +666,17 @@ function closeDay(){const t=S.today,lines=[],before=ovr();for(const p of S.pendi
   let n=0,d=0,pend=0;for(const h of dueToday()){const e=t.e[h.id]||{};n++;if(e.done){d++;continue}if(e.failed)continue;
     if(h.kind==="sleep"){failH(h,"não registrado");continue}S.pending.push({date:t.date,id:h.id});pend++}
   const ar={};for(const h of dueToday()){const e=t.e[h.id]||{},q=ar[h.area]||(ar[h.area]=[0,0]);q[1]++;if(e.done)q[0]++}for(const h of weeklies())if((t.e[h.id]||{}).done){const q=ar[h.area]||(ar[h.area]=[0,0]);q[0]++;q[1]++}
-  S.history.push({date:t.date,due:n,done:d,pend,ovr:before,a:ar});if(dow(t.date)===0)weekClose(lines);
+  const hv={};for(const h of dueToday())if(h.kind==="qty"||h.kind==="water"){const e=t.e[h.id]||{};hv[h.id]=[+(e.value||0).toFixed(2),h.kind==="water"?waterTarget():h.target,e.done?1:0]}
+  S.history.push({date:t.date,due:n,done:d,pend,ovr:before,a:ar,v:hv});if(dow(t.date)===0)weekClose(lines);
   updateAttrs();const after=ovr();if(tierOf(before).id!==tierOf(after).id){const up=after>before;lore(up?"🏆":"📉",`Carta ${up?"subiu":"caiu"} para ${tierOf(after).l} (${after})`,"tr"+t.date);queue({k:"tier",up,v:after})}
-  S.tasks=S.tasks.filter(x=>!x.done);const next=addDays(t.date,1);if(weekKey(next)!==S.week.key)S.week=newWeek(next);recomputeStreak();S.today=newDay(next);
+  tryShield(S.history[S.history.length-1]);S.tasks=S.tasks.filter(x=>!x.done);const next=addDays(t.date,1);if(weekKey(next)!==S.week.key)S.week=newWeek(next);recomputeStreak();S.today=newDay(next);
   return{date:t.date,n,d,pend,lines,before,after}}
-function rollover(){const vd=vdate();if(S.today.date>=vd)return false;const reps=[];let g=0;
+function rollover(){const vd=vdate();if(S.today.date>=vd)return false;const ps=S.streak;const reps=[];let g=0;
   while(S.today.date<vd&&g++<60)reps.push(closeDay());
   const r=reps[reps.length-1],L=[];if(reps.length>1)L.push(`${reps.length} dias sem abrir o app. O que ficou sem confirmar nesses dias contou como não cumprido.`);
   if(r.paused)L.push("Dia em pausa: sem perdas.");else if(r.n)L.push(`Ontem: ${r.d}/${r.n} feitos${r.pend?` · ${r.pend} para você confirmar`:""}.`);
-  L.push(...reps.flatMap(x=>x.lines||[]));if(r.before!=null&&r.after!==r.before)L.push(`Carta: ${r.before} → ${r.after}`);save();if(L.length)queue({k:"msg",tab:"Resumo",title:`Fim do dia · ${fmt(r.date)}`,lines:L},true);return true}
+  L.push(...reps.flatMap(x=>x.lines||[]));if(r.before!=null&&r.after!==r.before)L.push(`Carta: ${r.before} → ${r.after}`);
+  if(S.shieldMsg){L.push(S.shieldMsg);delete S.shieldMsg}else if(ps>0&&S.streak===0)L.push("A sequência zerou, mas sua evolução continua: nível, carta e histórico ficam com você. O segredo é não falhar dois dias seguidos.");save();if(L.length)queue({k:"msg",tab:"Resumo",title:`Fim do dia · ${fmt(r.date)}`,lines:L},true);return true}
 function tick(){const now=vmin();let ch=false;if(S.paused)return false;
   const h=H("agua");if(h&&S.areas.includes("agua")&&!ent(h).done){const e=ent(h);for(const r of waterRounds()){const k="n"+r.id;if(!S.today.wr[k]&&now>=r.b-30&&now<r.b&&drunkBy(e,1440)<r.cum-.15){S.today.wr[k]=1;ch=true;fx("ping");toast(`Água · faltam ${num(r1(r.cum-drunkBy(e,1440)))} L para fechar a rodada ${r.l.toLowerCase()}`,"gold")}}}
   return ch}
@@ -804,7 +817,7 @@ function wzApply(){const d=wz.d,first=!S.onboarded,p=S.profile;S.name=d.name||S.
   if(S.body.start==null){S.body.start=p.weight;S.body.log.push({date:S.today.date,kg:p.weight})}
   if(first){S.onboarded=true;delete S.migrated;S.today=newDay(vdate());S.week=newWeek(S.today.date,daysLeft());S.stats.since=S.today.date;lore("🚀",`${S.name} começou a evolução`,"start")}
   const mode=wz.mode;wz=null;if(mode==="edit")tab="evolucao";save();fx("lvl");render();
-  if(first)queue({k:"msg",tab:"Evolução",title:"Sua carta nasceu",lines:["Ela começa em 50 e sobe com a sua constância. Cada área é um atributo.","Na tela Hoje fica cada área com o que falta e botões de um toque.","Esqueceu de marcar? De manhã o app pergunta o que ficou de ontem.","Quando quiser, coloque sua foto na carta em Seu perfil."]});
+  if(first)queue({k:"msg",tab:"Evolução",title:"Sua carta nasceu",lines:["Ela começa em 50 e sobe com a sua constância. Cada área é um atributo.","Na tela Hoje fica cada área com o que falta e botões de um toque.","Faça pelo menos metade do dia e a sequência continua. Dia completo vale bônus.","Esqueceu de marcar? De manhã o app pergunta o que ficou de ontem.","Quando quiser, coloque sua foto na carta em Seu perfil."]});
   else toast("Salvo");if(mode==="new"||mode==="update")tab="hoje";if(A.includes("treino")&&S.program&&!S.program.splits.some(x=>x.ex.length)){tab="treino";render();openProg()}}
 
 /* ---------- 8. Sheets ---------- */
@@ -812,6 +825,7 @@ function openReview(){S.today.rv=true;const h=H("sono"),e=h?ent(h):{},p=S.profil
   if(h&&S.areas.includes("sono")&&!e.done&&!e.failed)b+=`<div class="mc"><div class="hd"><b>Como foi a noite?</b><span class="cd">meta ${p.sleep} → ${p.wake}</span></div>
     <div class="two" style="margin-top:8px"><label class="form" style="display:grid;gap:4px"><span class="mute">Dormiu às</span><input id="rBed" type="time" value="${p.sleep}"></label><label class="form" style="display:grid;gap:4px"><span class="mute">Acordou às</span><input id="rWake" type="time" value="${hm(Math.min(now,toL(toMin(p.wake))+180)%1440)}"></label></div>
     <div class="btns"><button class="btn solid full" data-do="rvsleep">Registrar</button></div><p class="mute" style="margin:6px 0 0">Até 30 min de diferença: no horário (+${h.bonus} XP).</p></div>`;
+  const yx=S.history[S.history.length-1];if(yx&&dayOk(yx)===false&&!yx.sh)b+=`<p class="note" style="margin:10px 0 0">Ontem não deu, e tudo bem. O que importa é não falhar dois dias seguidos.</p>`;
   if(S.pending.length){b+=`<p style="margin:14px 0 4px"><b>Ficou sem marcar</b></p>`+S.pending.map((q,i)=>{const x=H(q.id);if(!x)return"";return`<div class="mc"><div class="hd"><b>${esc(x.name)} <span class="mute">(${fmt(q.date)})</span></b></div><div class="acts"><button class="btn solid" data-do="rvok" data-v="${i}" data-g="1">Fiz</button><button class="btn red" data-do="rvok" data-v="${i}" data-g="0">Não fiz</button></div></div>`}).join("")+`<p class="mute" style="margin:6px 0 0">Sem resposta até o fim de hoje, conta como não feito.</p>`}
   if(!S.pending.length&&!(h&&S.areas.includes("sono")&&!e.done&&!e.failed))b+=`<p class="quiet">Tudo em dia.</p>`;
   openSheet(b+`<div class="btns"><button class="btn ghost full" data-do="close">Começar o dia</button></div>`,"__rv")}
@@ -875,8 +889,8 @@ const A={
   train:()=>train(),session:()=>openSession(),sesssave:()=>saveSession(),
   weigh:()=>openWeigh(),weighsave(){const kg=clamp(pnum($("#kg").value),30,250);if(!kg)return;logWeight(kg);closeSheet();save();render()},
   review:()=>openReview(),
-  rvsleep(){logSleep(toMin($("#rBed").value||S.profile.sleep),toMin($("#rWake").value||S.profile.wake));save();render();openReview()},
-  rvok(b){const p=S.pending[+b.dataset.v];if(!p)return;resolvePending(p,b.dataset.g==="1");save();render();openReview()},
+  rvsleep(){logSleep(toMin($("#rBed").value||S.profile.sleep),toMin($("#rWake").value||S.profile.wake));checkFullDay();save();render();openReview()},
+  rvok(b){const p=S.pending[+b.dataset.v];if(!p)return;resolvePending(p,b.dataset.g==="1");checkFullDay();save();render();openReview()},
   taskadd(){const t=$("#tIn").value.split(/\n|;/).map(x=>x.trim()).filter(Boolean);if(!t.length)return;for(const x of t)S.tasks.push({id:uid(),t:x.slice(0,120),pri:2,done:false,c:S.today.date});$("#tIn").value="";save();render();toast(`${t.length} tarefa(s) adicionada(s) · toque na cor para priorizar`)},
   taskpri(b){const x=S.tasks.find(y=>y.id===b.dataset.v);if(!x||x.done)return;x.pri=x.pri===1?3:x.pri-1;save();render()},
   taskdone(b){const x=S.tasks.find(y=>y.id===b.dataset.v);if(!x)return;if(x.done){x.done=false;addXP(-PRI[x.pri].xp);S.stats.tasks--}else{x.done=true;addXP(PRI[x.pri].xp);S.stats.tasks++;fx("ok");toast(`Tarefa feita · +${PRI[x.pri].xp} XP`);
@@ -920,8 +934,9 @@ const A={
     if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],title:"Backup Evolução"}).catch(()=>{});else{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=f.name;a.click()}},
   bksnooze(){S.bkSnooze=addDays(S.today.date,7);save();render()},
   importb(){$("#impFile").click()},copy(b){const v=b.dataset.v;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast("Link copiado")).catch(()=>prompt("Copie o link:",v))},
-  ics(){const f=new File([buildICS()],"evolucao.ics",{type:"text/calendar"});if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],title:"Evolução · lembretes"}).catch(()=>{});else A.icsopen()},
-  icsopen(){location.href="data:text/calendar;charset=utf-8,"+encodeURIComponent(buildICS())},
+  remoff(){S.remOff=true;save();render()},
+  ics(){S.icsDone=true;save();const f=new File([buildICS()],"evolucao.ics",{type:"text/calendar"});if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],title:"Evolução · lembretes"}).catch(()=>{});else A.icsopen()},
+  icsopen(){S.icsDone=true;save();location.href="data:text/calendar;charset=utf-8,"+encodeURIComponent(buildICS())},
   reset(){if(!confirmReset){confirmReset=true;render();return}localStorage.removeItem(LS);S=defaultState();confirmReset=false;wz=null;tab="hoje";save();render()}
 };
 function resizePhoto(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{const s=320,c=document.createElement("canvas");c.width=s;c.height=s;const x=c.getContext("2d"),m=Math.min(img.width,img.height);
@@ -995,11 +1010,13 @@ function ring(p){const r=26,c=2*Math.PI*r;return`<svg class="ring" viewBox="0 0 
 /* ---------- telas ---------- */
 function viewHoje(){const L=todayItems(),pend=L.filter(x=>!x.done),done=L.filter(x=>x.done),p=L.length?done.length/L.length:0,W=weekItems();let h=safariBar();
   const T=S.tasks.filter(x=>!x.done).sort((a,b)=>a.pri-b.pri||a.c.localeCompare(b.c));
-  h+=`<section class="sum"><div class="ringw">${ring(p)}<b>${done.length}/${L.length}</b></div><div class="sumt"><b>${!L.length?"Escolha suas áreas":pend.length?`Faltam ${pend.length} ${pend.length===1?"item":"itens"} hoje`:"Tudo feito hoje"}</b>
-    <small>Nível ${S.level} · ${S.xp}/${need(S.level)} XP${S.streak?` · ${S.streak} dia(s) seguidos`:""}</small><span class="mbar"><i style="width:${Math.min(100,S.xp/need(S.level)*100)}%"></i></span></div></section>`;
+  h+=`<section class="sum"><div class="ringw ${S.today.full?"full":""}">${ring(p)}<b>${done.length}/${L.length}</b></div><div class="sumt"><b>${!L.length?"Escolha suas áreas":pend.length?`Faltam ${pend.length} ${pend.length===1?"item":"itens"} hoje`:"Tudo feito hoje"}</b>
+    <small>${L.length?(done.length>=Math.ceil(L.length/2)?`<span style="color:var(--ok)">Hoje já conta para a sequência</span>`:`Faça ${Math.ceil(L.length/2)-done.length} para hoje contar na sequência`):""}</small><small>◆ ${S.streak} dia(s) seguidos${S.best<7?` · primeira semana ${Math.min(S.streak,7)}/7`:""}${shieldReady()?" · escudo pronto":""} · Nível ${S.level}</small><span class="mbar"><i style="width:${Math.min(100,S.xp/need(S.level)*100)}%"></i></span></div></section>`;
   if(needReview())h+=`<button class="banner" data-do="review">${ic("sun")}<span><b>Bom dia</b><small>${[H("sono")&&S.areas.includes("sono")&&!ent(H("sono")).done&&!ent(H("sono")).failed?"registre como foi a noite":"",S.pending.length?`confirme ${S.pending.length} item(ns) de ontem`:""].filter(Boolean).join(" · ")}</small></span>${ic("chev")}</button>`;
   if(S.paused)h+=`<button class="banner" data-do="resume">${ic("clock")}<span><b>Pausado</b><small>${S.paused.until?`até ${fmt(S.paused.until)}`:"até você voltar"} · toque para voltar</small></span>${ic("chev")}</button>`;
   if(!S.areas.length)h+=`<button class="banner" data-do="areas">${ic("plus")}<span><b>Escolha o que evoluir</b><small>água, treino, sono, leitura…</small></span>${ic("chev")}</button>`;
+  const lw=(S.weekLog||[]).slice(-1)[0];if(lw&&S.wkSeen!==lw.key)h+=`<button class="banner" data-do="weekrev" style="border-color:rgba(127,220,255,.4);background:linear-gradient(90deg,rgba(127,220,255,.12),rgba(127,220,255,.03))">${ic("trophy")}<span><b>Sua semana</b><small>${lw.ok} de ${lw.n||7} dias contaram · veja ajustes sugeridos</small></span>${ic("chev")}</button>`;
+  if(S.history.length>=1&&!S.icsDone&&!S.remOff)h+=`<div class="note" style="margin:0 0 12px">Quer avisos no iPhone mesmo com o app fechado? <button class="lnk" data-do="ics">Ativar lembretes</button> · <button class="lnk" data-do="remoff">agora não</button></div>`;
   if(pend.length)h+=`<h2 class="sec">Para hoje</h2><div class="list">${pend.map(row).join("")}</div>`;
   if(done.length)h+=`<details class="donegrp" ${pend.length?"":"open"}><summary class="sec">Feitos hoje <span>${done.length}</span></summary><div class="list">${done.map(row).join("")}</div></details>`;
   if(W.length)h+=`<h2 class="sec">Esta semana <span>faltam ${daysLeft()} dia(s)</span></h2><div class="list">${W.map(row).join("")}</div>`;
@@ -1022,7 +1039,7 @@ function viewEvolucao(){const p=S.profile;let h=`<div class="cardwrap">${bigCard
     ${S.photo?`<div class="btns"><button class="btn ghost full" data-do="photodel">Remover foto</button></div>`:""}</div></section>`;
   h+=`<section class="win"><div class="tab"><span>Atributos</span></div><div class="bd">${S.areas.map(a=>{const v=attrVal(a),dl=v-attrPrev(a);return`<div class="stat"><b><span class="dot" style="background:${AREA_C[a]}"></span>${esc(areaLabel(a))}</b><div class="bar" style="margin:0"><i style="width:${(v-40)/59*100}%"></i></div><span>${v}${dl?` <small style="color:${dl>0?"var(--ok)":"var(--red)"}">${dl>0?"+":""}${dl}</small>`:""}</span></div>`}).join("")||`<p class="mute">Escolha áreas para ganhar atributos.</p>`}
     ${S.history.some(x=>x.a)?`<p style="margin:14px 0 6px"><b>Últimos 7 dias</b></p>${S.areas.map(a=>`<div class="w7"><span>${esc(areaLabel(a))}</span><span class="w7d">${week7(a).map(c=>`<i class="${c}"></i>`).join("")}</span></div>`).join("")}`:""}
-    <details class="how"><summary>Como a nota funciona</summary><p class="mute">Cada área vira um atributo. A nota mostra sua forma recente: sobe com constância e cai quando você falha. Bronze até 64, prata de 65 a 74, ouro a partir de 75. Com 90% dos itens em 7 dias, a carta fica <b style="color:var(--glow)">Em forma</b>.</p></details></div></section>`;
+    <details class="how"><summary>Como a nota funciona</summary><p class="mute">Cada área vira um atributo. A nota mostra sua forma recente: sobe com constância e cai quando você falha. Bronze até 64, prata de 65 a 74, ouro a partir de 75. Com 90% dos itens em 7 dias, a carta fica <b style="color:var(--glow)">Em forma</b>.</p><p class="mute">A sequência conta os dias em que você fez pelo menos metade do dia. Uma vez por semana, um escudo protege a sequência se você falhar.</p></details></div></section>`;
   if(S.areas.includes("corpo")||S.body.log.length>1){const L=S.body.log;h+=`<section class="win"><div class="tab"><span>Peso</span></div><div class="bd">${sparkline(L.slice(-16).map(x=>x.kg))||`<p class="mute">Registre o peso para ver a curva.</p>`}<p class="mute" style="margin:4px 0 0">${L.length?`Início ${num(S.body.start)} kg · agora ${num(S.profile.weight)} kg`:""}</p></div></section>`}
   return h}
 function viewHistoria(){return recap()+`<section class="win"><div class="tab"><span>Sua história</span></div><div class="bd">${S.lore.length?`<div class="lore">${S.lore.slice(0,80).map(x=>`<div class="li"><span class="lic">${x.i}</span><div><b>${esc(x.t)}</b><br><span class="mute">${fmt(x.d)}${x.d.slice(0,4)!==S.today.date.slice(0,4)?" "+x.d.slice(0,4):""}</span></div></div>`).join("")}</div>`:`<p class="mute">Suas conquistas aparecem aqui.</p>`}
@@ -1085,9 +1102,27 @@ function openMove(){const h=H("movimento"),e=ent(h),m=wMin(h),g=wReq(h);S._act=S
 function openHabit(id){const h=H(id),e=ent(h);openSheet(shHd("habitos",esc(h.name),`${freqTxt(h)} · +${h.xp} XP · −${h.loss} XP se não cumprir`)+
   `<div class="btns">${e.done?`<p style="color:var(--ok);margin:0">Feito hoje${e.at?` às ${e.at}`:""}.</p><button class="btn ghost full" data-do="hundo" data-v="${id}">Marquei errado: desfazer</button>`:`<button class="btn solid full xl" data-do="check" data-v="${id}">${ic("check")} Feito</button>`}
   <button class="btn ghost full" data-do="hedit" data-id="${id}">Editar hábito</button><button class="btn ghost full" data-do="close">Fechar</button></div>`,id)}
-function commit(){save();render();if(sheetOpen&&sheetId){if(sheetId==="__rv")openReview();else openItem(sheetId)}}
+function checkFullDay(){if(!S.onboarded||S.today.full)return;const L=todayItems();if(L.length<2||!L.every(x=>x.done))return;S.today.full=true;addXP(20);if(!S.lore.some(x=>x.k==="full1"))lore("🌟","Primeiro dia completo","full1");fx("lvl");
+  queue({k:"msg",tab:"Dia completo",title:"Você fez tudo de hoje",lines:["+20 XP de bônus.",S.best<7?`Primeira semana: ${Math.min(S.streak+1,7)} de 7 dias.`:`Sequência: ${S.streak+1} dia(s) com hoje.`]})}
+const nice=(v,u)=>u==="L"?Math.round(v*10)/10:Math.max(1,Math.round(v/5)*5||Math.round(v));
+function weekSuggestions(w){const L=[];for(const id in w.q){const h=H(id),q=w.q[id];if(!h||q.due<4)continue;const rate=q.done/q.due;
+    if(h.kind==="water"){if(rate<=.5)L.push({id,t:`Água: bateu a meta em ${q.done} de ${q.due} dias`,s:"Ative os lembretes da água para as rodadas do dia.",act:"ics"});continue}
+    if(rate<=.4){const nt=nice(h.target*.7,h.unit);if(nt<h.target)L.push({id,t:`${h.name}: ${q.done} de ${q.due} dias na meta`,s:`Meta mais realista: ${nt} ${unitS(h)} por dia (hoje é ${h.target}). Constância vale mais que volume.`,f:"target",v:nt})}
+    else if(rate>=.85&&q.avg>=h.target*1.25){const nt=nice(h.target*1.2,h.unit);if(nt>h.target)L.push({id,t:`${h.name}: você passou da meta quase todo dia`,s:`Subir para ${nt} ${unitS(h)} por dia (média da semana: ${num(q.avg)}).`,f:"target",v:nt})}}
+  for(const id in w.s){const h=H(id),[c,r]=w.s[id];if(!h||h.kind==="weigh"||!r)continue;if(c<r*.5&&h.freq.times>1)L.push({id,t:`${h.name}: ${c} de ${r} na semana`,s:`Começar com ${h.freq.times-1}× por semana e subir depois.`,f:"times",v:h.freq.times-1});else if(c>r&&h.freq.times<6)L.push({id,t:`${h.name}: ${c} de ${r} na semana`,s:`Você fez mais que a meta. Subir para ${h.freq.times+1}× por semana?`,f:"times",v:h.freq.times+1})}
+  for(const id in w.m){const h=H(id),[m,g]=w.m[id];if(!h||!g)continue;if(m<g*.5){const ng=Math.max(60,nice(h.freq.goal*.75));if(ng<h.freq.goal)L.push({id,t:`${h.name}: ${m} de ${g} min`,s:`Meta de ${ng} min por semana para ganhar ritmo.`,f:"goal",v:ng})}else if(m>=g*1.3){const ng=nice(h.freq.goal*1.2);L.push({id,t:`${h.name}: ${m} de ${g} min`,s:`Você passou bem da meta. Subir para ${ng} min por semana?`,f:"goal",v:ng})}}
+  return L}
+function openWeekReview(){const w=(S.weekLog||[]).slice(-1)[0];if(!w)return;S.wkSeen=w.key;save();const sg=weekSuggestions(w),A2=S.areas.map(a=>{const days=S.history.filter(x=>weekKey(x.date)===w.key&&x.a&&x.a[a]);const d=days.reduce((s,x)=>s+x.a[a][0],0),n=days.reduce((s,x)=>s+x.a[a][1],0);return[a,n?d/n:null]}).filter(x=>x[1]!=null).sort((a,b)=>b[1]-a[1]);
+  openSheet(`<div class="sh-hd" style="--ac:#7fdcff"><span class="ico">${ic("trophy")}</span><div><h3>Sua semana</h3><p class="mute">${fmt(w.key)} a ${fmt(addDays(w.key,6))}</p></div></div>
+  <div class="recap"><div><b>${w.ok}/${w.n||7}</b><span>dias que contaram</span></div><div><b>${w.full}</b><span>dias completos</span></div><div><b>${w.xp>=0?"+":""}${w.xp}</b><span>XP na semana</span></div></div>
+  ${A2.length?`<p class="lbl">Por área</p>${A2.map(([a,r])=>`<div class="srow"><span><span class="dot" style="background:${AREA_C[a]}"></span>${esc(areaLabel(a))}</span><b style="color:${r>=.8?"var(--ok)":r>=.5?"var(--ink)":"var(--red)"}">${Math.round(r*100)}%</b></div>`).join("")}`:""}
+  <p class="lbl">Ajustes sugeridos</p>${sg.length?sg.map((x,k)=>`<div class="mc"><b>${esc(x.t)}</b><p class="mute" style="margin:2px 0 8px">${esc(x.s)}</p><div class="acts"><button class="btn solid" data-do="sgapply" data-k="${k}">${x.act?"Ativar lembretes":"Aplicar"}</button><button class="btn ghost" data-do="close">Manter</button></div></div>`).join(""):`<p class="mute" style="margin:0">Suas metas estão no ponto certo. Siga assim.</p>`}
+  <div class="btns"><button class="btn ghost full" data-do="close">Fechar</button></div>`,"__wk");S._sg=sg}
+function commit(){checkFullDay();save();render();if(sheetOpen&&sheetId){if(sheetId==="__rv")openReview();else if(sheetId!=="__wk")openItem(sheetId)}}
 Object.assign(A,{
   menu(){setMenu(true)},
+  weekrev(){openWeekReview()},
+  sgapply(b){const x=(S._sg||[])[+b.dataset.k];if(!x)return;if(x.act==="ics"){A.ics();return}const h=H(x.id);if(!h)return;if(x.f==="target")h.target=x.v;if(x.f==="times")h.freq.times=x.v;if(x.f==="goal")h.freq.goal=x.v;log(`Meta ajustada: ${h.name}.`);toast("Meta ajustada");save();render();openWeekReview()},
   photo2(){const i=$("#photoFile2");if(i)i.click()},
   photodel(){if(!confirm("Remover a foto da sua carta?"))return;S.photo=null;save();render();toast("Foto removida")},open(b){openItem(b.dataset.v)},
   wq(b){addWater(+b.dataset.v/1000);commit()},wqv(){const ml=Math.round(pnum($("#wml").value));if(ml>0){addWater(ml>=20?ml/1000:ml);commit()}},wdel(b){delWater(+b.dataset.v);commit()},
