@@ -435,6 +435,82 @@ button.dw-hd{width:100%;background:none;border:0;border-bottom:1px solid var(--h
 .ringw.full .rfg{stroke:#ffd166}.ringw.full b{color:#ffd166}
 .sumt small{display:block}
 .dw-ft{line-height:1.6}.dw-ft .lnk{font-size:.8rem;text-align:left}
+/* ===== v4.2 · refinamento do visual atual (mesma identidade, mais acabamento) ===== */
+:root{--card:#0f1831;--card2:#131d3a;--acc:#4a86ff;--acc-s:rgba(74,134,255,.14);--acc-b:rgba(74,134,255,.5);--ok:#4fdc9b}
+body{font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+.app{padding-left:16px;padding-right:16px}
+/* superfícies: mesma cor, com um leve realce no topo em vez de só borda */
+.win,.list,.sum{background:var(--card);border:1px solid rgba(255,255,255,.06);box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+.sheet .win{background:#101a35;box-shadow:0 -12px 40px rgba(0,0,0,.35)}
+/* barra superior mais firme */
+.topbar{padding-top:calc(env(safe-area-inset-top,0px) + 6px);padding-bottom:6px;background:rgba(7,11,24,.92)}
+.tb-t b{font-size:1.14rem;letter-spacing:-.005em}.tb-t small{font-size:.78rem}
+.tb-card{box-shadow:inset 0 -2px 0 rgba(0,0,0,.18)}
+/* resumo do dia */
+.sum{padding:16px 18px;gap:18px}
+.ring .rbg{stroke:rgba(255,255,255,.07);stroke-width:7}.ring .rfg{stroke:var(--ok);stroke-width:7}
+.ringw b{font-size:1.02rem}
+.sumt b{font-size:1.08rem;margin-bottom:2px}.sumt small{line-height:1.45}.sumt .mbar{margin-top:8px}
+/* títulos de seção: menores e mais discretos */
+.sec{font-size:.72rem!important;letter-spacing:.08em;margin:24px 4px 8px!important;color:#7f8fb3!important}
+/* linhas da lista */
+.list{border-radius:16px}
+.row{padding:2px 12px 2px 4px;min-height:68px;transition:background .15s}
+.row-main{gap:14px;padding:12px 8px;border-radius:12px}
+.row-main:active{background:rgba(255,255,255,.035)}
+.ico{width:42px;height:42px;flex-basis:42px;border-radius:13px;background:color-mix(in srgb,var(--ac) 13%,transparent)}
+.ico .ic{width:21px;height:21px}
+.rt b{font-size:1.01rem;letter-spacing:-.003em}.rt small{font-size:.83rem;margin-top:1px;color:#8b9bbd}
+.rt .mbar{height:4px;border-radius:2px;margin-top:8px}
+/* botões da direita: mesma forma e altura em todos */
+.rbtn{height:40px;min-width:48px;border-radius:12px;border:1px solid var(--acc-b);background:var(--acc-s);color:#d6e4ff;font-weight:600;transition:transform .12s,background .15s}
+.rbtn:active{transform:scale(.95);background:rgba(74,134,255,.24)}
+.rbtn.chk{border-color:rgba(79,220,155,.45);background:rgba(79,220,155,.08);color:var(--ok)}
+.okc{width:40px;height:40px;border-radius:50%;background:rgba(79,220,155,.12);color:var(--ok)}.okc .ic{width:20px;height:20px;stroke-width:2.2}
+.okc.bad{background:rgba(255,93,115,.12)}
+.row.done{opacity:.92}.row.done .rt b{color:#7f8fb3}
+/* botões e campos */
+.btn{min-height:48px;border-radius:12px;font-weight:600;transition:transform .12s,opacity .15s}
+.btn:active{transform:scale(.98)}
+.btn.solid{background:var(--acc);border-color:var(--acc)}
+.btn.ghost{color:#9fb0d3}
+input,select,textarea{min-height:48px}
+.chip{border-radius:10px;padding:7px 12px}
+.chip.on{background:var(--acc);border-color:var(--acc)}
+/* menu lateral */
+.drawer{background:#0b1330}
+.drawer nav.dw-nav button{padding:13px 14px;border-radius:12px}
+.drawer nav.dw-nav button .ic{color:#8b9bbd}
+.drawer nav.dw-nav button[aria-current=page]{background:rgba(74,134,255,.14);color:#e3ecff}
+.drawer nav.dw-nav button[aria-current=page] .ic{color:var(--acc)}
+.dw-hd .pf-img{border-radius:14px;object-fit:cover}
+.dw-ft{font-size:.76rem;color:#6f7fa3}
+/* folhas de registro */
+.sh-hd .ico{width:46px;height:46px;flex-basis:46px}.sh-hd h3{font-size:1.22rem}
+.qgrid{gap:10px}
+.qb{padding:14px 6px;border-radius:14px;background:var(--card2);border-color:rgba(255,255,255,.06);transition:transform .12s,background .15s}
+.qb:active{transform:scale(.96);background:rgba(74,134,255,.18)}
+.qb b{font-size:1.12rem}
+.bigbar{height:6px}
+.lbl{margin:20px 0 8px}
+.lgr{padding:9px 0}
+.timerbox{border-radius:14px;background:var(--card2);border-color:rgba(127,220,255,.25)}
+/* avisos */
+.banner{border-radius:16px;padding:14px 16px}
+.note{border-radius:12px}
+.toast{bottom:calc(env(safe-area-inset-bottom,0px) + 24px)}
+/* carta e perfil */
+.pcard{box-shadow:0 14px 34px rgba(0,0,0,.4)}
+.stat{padding:4px 0}
+@media (prefers-reduced-motion:reduce){.rbtn,.btn,.qb{transition:none}}
+.sum{display:block}.sum-top{display:flex;gap:16px;align-items:center}
+.sumt small .okt{color:var(--ok);display:inline-flex;align-items:center;gap:4px}.sumt small .okt .ic{width:15px;height:15px;stroke-width:2.2}
+.sum-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06)}
+.sum-stats span{display:block;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:#7f8fb3;font-weight:600}
+.sum-stats b{display:flex;align-items:center;gap:6px;font:600 .98rem "Chakra Petch",sans-serif;margin-top:2px;white-space:nowrap}
+.shd{font:600 .62rem Barlow,sans-serif;font-style:normal;letter-spacing:.04em;text-transform:uppercase;color:var(--ok);border:1px solid rgba(79,220,155,.4);border-radius:6px;padding:1px 5px}
+.sum>.mbar{max-width:none;margin-top:10px}
+.ico{width:40px;height:40px;flex-basis:40px}.row-main{gap:12px}
 </style>
 </head>
 <body>
@@ -457,7 +533,7 @@ button.dw-hd{width:100%;background:none;border:0;border-bottom:1px solid var(--h
             5 Efeitos · 6 Telas · 7 Onboarding · 8 Sheets · 9 Ações · 10 Integrações
    ===================================================================== */
 const $=s=>document.querySelector(s);
-const APP_VERSION="4.1.0",APP_DATE="28/09/2026";
+const APP_VERSION="4.2.0",APP_DATE="28/09/2026";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid=()=>Math.random().toString(36).slice(2,9);
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -987,11 +1063,11 @@ const timerTxt=()=>{if(!S.timer)return"";const s=Math.floor((Date.now()-S.timer.
 function timerTick(){if(!S.timer)return;document.querySelectorAll("[data-timer]").forEach(el=>el.textContent=timerTxt())}
 
 /* ---------- o que é de hoje e o que é da semana ---------- */
-function waterHint(){const e=ent(H("agua")),now=vmin(),R=waterRounds(),cur=R.find(r=>now<r.b)||R[2],nd=r1(Math.max(0,cur.cum-(e.value||0)));return nd>0?`faltam ${num(nd)} L até ${hm(cur.b%1440)}`:"rodada em dia"}
+function waterHint(){const e=ent(H("agua")),now=vmin(),R=waterRounds(),cur=R.find(r=>now<r.b)||R[2],nd=r1(Math.max(0,cur.cum-(e.value||0)));return nd>0?`${num(nd)} L até ${hm(cur.b%1440).replace(":00","h")}`:"rodada em dia"}
 function todayItems(){const L=[],d=S.today.date,wi=(dow(d)+6)%7;
   for(const a of S.areas){
     if(a==="sono"){const h=H("sono");if(h&&dueOn(h,d)){const e=ent(h),r=e.done||e.failed;L.push({id:"sono",a,done:!!r,fail:!!e.failed,t:"Sono",s:r?`${e.bed} → ${e.wake} · ${dur(e.dur*60)}${e.grade==="on"?" · no horário":e.grade==="late"?" · um pouco fora":" · fora do horário"}`:`meta ${S.profile.sleep} → ${S.profile.wake}`,btn:r?null:{l:"Registrar",do:"review"}})}}
-    if(a==="agua"){const h=H("agua");if(h){const e=ent(h),T=waterTarget(),v=e.value||0;L.push({id:"agua",a,done:!!e.done,t:"Água",s:`${num(v)} de ${num(T)} L${e.done?"":" · "+waterHint()}`,p:v/T,btn:{l:`+${S.profile.glass} ml`,do:"wq",v:S.profile.glass}})}}
+    if(a==="agua"){const h=H("agua");if(h){const e=ent(h),T=waterTarget(),v=e.value||0;L.push({id:"agua",a,done:!!e.done,t:"Água",s:`${num(v)}/${num(T)} L${e.done?"":" · "+waterHint()}`,p:v/T,btn:{l:`+${S.profile.glass} ml`,do:"wq",v:S.profile.glass}})}}
     if(a==="treino"){const h=H("treino");if(h){const e=ent(h),c=wCount(h),r=wReq(h),s=nextSplit(),pref=h.freq.days.includes(dow(d));
       if(pref||e.done||(c<r&&r-c>=daysLeft()))L.push({id:"treino",a,done:!!e.done,t:"Treino",s:e.done?`feito · ${c}/${r} na semana${program()&&!e.logged?" · cargas opcionais":""}`:`${s&&s.ex.length?esc(s.name)+" · ":""}${c}/${r} na semana`,btn:e.done?null:{l:"Fui",do:"fui"}})}}
     if(a==="leitura"||a==="estudo"){const h=H(a);if(h&&dueOn(h,d)){const e=ent(h),v=e.value||0,run=S.timer&&S.timer.id===a;
@@ -1012,8 +1088,12 @@ function ring(p){const r=26,c=2*Math.PI*r;return`<svg class="ring" viewBox="0 0 
 /* ---------- telas ---------- */
 function viewHoje(){const L=todayItems(),pend=L.filter(x=>!x.done),done=L.filter(x=>x.done),p=L.length?done.length/L.length:0,W=weekItems();let h=safariBar();
   const T=S.tasks.filter(x=>!x.done).sort((a,b)=>a.pri-b.pri||a.c.localeCompare(b.c));
-  h+=`<section class="sum"><div class="ringw ${S.today.full?"full":""}">${ring(p)}<b>${done.length}/${L.length}</b></div><div class="sumt"><b>${!L.length?"Escolha suas áreas":pend.length?`Faltam ${pend.length} ${pend.length===1?"item":"itens"} hoje`:"Tudo feito hoje"}</b>
-    <small>${L.length?(done.length>=Math.ceil(L.length/2)?`<span style="color:var(--ok)">Hoje já conta para a sequência</span>`:`Faça ${Math.ceil(L.length/2)-done.length} para hoje contar na sequência`):""}</small><small>◆ ${S.streak} dia(s) seguidos${S.best<7?` · primeira semana ${Math.min(S.streak,7)}/7`:""}${shieldReady()?" · escudo pronto":""} · Nível ${S.level}</small><span class="mbar"><i style="width:${Math.min(100,S.xp/need(S.level)*100)}%"></i></span></div></section>`;
+  const half=Math.ceil(L.length/2),okToday=done.length>=half,pl=(n,a,b)=>`${n} ${n===1?a:b}`;
+  h+=`<section class="sum"><div class="sum-top"><div class="ringw ${S.today.full?"full":""}">${ring(p)}<b>${done.length}/${L.length}</b></div><div class="sumt"><b>${!L.length?"Escolha suas áreas":pend.length?`Faltam ${pl(pend.length,"item","itens")} hoje`:"Dia completo"}</b>
+    <small>${L.length?(okToday?`<span class="okt">${ic("check")} Hoje já conta para a sequência</span>`:`Faça mais ${half-done.length} para hoje contar na sequência`):""}</small></div></div>
+    <div class="sum-stats"><div><span>Sequência</span><b>${pl(S.streak,"dia","dias")}${shieldReady()?`<i class="shd" title="Escudo pronto">escudo</i>`:""}</b></div>
+    ${S.best<7?`<div><span>1ª semana</span><b>${Math.min(S.streak,7)}/7</b></div>`:`<div><span>Recorde</span><b>${pl(S.best,"dia","dias")}</b></div>`}
+    <div><span>Nível ${S.level}</span><b>${S.xp}/${need(S.level)} XP</b></div></div><span class="mbar"><i style="width:${Math.min(100,S.xp/need(S.level)*100)}%"></i></span></section>`;
   if(S._upd)h+=`<button class="banner" data-do="update">${ic("sun")}<span><b>Nova versão disponível</b><small>v${esc(S._upd)} · toque para atualizar agora</small></span>${ic("chev")}</button>`;
   if(needReview())h+=`<button class="banner" data-do="review">${ic("sun")}<span><b>Bom dia</b><small>${[H("sono")&&S.areas.includes("sono")&&!ent(H("sono")).done&&!ent(H("sono")).failed?"registre como foi a noite":"",S.pending.length?`confirme ${S.pending.length} item(ns) de ontem`:""].filter(Boolean).join(" · ")}</small></span>${ic("chev")}</button>`;
   if(S.paused)h+=`<button class="banner" data-do="resume">${ic("clock")}<span><b>Pausado</b><small>${S.paused.until?`até ${fmt(S.paused.until)}`:"até você voltar"} · toque para voltar</small></span>${ic("chev")}</button>`;
