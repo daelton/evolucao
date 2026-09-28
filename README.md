@@ -22,6 +22,6 @@ Sempre disponível: **Tarefas do dia** (despeje tudo, priorize por cor) e **Sua 
 - Não cumprir tira XP e baixa a nota. Pausa para férias/doença.
 
 ## Atalhos do iPhone
-`?acao=agua` (ou `&v=500`) · `?acao=treino` · `?acao=ler&v=10` · `?acao=estudo&v=15` · `?acao=mover&v=30` · `?acao=acordei`
+Use a ação **Abrir App → Evolução** (iOS 16.4+). Não use "Abrir URL": links abrem no Safari, que guarda dados separados do app da Tela de Início. Ideias: ao parar o alarme (abre o Bom dia), ao chegar na academia, widget ou Botão de Ação.
 
 Dados ficam só no aparelho (Perfil → Ajustes → Exportar backup).
