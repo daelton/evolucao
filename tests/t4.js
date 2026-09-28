@@ -1,0 +1,18 @@
+const {mk,onboard,ok,sec,report}=require('./lib');
+sec('Prazo de 48 h');
+{const env=mk();onboard(env,['leitura']);env.at('2026-10-06','09:00');ok('ontem pendente',env.E('S.pending.length')===1);env.at('2026-10-07','09:00');ok('continua pendente no 2º dia',env.E('S.pending.some(p=>p.date==="2026-10-05")'),env.E('JSON.stringify(S.pending)'));
+  env.E('resolvePending(S.pending.find(p=>p.date==="2026-10-05"),true)');ok('confirmar anteontem corrige aquele dia',env.E('S.history[0].r.leitura')===1);env.at('2026-10-09','09:00');ok('depois de 48 h conta como não feito',!env.E('S.pending.some(p=>p.date<"2026-10-07")'),env.E('JSON.stringify(S.pending)'))}
+sec('Inatividade');
+{const env=mk();onboard(env,['agua','treino','sono','leitura','habitos']);env.E('addXP(150)');env.at('2026-10-19','09:00');ok('14 dias sem abrir: para no nível 1 com 0 XP',env.E('S.level')===1&&env.E('S.xp')===0,env.E('S.level+" "+S.xp'));ok('nota não passa do piso (40)',env.E('S.areas.every(a=>attrVal(a)>=40)'));ok('sem erro',!env.errs.length,env.errs[0])}
+sec('Reforço');
+{const bad=JSON.stringify({v:8,onboarded:true,name:'X',areas:['agua','xyz'],habits:[{id:'agua',area:'agua',kind:'water',name:'Água',target:2.5,freq:{mode:'daily'}},{id:'q',area:'naoexiste'}],pending:[{date:'2026-10-01',id:'fantasma'}],xp:NaN,level:0,today:null,week:null,stats:null,program:{splits:'x'},timer:{id:'nada',start:1}});
+  const env=mk(bad);ok('estado corrompido abre sem erro',!env.errs.length,env.errs[0]);ok('área inválida removida',env.E('S.areas.join()')==='agua',env.E('S.areas.join()'));ok('pendência fantasma removida',env.E('S.pending.length')===0);ok('números reparados',env.E('S.level')===1&&env.E('S.xp')===0);ok('tela Hoje renderiza',env.q('#view').textContent.includes('Água'),env.q('#view').textContent.slice(0,80))}
+{const env=mk();onboard(env,['agua']);env.E('A.boom=()=>{throw new Error("teste")}');const b=env.d.createElement('button');b.dataset.do='boom';env.q('#view').appendChild(b);b.click();
+  ok('erro numa ação não trava: anotado',env.E('(S.errors||[]).some(x=>x.w==="boom")'));env.E('tab="ajustes";render()');ok('aparece em Ajustes → Diagnóstico',env.q('#view').textContent.includes('Diagnóstico'));env.c('[data-do=errclear]');ok('limpar diagnóstico',!env.E('(S.errors||[]).length'))}
+{const env=mk();onboard(env,['agua','movimento']);env.E('openWater()');env.q('#wml').value='6000';env.c('[data-do=wqv]');ok('6.000 ml num registro é recusado',env.E('ent(H("agua")).value||0')===0);env.E('openSteps()');env.q('#stIn').value='250000';env.c('[data-do=stepsave]');ok('250 mil passos é recusado',!env.E('ent(H("movimento")).value'))}
+sec('Correções da rodada anterior');
+{const env=mk();onboard(env,['leitura','habitos'],{habits:['Meditar 5 min','Alongar 5 min','Tomar vitamina']});const full=()=>env.E('addQty(H("leitura"),10);S.habits.filter(h=>h.area==="habitos").forEach(h=>complete(h,10))'),rv=()=>env.E('while(S.pending.length)resolvePending(S.pending[0],false)');
+  full();env.at('2026-10-06','09:00');full();env.at('2026-10-07','09:00');env.at('2026-10-08','09:00');ok('recorde não conta dia ainda sem confirmar',env.E('S.best')===2,env.E('S.best+" (seq "+S.streak+")"'))}
+{const env=mk();onboard(env,['treino']);const r=env.E('JSON.stringify(parseWorkout("Segunda - Peito\\nSupino 4x10\\nTerça - Costas\\nRemada 4x10\\nSex: Pernas\\nLeg press 4x12").map(s=>s.name))');ok('dias da semana viram divisões',JSON.parse(r).length===3,r);
+  const r2=env.E('JSON.stringify(parseWorkout("Treino A\\nTerra 4x5 100kg").map(s=>s.ex.map(x=>x.name)))');ok('exercício que começa com "Ter" não vira divisão',r2.includes('Terra'),r2)}
+report();

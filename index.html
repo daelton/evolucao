@@ -545,7 +545,7 @@ input,select,textarea{min-height:48px}
             5 Efeitos · 6 Telas · 7 Onboarding · 8 Sheets · 9 Ações · 10 Integrações
    ===================================================================== */
 const $=s=>document.querySelector(s);
-const APP_VERSION="4.5.0",APP_DATE="28/09/2026";
+const APP_VERSION="4.6.0",APP_DATE="28/09/2026";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid=()=>Math.random().toString(36).slice(2,9);
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -1144,7 +1144,7 @@ function todayItems(){const L=[],d=S.today.date,wi=(dow(d)+6)%7;
       if(pref||e.done||(c<r&&r-c>=daysLeft()))L.push({id:"treino",a,done:!!e.done,t:"Treino",s:e.done?`${e.split?esc(e.split)+" · ":"feito · "}${c}/${r} na semana${program()&&!e.logged?" · cargas opcionais":""}`:`${s&&s.ex.length?esc(s.name)+" · ":""}${c}/${r} na semana`,btn:e.done?null:{l:"Fui",do:"fui"}})}}
     if(a==="leitura"||a==="estudo"){const h=H(a);if(h&&dueOn(h,d)){const e=ent(h),v=e.value||0,run=S.timer&&S.timer.id===a;
       L.push({id:a,a,done:!!e.done,t:a==="leitura"?"Leitura":esc(h.name),s:run?`<b class="tmr" data-timer>${timerTxt()}</b> cronômetro rodando`:`${num(v)} de ${num(h.target)} ${unitS(h)}${a==="leitura"&&h.book&&h.book.title&&!h.book.done?` · ${esc(h.book.title)}`:""}`,p:v/h.target,btn:run?{l:"Parar",do:"tstop"}:{l:"+",do:"open",v:a,plus:1}})}}
-    if(a==="movimento"){const h=H("movimento");if(h&&h.kind==="steps"&&dueOn(h,d)){const e=ent(h),v=e.value||0;L.push({id:"movimento",a,done:!!e.done,t:"Passos",s:`${fmtInt(v)} de ${fmtInt(h.target)} passos`,p:v/h.target,btn:{l:"Registrar",do:"open",v:"movimento"}})}}
+    if(a==="movimento"){const h=H("movimento");if(h&&h.kind==="steps"&&dueOn(h,d)){const e=ent(h),v=e.value||0;L.push({id:"movimento",a,done:!!e.done,t:"Passos",s:`${fmtInt(v)} de ${fmtInt(h.target)} passos${e.src?" · Saúde":""}`,p:v/h.target,btn:{l:"Registrar",do:"open",v:"movimento"}})}}
     if(a==="corpo"){const h=H("corpo");if(h&&!wCount(h)){const pm=Math.min(...h.freq.days.map(x=>(x+6)%7));if(wi>=pm)L.push({id:"corpo",a,done:false,t:"Pesagem",s:`da semana · último: ${num(S.profile.weight)} kg`,btn:{l:"Pesar",do:"open",v:"corpo"}})}}
     if(a==="habitos")for(const h of S.habits.filter(x=>x.area==="habitos"&&dueOn(x,d))){const e=ent(h);if(h.kind==="avoid"){L.push({id:h.id,a,avoid:1,done:!e.broken,fail:!!e.broken,t:esc(h.name),s:e.broken?"quebrou hoje":"mantendo · toque em Quebrei se escapar",btn:e.broken?null:{l:"Quebrei",do:"broke",v:h.id}});continue}L.push({id:h.id,a,done:!!e.done,t:esc(h.name),s:freqTxt(h),btn:e.done?null:{l:"Feito",do:"check",v:h.id,chk:1}})}}
   return L}
@@ -1210,7 +1210,12 @@ function viewPerfil(){const p=S.profile;
   <section class="win"><div class="tab"><span>Lembretes e Atalhos</span></div><div class="bd"><p class="mute" style="margin:0 0 8px">Cria eventos com alerta no Calendário do iPhone para suas áreas, mesmo com o app fechado. Ao importar, escolha um calendário novo chamado Evolução. Mudou algo? Apague esse calendário e importe de novo.</p>
     <div class="two"><button class="btn full" data-do="ics">Compartilhar</button><button class="btn full" data-do="icsopen">Abrir direto</button></div>
     <p class="mute" style="margin:14px 0 0">No app Atalhos, use a ação <b>Abrir App → Evolução</b> (não "Abrir URL", que abre no Safari com dados separados). Ideias: ao parar o alarme, ao chegar na academia, no widget ou no Botão de Ação.</p></div></section>`}
-function viewAjustes(){return`<section class="win"><div class="tab"><span>Seus dados</span></div><div class="bd form">
+function integSection(){const c=integ(),T=[["steps","Passos"],["sleep","Sono"],["workouts","Treinos e atividades"],["weight","Peso"],["water","Água"]];
+  return`<section class="win"><div class="tab"><span>Integrações</span></div><div class="bd form"><div class="srow"><span><b>App Saúde</b><br><span class="mute">no app do iPhone</span></span><b class="mute">preparado</b></div>
+  <p class="mute" style="margin:0">No app do iPhone, o Evolução lê do Saúde sozinho o que estiver ligado abaixo: passos, sono (do iPhone ou do Watch), treinos do Watch (força marca "Fui", caminhada e esportes viram minutos), peso da balança e água. Aqui no site nada é lido; com o Modo teste ligado dá para simular os dados.</p>
+  ${T.map(([k,l])=>`<label class="check sw"><span>${l}</span><input type="checkbox" data-integ="${k}" ${c[k]?"checked":""}></label>`).join("")}
+  ${S.test?`<p class="lbl" style="margin-top:14px">Simular dados do Saúde</p><div class="chips">${[["simsteps","8.200 passos"],["simsleep","Sono da noite"],["simforca","Treino de força"],["simwalk","Caminhada 35 min"],["simweight","Peso"],["simwater","Água 500 ml"]].map(([a,l])=>`<button class="chip" data-do="${a}">${l}</button>`).join("")}</div>`:""}</div></section>`}
+function viewAjustes(){return integSection()+`<section class="win"><div class="tab"><span>Seus dados</span></div><div class="bd form">
   <div class="two"><button class="btn full" data-do="export">Exportar backup</button><button class="btn full" data-do="importb">Importar backup</button></div><input type="file" id="impFile" accept="application/json,.json" class="hide">
   <p class="mute" style="margin:0">Tudo fica só neste aparelho. ${S.lastBackup?`Último backup: ${fmt(S.lastBackup)}.`:"Nenhum backup ainda."}</p></div></section>
   <section class="win"><div class="tab"><span>Pausa</span></div><div class="bd">${S.paused?`<p class="mute" style="margin:0">Pausado ${S.paused.until?`até ${fmt(S.paused.until)}`:"até você voltar"}.</p><div class="btns"><button class="btn solid full" data-do="resume">Voltar agora</button></div>`:`<p class="mute" style="margin:0 0 8px">Férias, doença ou viagem: nada tira ponto e a sequência fica congelada.</p><div class="chips">${[[1,"Hoje"],[3,"3 dias"],[7,"7 dias"],[0,"Até eu voltar"]].map(([v,l])=>`<button class="chip" data-do="pause" data-v="${v}">${l}</button>`).join("")}</div>`}</div></section>
@@ -1296,6 +1301,12 @@ function openWeekReview(){const w=(S.weekLog||[]).slice(-1)[0];if(!w)return;S.wk
 function commit(){checkFullDay();save();render();if(sheetOpen&&sheetId){if(sheetId==="__rv")openReview();else if(sheetId!=="__wk")openItem(sheetId)}}
 Object.assign(A,{
   menu(){setMenu(true)},
+  simsteps(){const r=ingest("steps",S.today.date,8200,"simulado");toast(`Simulado: 8.200 passos · ${r.ok?"aplicado":r.why}`,r.ok?null:"red")},
+  simsleep(){const w=vnow();w.setHours(+S.profile.wake.slice(0,2),+S.profile.wake.slice(3)-10,0,0);const b=new Date(w.getTime()-7.7*3600000),r=ingest("sleep",b.getTime(),w.getTime(),"simulado");toast(`Simulado: sono ${hm(b.getHours()*60+b.getMinutes())} → ${hm(w.getHours()*60+w.getMinutes())} · ${r.ok?"aplicado":r.why}`,r.ok?null:"red")},
+  simforca(){const e=vnow().getTime(),r=ingest("workout",{uuid:"sim-f"+Date.now(),kind:"forca",start:e-55*60000,end:e},"simulado");toast(`Simulado: treino de força 55 min · ${r.ok?"aplicado":r.why}`,r.ok?null:"red")},
+  simwalk(){const e=vnow().getTime(),r=ingest("workout",{uuid:"sim-c"+Date.now(),kind:"atividade",act:"Caminhada",start:e-35*60000,end:e},"simulado");toast(`Simulado: caminhada 35 min · ${r.ok?"aplicado":r.why}`,r.ok?null:"red")},
+  simweight(){const r=ingest("weight",r1(S.profile.weight-.3),vnow().getTime(),"sim-p"+Date.now(),"simulado");toast(`Simulado: peso ${num(r1(S.profile.weight))} kg · ${r.ok?"aplicado":r.why}`,r.ok?null:"red")},
+  simwater(){const r=ingest("water",.5,vnow().getTime(),"sim-a"+Date.now(),"simulado");toast(`Simulado: 500 ml de água · ${r.ok?"aplicado":r.why}`,r.ok?null:"red")},
   errclear(){S.errors=[];save();render()},
   ordmv(b){const o=orderedAreas(),a=b.dataset.v,k=o.indexOf(a),t=k+(+b.dataset.d);if(t<0||t>=o.length)return;[o[k],o[t]]=[o[t],o[k]];S.order=o;save();render()},
   stepsave(){const h=H("movimento");if(!h)return;const e=ent(h),v=Math.round(pnum(String($("#stIn").value).replace(/\./g,"")));if(!(v>=0))return;if(v>100000){toast("Número de passos alto demais","red");return}const old=e.value||0;e.value=v;S.stats.steps=Math.max(0,(S.stats.steps||0)+v-old);
@@ -1336,6 +1347,42 @@ Object.assign(A,{
   task1(){const i=$("#tOne"),t=(i.value||"").trim();if(!t)return;S.tasks.push({id:uid(),t:t.slice(0,120),pri:2,done:false,c:S.today.date});save();render();const n=$("#tOne");if(n)n.focus()}
 });
 
+
+/* =====================================================================
+   INTEGRAÇÕES · porta de entrada única para dados de fora do app.
+   No app nativo, o app Saúde (HealthKit) chama estas funções.
+   Aqui no site, o simulador (Ajustes, com Modo teste ligado) chama as mesmas.
+   As regras não sabem de onde o dado veio: digitado, Saúde ou simulado.
+   ===================================================================== */
+const INTEG0={on:false,steps:true,sleep:true,workouts:true,weight:true,water:false};
+const integ=()=>{S.integ=S.integ||{};S.integ.saude=Object.assign({},INTEG0,S.integ.saude||{});return S.integ.saude};
+function logicalDateOf(ms){const d=new Date(ms-cutoff()*60000);return`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
+function seenSample(uuid){if(!uuid)return false;S.ing=S.ing||[];if(S.ing.includes(uuid))return true;S.ing.push(uuid);if(S.ing.length>600)S.ing=S.ing.slice(-400);return false}
+function resolvePendingPartial(p,r,src){if(r>=1)return resolvePending(p,true);const h=H(p.id),x=hist(p.date);S.pending=S.pending.filter(q=>q!==p);if(!h)return;const net=Math.round(h.xp*r-h.loss*(1-r));addXP(net);
+  if(x){x.pend=Math.max(0,(x.pend||0)-1);if(x.hr){x.hr[p.id]=r;x.r=areaR(x.hr);x.score=+((x.score||0)+r).toFixed(2)}S._av=(S._av||0)+1}log(`${h.name} (${fmt(p.date)}) via ${src||"integração"}: ${Math.round(r*100)}%. ${net>=0?"+":""}${net} XP.`);if(r===0)tryShield(x);recomputeStreak()}
+const ING={
+  steps(date,count,src){const h=H("movimento");if(!h||h.kind!=="steps"||!S.areas.includes("movimento"))return{ok:false,why:"sem área de passos"};count=Math.round(count);if(!(count>=0&&count<=100000))return{ok:false,why:"valor inválido"};
+    if(date===S.today.date){const e=ent(h),old=e.value||0;if(old>=count)return{ok:true,why:"já tinha esse valor ou maior"};e.value=count;e.src=src;S.stats.steps=Math.max(0,(S.stats.steps||0)+count-old);if(!e.done&&count>=h.target)complete(h,h.xp,`Passos: meta batida · +${h.xp} XP`);return{ok:true}}
+    const p=S.pending.find(q=>q.id===h.id&&q.date===date);if(p){resolvePendingPartial(p,clamp(count/h.target,0,1),src);return{ok:true,why:"confirmou um dia pendente"}}return{ok:false,why:"dia já fechado"}},
+  sleep(bedMs,wakeMs,src){const h=H("sono");if(!h||!S.areas.includes("sono"))return{ok:false,why:"sem área de sono"};if(!(wakeMs>bedMs)||wakeMs-bedMs>16*3600000)return{ok:false,why:"horários inválidos"};
+    if(logicalDateOf(wakeMs)!==S.today.date)return{ok:false,why:"não é a noite de hoje"};const e=ent(h);if(e.done||e.failed)return{ok:true,why:"sono de hoje já registrado"};
+    const b=new Date(bedMs),w=new Date(wakeMs);logSleep(b.getHours()*60+b.getMinutes(),w.getHours()*60+w.getMinutes());ent(h).src=src;return{ok:true}},
+  workout(o,src){if(!o||!(o.end>o.start))return{ok:false,why:"treino inválido"};if(seenSample(o.uuid))return{ok:true,why:"já importado"};const D=logicalDateOf(o.end),min=clamp(Math.round(o.minutes||(o.end-o.start)/60000),1,600);
+    if(o.kind==="forca"){const h=H("treino");if(!h||!S.areas.includes("treino"))return{ok:false,why:"sem área de treino"};
+      if(D===S.today.date){if(ent(h).done)return{ok:true,why:"treino de hoje já marcado"};A.fui();ent(h).src=src;return{ok:true}}
+      if(weekKey(D)===S.week.key&&D<S.today.date){S.week.c[h.id]=wCount(h)+1;addXP(h.xp);S.stats.workouts++;log(`Treino de ${fmt(D)} via ${src}. +${h.xp} XP.`);return{ok:true,why:"treino de outro dia desta semana"}}return{ok:false,why:"fora da semana"}}
+    const h=H("movimento");if(!h||h.kind!=="minutes"||!S.areas.includes("movimento"))return{ok:false,why:"movimento não está em minutos"};
+    if(D===S.today.date){addMinutes(h,min,o.act||"Atividade");ent(h).src=src;return{ok:true}}
+    if(weekKey(D)===S.week.key){S.week.m[h.id]=wMin(h)+min;S.stats.moveMin+=min;const x=Math.min(40,Math.round(min/3));addXP(x);log(`${o.act||"Atividade"} de ${fmt(D)} via ${src}: ${min} min. +${x} XP.`);return{ok:true,why:"outro dia desta semana"}}return{ok:false,why:"fora da semana"}},
+  weight(kg,ms,uuid,src){if(!(kg>=30&&kg<=250))return{ok:false,why:"valor inválido"};if(seenSample(uuid))return{ok:true,why:"já importado"};const D=logicalDateOf(ms),L=S.body.log;
+    if(L.length&&L[L.length-1].date>D)return{ok:false,why:"mais antigo que o último peso"};if(L.length&&L[L.length-1].date===D&&L[L.length-1].kg===r1(kg))return{ok:true,why:"mesmo peso de hoje"};logWeight(kg);return{ok:true}},
+  water(liters,ms,uuid,src){if(!(liters>0&&liters<=5))return{ok:false,why:"valor inválido"};if(seenSample(uuid))return{ok:true,why:"já importado"};if(!H("agua")||!S.areas.includes("agua"))return{ok:false,why:"sem área de água"};
+    if(logicalDateOf(ms)!==S.today.date)return{ok:false,why:"não é de hoje"};addWater(+liters.toFixed(3));return{ok:true}}};
+const ING_KEY={steps:"steps",sleep:"sleep",workout:"workouts",weight:"weight",water:"water"};
+function ingest(kind,...args){const cfg=integ();if(!ING[kind])return{ok:false,why:"tipo desconhecido"};if(cfg[ING_KEY[kind]]===false)return{ok:false,why:"desligado em Ajustes"};
+  try{const r=ING[kind](...args);S._av=(S._av||0)+1;save();try{render()}catch(_){}return r}catch(err){reportErr(err,"integração:"+kind);return{ok:false,why:"erro"}}}
+if(typeof window!=="undefined")window.EvolucaoIngest=ingest;
+
 /* ---------- 10. Integrações: lembretes no Calendário e links do Atalhos ---------- */
 function buildICS(){const base=location.origin+location.pathname,BY=["SU","MO","TU","WE","TH","FR","SA"],t=S.today.date,st=new Date().toISOString().replace(/[-:]/g,"").slice(0,15)+"Z",E=[];
   const ev=(k,title,desc,min,days,url)=>{const first=days.map(d=>nextDow(t,d)).sort()[0],dt=m=>first.replace(/-/g,"")+"T"+hm(m).replace(":","")+"00";
@@ -1357,7 +1404,7 @@ document.addEventListener("change",e=>{const t=e.target;
   if(t.id==="impFile"&&t.files[0]){t.files[0].text().then(tx=>{try{const d=migrate(JSON.parse(tx));if(!d)throw 0;S=repairState(d);S._av=(S._av||0)+1;save();render();toast("Backup restaurado")}catch(x){toast("Arquivo de backup inválido","red")}});return}
   if(t.id==="photoFile2"&&t.files[0]){resizePhoto(t.files[0]).then(u=>{S.photo=u;save();render();toast("Foto atualizada")}).catch(()=>toast("Não consegui ler essa foto","red"));return}
   if(t.id==="photoFile"&&t.files[0]){resizePhoto(t.files[0]).then(u=>{wz.d.photo=u;render()}).catch(()=>toast("Não consegui ler essa foto","red"));return}
-  if(t.id==="wWeOn"&&wz){wzRead();wz.d.weOn=t.checked;render();return}if(t.id==="sSound"){S.sound=t.checked;save()}if(t.id==="sTest"){S.test=t.checked;if(!S.test)S.offset=0;save();render()}if(t.dataset.rh&&hdraft){readHabitEdit();renderHabitEdit()}});
+  if(t.id==="wWeOn"&&wz){wzRead();wz.d.weOn=t.checked;render();return}if(t.dataset&&t.dataset.integ){integ()[t.dataset.integ]=t.checked;save();return}if(t.id==="sSound"){S.sound=t.checked;save()}if(t.id==="sTest"){S.test=t.checked;if(!S.test)S.offset=0;save();render()}if(t.dataset.rh&&hdraft){readHabitEdit();renderHabitEdit()}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(sheetOpen)closeSheet();setMenu(false)}if(e.key==="Enter"&&e.target.id==="tOne"){e.preventDefault();A.task1()}});
 $("#dov").onclick=()=>setMenu(false);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden){loop();checkUpdate()}});

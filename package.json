@@ -1,0 +1,9 @@
+{
+  "name": "evolucao",
+  "private": true,
+  "description": "Evolução · app de evolução pessoal (PWA hoje, Expo depois)",
+  "scripts": {
+    "test": "node tests/t1.js && node tests/t2.js && node tests/t3.js && node tests/t4.js && node tests/t5.js && node native/health/health-sync.test.js"
+  },
+  "devDependencies": { "jsdom": "^24.0.0" }
+}
