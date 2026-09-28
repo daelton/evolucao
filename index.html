@@ -523,6 +523,17 @@ input,select,textarea{min-height:48px}
 .pcard{position:relative}.pc-badge{position:absolute;top:12px;right:14px;z-index:3;font:700 .6rem Barlow,sans-serif;letter-spacing:.08em;text-transform:uppercase;background:#4fdc9b;color:#04321f;padding:3px 7px;border-radius:6px}
 .rbtn.brk{border-color:rgba(255,93,115,.5);background:rgba(255,93,115,.08);color:#ff9aa8;font-size:.82rem}
 .rt small{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* painel encosta no fim da tela (o espaço da barra do iPhone faz parte do painel, não vaza o fundo) */
+:root{--sab:env(safe-area-inset-bottom,0px)}
+.sheet{padding-bottom:0!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.sheet>.win{padding-bottom:var(--sab)}
+.sheet.dragging,.drawer.dragging{transition:none!important}
+.sheet .win::before{width:44px;height:5px;margin:10px auto 2px}
+body.lock{position:fixed;left:0;right:0;width:100%;overflow:hidden}
+.ov,.dov{overscroll-behavior:contain}
+.drawer{overscroll-behavior:contain}
+.native button,.native .row-main,.native .chip,.native .qb,.native .rbtn{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 </style>
 </head>
 <body>
@@ -545,7 +556,7 @@ input,select,textarea{min-height:48px}
             5 Efeitos · 6 Telas · 7 Onboarding · 8 Sheets · 9 Ações · 10 Integrações
    ===================================================================== */
 const $=s=>document.querySelector(s);
-const APP_VERSION="4.7.0",APP_DATE="28/09/2026";
+const APP_VERSION="4.7.1",APP_DATE="28/09/2026";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid=()=>Math.random().toString(36).slice(2,9);
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -574,8 +585,12 @@ const TQ=[];let tBusy=false;
 function toast(t,kind){TQ.push([t,kind]);if(TQ.length>4)TQ.splice(0,TQ.length-4);if(!tBusy)nextToast()}
 function nextToast(){const x=TQ.shift(),e=$("#toast");if(!x){tBusy=false;e.classList.remove("on");return}tBusy=true;e.textContent=x[0];
   e.style.borderColor=x[1]==="red"?"var(--red)":x[1]==="gold"?"var(--gold)":"";e.classList.add("on");setTimeout(nextToast,2800)}
-function openSheet(h,id=null){sheetId=id;$("#sheetBody").innerHTML=h;$("#ov").classList.add("on");$("#sheet").classList.add("on");sheetOpen=true}
-function closeSheet(){$("#ov").classList.remove("on");$("#sheet").classList.remove("on");sheetOpen=false;sheetId=null}
+/* Trava a tela de trás enquanto um painel, o menu ou um aviso está aberto (no iPhone o fundo rolava junto). */
+const _locks=new Set();let _lockY=0;
+function lockScroll(key,on){const b=document.body,was=_locks.size>0;if(on)_locks.add(key);else _locks.delete(key);const now=_locks.size>0;if(now===was)return;
+  if(now){_lockY=window.scrollY||0;b.style.top=`-${_lockY}px`;b.classList.add("lock")}else{b.classList.remove("lock");b.style.top="";window.scrollTo(0,_lockY)}}
+function openSheet(h,id=null){sheetId=id;const sh=$("#sheet");$("#sheetBody").innerHTML=h;if(!sheetOpen)sh.scrollTop=0;sh.style.transform="";$("#ov").classList.add("on");sh.classList.add("on");sheetOpen=true;lockScroll("sheet",true)}
+function closeSheet(){const sh=$("#sheet");$("#ov").classList.remove("on");sh.classList.remove("on","dragging");sh.style.transform="";sheetOpen=false;sheetId=null;lockScroll("sheet",false)}
 const stepper=(id,val,sm,step=1)=>`<span class="step${sm?" sm":""}"><button data-do="st" data-t="${id}" data-d="-${step}" aria-label="Menos">−</button><input id="${id}" type="text" inputmode="decimal" autocomplete="off" value="${num(val)}"><button data-do="st" data-t="${id}" data-d="${step}" aria-label="Mais">+</button></span>`;
 
 function icsEsc(x){return String(x).replace(/\\/g,"\\\\").replace(/[;,]/g,m=>"\\"+m).replace(/\n/g,"\\n")}
@@ -817,7 +832,7 @@ function lore(i,t,key){if(key&&S.lore.some(x=>x.k===key))return;S.lore.unshift({
 /* ---------- 5. Efeitos e modais ---------- */
 const Q=[];let showing=false;
 function queue(m,front){front?Q.unshift(m):Q.push(m);if(!showing)nextM()}
-function nextM(){const m=Q.shift(),md=$("#modal"),w=md.querySelector(".win");if(!m){showing=false;md.classList.remove("on");setTimeout(()=>{try{maybeReview()}catch(e){}},250);return}showing=true;w.style.removeProperty("--rk");let tb="Evolução",h;
+function nextM(){const m=Q.shift(),md=$("#modal"),w=md.querySelector(".win");if(!m){showing=false;md.classList.remove("on");lockScroll("modal",false);setTimeout(()=>{try{maybeReview()}catch(e){}},250);return}showing=true;lockScroll("modal",true);w.style.removeProperty("--rk");let tb="Evolução",h;
   if(m.k==="lvl"){fx(m.up?"lvl":"bad");h=`<h3>${m.up?"Você subiu de nível":"Você perdeu um nível"}</h3><div class="huge">${S.level}</div><p class="mute">${m.up?"Constância vira evolução.":"Hábito não cumprido custa XP. Amanhã dá para recuperar."}</p>`}
   else if(m.k==="tier"){const t=tierOf(m.v);w.style.setProperty("--rk",t.c);fx(m.up?"lvl":"bad");tb="Carta";h=`<h3>${m.up?"Sua carta evoluiu":"Sua carta caiu"}</h3><div class="huge">${m.v}</div><p class="mute">Agora: carta ${t.l}</p>`}
   else{tb=m.tab||tb;h=`<h3>${esc(m.title)}</h3>${(m.lines||[]).map(l=>`<p>${esc(l)}</p>`).join("")}`}
@@ -1232,7 +1247,7 @@ function drawer(){const t=cardTheme(),pages=Object.keys(PAGES).filter(k=>k!=="tr
   return`<button class="dw-hd" data-go="evolucao">${photoHTML("pf-img")}<div><b>${esc(S.name||"Você")}</b><small>Nível ${S.level} · carta ${ovr()} ${t.l}</small><span class="mbar"><i style="width:${Math.min(100,S.xp/need(S.level)*100)}%"></i></span></div></button>
   <nav class="dw-nav">${pages.map(k=>`<button data-go="${k}" ${k===tab?'aria-current="page"':""}>${ic(PAGES[k][1])}<span>${PAGES[k][0]}</span>${k==="tarefas"&&S.tasks.some(x=>!x.done)?`<em>${S.tasks.filter(x=>!x.done).length}</em>`:""}</button>`).join("")}</nav>
   <p class="dw-ft mute">${S._upd?`<button class="lnk" data-do="update">Nova versão ${esc(S._upd)} disponível · atualizar</button><br>`:""}Evolução v${APP_VERSION} · atualizada em ${APP_DATE}<br>seus dados ficam neste aparelho</p>`}
-function setMenu(on){$("#drawer").classList.toggle("on",on);$("#dov").classList.toggle("on",on);$("#drawer").setAttribute("aria-hidden",on?"false":"true")}
+function setMenu(on){const d=$("#drawer");d.classList.toggle("on",on);d.style.transform="";$("#dov").classList.toggle("on",on);d.setAttribute("aria-hidden",on?"false":"true");lockScroll("menu",on)}
 function render(){const top=$("#top");if(!S.onboarded||wz){top.classList.add("hide");renderWizard();const v=$("#view");if(v&&IOS&&!STANDALONE)v.insertAdjacentHTML("afterbegin",safariBar());return}
   top.classList.remove("hide");if(!PAGES[tab]||(tab==="treino"&&!S.areas.includes("treino")))tab="hoje";top.innerHTML=topbar();$("#drawer").innerHTML=drawer();
   $("#view").innerHTML=({hoje:viewHoje,tarefas:viewTarefas,treino:viewTreino,evolucao:viewEvolucao,historia:viewHistoria,perfil:viewPerfil,ajustes:viewAjustes}[tab])();const k=$("#clk");if(k)k.textContent=hm(vmin()%1440)}
@@ -1428,6 +1443,17 @@ function reportErr(err,where){try{S.errors=(S.errors||[]).concat([{t:new Date().
 window.addEventListener("error",e=>{if(e&&e.message&&/Script error/.test(e.message))return;reportErr(e.error||e.message,"tela")});
 function importText(tx){try{const d=migrate(JSON.parse(tx));if(!d)throw 0;S=repairState(d);S._av=(S._av||0)+1;save();render();toast("Backup restaurado")}catch(x){toast("Arquivo de backup inválido","red")}}
 if(typeof window!=="undefined")window.__evoImport=importText;
+function swipeClose(el,axis,canStart,onClose,dist){let s0=null,d=0,t0=0,drag=false;
+  el.addEventListener("touchstart",e=>{if(e.touches.length!==1||!canStart(e))return;const t=e.touches[0];s0=axis==="y"?t.clientY:t.clientX;t0=Date.now();d=0;drag=false;el._atTop=el.scrollTop<=0},{passive:true});
+  el.addEventListener("touchmove",e=>{if(s0==null)return;const t=e.touches[0],raw=(axis==="y"?t.clientY:t.clientX)-s0,v=axis==="y"?raw:-raw;
+    if(!drag){if(v>8&&(axis!=="y"||(el._atTop&&el.scrollTop<=0))){drag=true;el.classList.add("dragging")}else if(Math.abs(raw)>8){s0=null;return}else return}
+    if(e.cancelable)e.preventDefault();d=Math.max(0,v);el.style.transform=axis==="y"?`translateY(${d}px)`:`translateX(${-d}px)`},{passive:false});
+  const end=()=>{if(s0==null)return;const vel=d/Math.max(1,Date.now()-t0);el.classList.remove("dragging");const close=drag&&(d>dist||vel>.6);el.style.transform="";s0=null;drag=false;if(close)onClose()};
+  el.addEventListener("touchend",end,{passive:true});el.addEventListener("touchcancel",end,{passive:true})}
+swipeClose($("#sheet"),"y",()=>sheetOpen,()=>closeSheet(),110);
+swipeClose($("#drawer"),"x",()=>$("#drawer").classList.contains("on"),()=>setMenu(false),80);
+for(const id of ["ov","dov","modal"]){const el=$("#"+id);if(el)el.addEventListener("touchmove",e=>{if(e.target===el&&e.cancelable)e.preventDefault()},{passive:false})}
+if(NATIVE){document.documentElement.classList.add("native");const vp=document.querySelector('meta[name="viewport"]');if(vp)vp.setAttribute("content","width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover")}
 function checkUpdate(manual){if(NATIVE||!window.fetch||location.protocol==="file:")return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json()).then(j=>{if(j&&j.v&&j.v!==APP_VERSION){S._upd=j.v;render()}else{delete S._upd;if(manual)toast("Você já está na versão mais nova")}}).catch(()=>{if(manual)toast("Sem internet para verificar","red")})}
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
 if(!NATIVE&&"serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
