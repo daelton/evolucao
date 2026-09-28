@@ -256,6 +256,7 @@ input::placeholder,textarea::placeholder{color:var(--ink-3)}
 .rest.sticky{position:sticky;top:0;z-index:3;margin:10px 0 0;padding:10px 0;background:var(--card);border-bottom:1px solid var(--rule)}
 .demo{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:20px;padding:12px;border:1px dashed var(--ink-3)}.demo span{width:100%;text-align:center;font:400 .8rem var(--mono);color:var(--ink-3)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.dw-ft{line-height:1.6}.dw-ft .lnk{font:600 .8rem var(--sans);text-align:left}
 </style>
 </head>
 <body>
@@ -278,6 +279,7 @@ input::placeholder,textarea::placeholder{color:var(--ink-3)}
             5 Efeitos · 6 Telas · 7 Onboarding · 8 Sheets · 9 Ações · 10 Integrações
    ===================================================================== */
 const $=s=>document.querySelector(s);
+const APP_VERSION="4.0.1",APP_DATE="28/09/2026";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid=()=>Math.random().toString(36).slice(2,9);
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -838,6 +840,7 @@ function viewHoje(){const L=todayItems(),pend=L.filter(x=>!x.done),done=L.filter
     <small>${L.length?(okToday?`<span class="okt">hoje já conta na sequência</span>`:`faça ${half-done.length} para hoje contar`):""}</small>
     <small>${S.streak} ${S.streak===1?"dia":"dias"} seguidos${S.best<7?` · 1ª semana ${Math.min(S.streak,7)}/7`:""}${shieldReady()?" · escudo pronto":""} · nível ${S.level}</small></div>
     ${L.length?`<div class="tally" aria-hidden="true">${L.map(x=>`<i class="${x.done?"on":""}"></i>`).join("")}</div>`:""}</section>`;
+  if(S._upd)h+=`<button class="banner" data-do="update">${ic("sun")}<span><b>Nova versão disponível</b><small>v${esc(S._upd)} · toque para atualizar agora</small></span>${ic("chev")}</button>`;
   if(needReview())h+=`<button class="banner" data-do="review">${ic("sun")}<span><b>Bom dia</b><small>${[H("sono")&&S.areas.includes("sono")&&!ent(H("sono")).done&&!ent(H("sono")).failed?"registre como foi a noite":"",S.pending.length?`confirme ${S.pending.length} item(ns) de ontem`:""].filter(Boolean).join(" · ")}</small></span>${ic("chev")}</button>`;
   if(S.paused)h+=`<button class="banner" data-do="resume">${ic("clock")}<span><b>Pausado</b><small>${S.paused.until?`até ${fmt(S.paused.until)}`:"até você voltar"} · toque para voltar</small></span>${ic("chev")}</button>`;
   if(!S.areas.length)h+=`<button class="banner" data-do="areas">${ic("plus")}<span><b>Escolha o que evoluir</b><small>água, treino, sono, leitura…</small></span>${ic("chev")}</button>`;
@@ -880,13 +883,14 @@ function viewAjustes(){return`<section class="win"><div class="tab"><span>Seus d
   <div class="two"><button class="btn full" data-do="export">Exportar backup</button><button class="btn full" data-do="importb">Importar backup</button></div><input type="file" id="impFile" accept="application/json,.json" class="hide">
   <p class="mute" style="margin:0">Tudo fica só neste aparelho. ${S.lastBackup?`Último backup: ${fmt(S.lastBackup)}.`:"Nenhum backup ainda."}</p></div></section>
   <section class="win"><div class="tab"><span>Pausa</span></div><div class="bd">${S.paused?`<p class="mute" style="margin:0">Pausado ${S.paused.until?`até ${fmt(S.paused.until)}`:"até você voltar"}.</p><div class="btns"><button class="btn solid full" data-do="resume">Voltar agora</button></div>`:`<p class="mute" style="margin:0 0 8px">Férias, doença ou viagem: nada tira ponto e a sequência fica congelada.</p><div class="chips">${[[1,"Hoje"],[3,"3 dias"],[7,"7 dias"],[0,"Até eu voltar"]].map(([v,l])=>`<button class="chip" data-do="pause" data-v="${v}">${l}</button>`).join("")}</div>`}</div></section>
+  <section class="win"><div class="tab"><span>Sobre</span></div><div class="bd"><div class="srow"><span>Versão</span><b class="disp">v${APP_VERSION}</b></div><div class="srow"><span>Atualizada em</span><b class="disp">${APP_DATE}</b></div>${S._upd?`<div class="btns"><button class="btn solid full" data-do="update">Atualizar para a v${esc(S._upd)}</button></div>`:`<div class="btns"><button class="btn full" data-do="checkupd">Procurar atualização</button></div>`}</div></section>
   <section class="win"><div class="tab"><span>Preferências</span></div><div class="bd form"><label>Aparência<select id="sTheme"><option value="auto" ${(S.theme||"auto")==="auto"?"selected":""}>Automático (segue o iPhone)</option><option value="light" ${S.theme==="light"?"selected":""}>Claro</option><option value="dark" ${S.theme==="dark"?"selected":""}>Escuro</option></select></label><label class="check sw"><span>Som</span><input type="checkbox" id="sSound" ${S.sound?"checked":""}></label><label class="check sw"><span>Modo teste<small class="mute" style="display:block">avançar o relógio para testar</small></span><input type="checkbox" id="sTest" ${S.test?"checked":""}></label>
   <button class="btn red full" data-do="reset">${confirmReset?"Toque de novo para apagar tudo":"Apagar tudo e recomeçar"}</button></div></section>`}
 function topbar(){const t=cardTheme(),[title]=PAGES[tab]||PAGES.hoje;return`<button class="tb-b" data-do="menu" aria-label="Abrir menu">${ic("menu")}</button><div class="tb-t"><b>${title}</b><small>${fmt(S.today.date)}</small></div><button class="tb-card t-${t.id}" data-go="evolucao" aria-label="Sua carta: ${ovr()}">${ovr()}</button>`}
 function drawer(){const t=cardTheme(),pages=Object.keys(PAGES).filter(k=>k!=="treino"||S.areas.includes("treino"));
   return`<button class="dw-hd" data-go="evolucao">${photoHTML("pf-img")}<div><b>${esc(S.name||"Você")}</b><small>Nível ${S.level} · carta ${ovr()} ${t.l}</small><span class="mbar"><i style="width:${Math.min(100,S.xp/need(S.level)*100)}%"></i></span></div></button>
   <nav class="dw-nav">${pages.map(k=>`<button data-go="${k}" ${k===tab?'aria-current="page"':""}>${ic(PAGES[k][1])}<span>${PAGES[k][0]}</span>${k==="tarefas"&&S.tasks.some(x=>!x.done)?`<em>${S.tasks.filter(x=>!x.done).length}</em>`:""}</button>`).join("")}</nav>
-  <p class="dw-ft mute">Evolução · seus dados ficam neste aparelho</p>`}
+  <p class="dw-ft">${S._upd?`<button class="lnk" data-do="update">Nova versão ${esc(S._upd)} disponível · atualizar</button><br>`:""}Evolução v${APP_VERSION} · atualizada em ${APP_DATE}<br>seus dados ficam neste aparelho</p>`}
 function setMenu(on){$("#drawer").classList.toggle("on",on);$("#dov").classList.toggle("on",on);$("#drawer").setAttribute("aria-hidden",on?"false":"true")}
 function render(){const top=$("#top");if(!S.onboarded||wz){top.classList.add("hide");renderWizard();const v=$("#view");if(v&&IOS&&!STANDALONE)v.insertAdjacentHTML("afterbegin",safariBar());return}
   top.classList.remove("hide");if(!PAGES[tab]||(tab==="treino"&&!S.areas.includes("treino")))tab="hoje";top.innerHTML=topbar();$("#drawer").innerHTML=drawer();
@@ -947,6 +951,8 @@ function openWeekReview(){const w=(S.weekLog||[]).slice(-1)[0];if(!w)return;S.wk
 function commit(){checkFullDay();save();render();if(sheetOpen&&sheetId){if(sheetId==="__rv")openReview();else if(sheetId!=="__wk")openItem(sheetId)}}
 Object.assign(A,{
   menu(){setMenu(true)},
+  update(){toast("Atualizando…");const go=()=>location.reload();if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration)navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{}).finally(()=>setTimeout(go,400));else go()},
+  checkupd(){checkUpdate(true)},
   weekrev(){openWeekReview()},
   sgapply(b){const x=(S._sg||[])[+b.dataset.k];if(!x)return;if(x.act==="ics"){A.ics();return}const h=H(x.id);if(!h)return;if(x.f==="target")h.target=x.v;if(x.f==="times")h.freq.times=x.v;if(x.f==="goal")h.freq.goal=x.v;log(`Meta ajustada: ${h.name}.`);toast("Meta ajustada");save();render();openWeekReview()},
   photo2(){const i=$("#photoFile2");if(i)i.click()},
@@ -990,10 +996,12 @@ document.addEventListener("change",e=>{const t=e.target;
   if(t.id==="sTheme"){S.theme=t.value;applyTheme();save()}if(t.id==="sSound"){S.sound=t.checked;save()}if(t.id==="sTest"){S.test=t.checked;if(!S.test)S.offset=0;save();render()}if(t.dataset.rh&&hdraft){readHabitEdit();renderHabitEdit()}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(sheetOpen)closeSheet();setMenu(false)}if(e.key==="Enter"&&e.target.id==="tOne"){e.preventDefault();A.task1()}});
 $("#dov").onclick=()=>setMenu(false);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden)loop()});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){loop();checkUpdate()}});
+function checkUpdate(manual){if(!window.fetch||location.protocol==="file:")return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json()).then(j=>{if(j&&j.v&&j.v!==APP_VERSION){S._upd=j.v;render()}else{delete S._upd;if(manual)toast("Você já está na versão mais nova")}}).catch(()=>{if(manual)toast("Sem internet para verificar","red")})}
 function applyTheme(){const r=document.documentElement;if(!S.theme||S.theme==="auto")r.removeAttribute("data-theme");else r.setAttribute("data-theme",S.theme)}applyTheme();
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+delete S._upd;setTimeout(()=>checkUpdate(),1500);
 setInterval(()=>{loop();restTick();timerTick();const k=$("#clk");if(k)k.textContent=hm(vmin()%1440)},1000);render();loop();urlAction();
 
 </script>
