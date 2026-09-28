@@ -16,6 +16,12 @@ Safari → abrir o link → Compartilhar → Adicionar à Tela de Início.
 | Ler N páginas | `https://daelton.github.io/evolucao/?acao=ler&v=10` |
 | Indo dormir | `https://daelton.github.io/evolucao/?acao=dormir` |
 
+## Como as missões funcionam (v0.6)
+- **No horário** (acordar, dormir): no horário = bônus; atrasado = XP normal; muito atrasado = não cumprida. Dá para registrar depois com a hora real.
+- **Do dia** (ler, água): qualquer hora do dia; no momento sugerido (ex.: ônibus) = bônus. O que ficar sem marcar é confirmado no **Bom dia** da manhã seguinte.
+- **Da semana** (academia, vôlei): N vezes por semana, em qualquer dia. Cobrança no domingo, por sessão que faltou. "Não teve" não conta.
+- Não cumprida tira XP e zera a sequência. Escudo, pausa e desfazer continuam valendo.
+
 ## Integrações (grátis)
 - **Calendário do iPhone**: Rotina → Integrações → gera eventos recorrentes com alerta nativo e link que marca a missão.
 - **E-mail**: resumo da semana pronto no app Mail.
