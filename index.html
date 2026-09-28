@@ -522,6 +522,7 @@ input,select,textarea{min-height:48px}
 .tb-card.t-elite{background:linear-gradient(160deg,#9f7dff,#4b2fa8);color:#fff}.tb-card.t-lenda{background:linear-gradient(160deg,#3b2c08,#0a0802);color:#ffd76a;box-shadow:inset 0 0 0 1px #d4af37}
 .pcard{position:relative}.pc-badge{position:absolute;top:12px;right:14px;z-index:3;font:700 .6rem Barlow,sans-serif;letter-spacing:.08em;text-transform:uppercase;background:#4fdc9b;color:#04321f;padding:3px 7px;border-radius:6px}
 .rbtn.brk{border-color:rgba(255,93,115,.5);background:rgba(255,93,115,.08);color:#ff9aa8;font-size:.82rem}
+.rt small{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 </style>
 </head>
 <body>
@@ -544,7 +545,7 @@ input,select,textarea{min-height:48px}
             5 Efeitos · 6 Telas · 7 Onboarding · 8 Sheets · 9 Ações · 10 Integrações
    ===================================================================== */
 const $=s=>document.querySelector(s);
-const APP_VERSION="4.4.0",APP_DATE="28/09/2026";
+const APP_VERSION="4.5.0",APP_DATE="28/09/2026";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid=()=>Math.random().toString(36).slice(2,9);
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -621,7 +622,8 @@ function defaultState(){const iso=todayIso();return{v:8,rulesV:2,updatedAt:Date.
 const LS="evolucao-v8";let S;try{localStorage.removeItem("evolucao-v4")}catch(e){}
 try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
 /* Migração da versão anterior (v7): mantém nível, XP, histórico, foto, peso, programa e cargas */
-function migrate(d){if(!d||typeof d!=="object")return null;if(d.v===8)return d;
+function rulesMigrate(d){if(d&&d.onboarded&&!d.rulesV){d.rulesV=2;d.attrBase={};for(const a in (d.attrs||{}))d.attrBase[a]=d.attrs[a].ema;d.attrFrom=d.today&&d.today.date;for(const h of (d.habits||[])){if(h.id==="agua"&&h.xp===20)h.xp=15;if(h.area==="habitos"&&h.kind==="check"&&h.freq&&h.freq.mode!=="weekly"&&/^(sem|não|nao|parar de|evitar)\s/i.test(h.name))h.kind="avoid"}}return d}
+function migrate(d){if(!d||typeof d!=="object")return null;if(d.v===8)return rulesMigrate(d);
   if(d.v!==7&&d.v!==6&&d.v!==5)return null;
   const n=defaultState(),ms=d.missions||[],has=id=>ms.find(m=>m.id===id);const p=d.profile||{};
   Object.assign(n,{name:d.name||"",photo:d.photo||null,level:d.level||1,xp:d.xp||0,streak:d.streak||0,best:d.best||0,sound:d.sound!==false,history:d.history||[],log:(d.log||[]).slice(0,150),program:d.program||null});
@@ -636,7 +638,7 @@ function migrate(d){if(!d||typeof d!=="object")return null;if(d.v===8)return d;
   if(A.includes("sono")&&d.attrs&&d.attrs.DIS)n.attrs.sono=clone(d.attrs.DIS);for(const a of A)n.attrs[a]=n.attrs[a]||{ema:.17,prev:.17};
   n.onboarded=false;n.migrated=true;n.lore=[{d:(d.history&&d.history[0]&&d.history[0].date)||n.today.date,i:"🚀",t:"Começou a jornada"}];return n}
 S=migrate(S)||defaultState();
-function save(){S.updatedAt=Date.now();try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){S.log=S.log.slice(0,60);try{localStorage.setItem(LS,JSON.stringify(S))}catch(x){}}}
+let _saveWarn=false;function save(){S.updatedAt=Date.now();try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){S.log=(S.log||[]).slice(0,60);S.errors=(S.errors||[]).slice(-5);try{localStorage.setItem(LS,JSON.stringify(S))}catch(x){if(!_saveWarn){_saveWarn=true;setTimeout(()=>{try{toast("Não consegui salvar: memória do navegador cheia. Faça um backup em Ajustes.","red")}catch(_){}},50)}}}}
 
 /* Cada área gera os seus hábitos com metas inteligentes */
 function hb(o){return Object.assign({id:uid(),kind:"check",unit:"",target:1,steps:[1],freq:{mode:"daily",days:[],times:1,goal:0},xp:10,bonus:0,loss:10},o)}
@@ -714,8 +716,10 @@ function streakBefore(i){let n=0;for(let k=i-1;k>=0;k--){const ok=dayOk(S.histor
 const shieldReady=()=>!S.shieldAt||addDays(S.shieldAt,7)<=S.today.date;
 function tryShield(x){if(!x||dayOk(x)!==false)return false;const i=S.history.indexOf(x),b=streakBefore(i);if(b<1)return false;if(S.shieldAt&&addDays(S.shieldAt,7)>x.date)return false;
   x.sh=true;S.shieldAt=x.date;log(`Escudo protegeu a sequência (${fmt(x.date)}).`);S.shieldMsg=`Escudo usado: sua sequência de ${b} dia(s) foi protegida. O próximo escudo fica pronto em 7 dias.`;return true}
-function recomputeStreak(){let n=0;for(let k=S.history.length-1;k>=0;k--){const ok=dayOk(S.history[k]);if(ok===null)continue;if(ok)n++;else break}
-  if(n>S.streak&&[7,30,100,365].includes(n))lore("🔥",`${n} dias seguidos`,"st"+n);S.streak=n;S.best=Math.max(S.best,n)}
+function recomputeStreak(){let n=0,c=0,conf=true;for(let k=S.history.length-1;k>=0;k--){const x=S.history[k],ok=dayOk(x);if(ok===null)continue;if(!ok)break;n++;
+    if(conf){const sure=!!x.sh||((x.score!=null?x.score:x.done)>=x.due/2);if(sure)c++;else conf=false}}
+  if(!conf){c=0;for(let k=S.history.length-1;k>=0;k--){const x=S.history[k];if(x.paused||!x.due)continue;if(x.sh||((x.score!=null?x.score:x.done)>=x.due/2))c++;else break}}
+  if(c>(S.bestConf||0)&&[7,30,100,365].includes(c))lore("🔥",`${c} dias seguidos`,"st"+c);S.bestConf=Math.max(S.bestConf||0,c);S.streak=c;S.streakPend=n>c?n:0;S.best=Math.max(S.best||0,c)}
 /* Quantidade (leitura, estudo…) */
 /* Água em rodadas */
 function addWater(v){const h=H("agua");if(!h)return;const e=ent(h);e.log=e.log||[];const now=vmin();e.log.push({t:now,v});e.value=+((e.value||0)+v).toFixed(3);S.stats.water=+(S.stats.water+v).toFixed(3);
@@ -766,7 +770,7 @@ function weekClose(lines){logWeek();for(const h of weeklies()){const x=hist(S.to
       if(m>=g){addXP(h.bonus);hit(h.area,true);lines.push(`${h.name}: ${m}/${g} min · meta batida · +${h.bonus} XP`)}else{const l=Math.round(h.loss*(1-m/g));addXP(-l);hit(h.area,false);log(`${h.name}: ${m}/${g} min na semana. −${l} XP.`);lines.push(`${h.name}: ${m}/${g} min · −${l} XP`)}continue}
     const r=wReq(h),c=wCount(h);if(!r)continue;if(x){x.due+=r;x.done+=Math.min(c,r)}
     if(c<r){const l=(r-c)*h.loss;addXP(-l);hit(h.area,false,r-c);log(`${h.name}: ${c}/${r} na semana. −${l} XP.`);lines.push(`${h.name}: ${c}/${r} · −${l} XP`)}else lines.push(`${h.name}: ${c}/${r} na semana ✓`)}}
-function closeDay(){const t=S.today,lines=[],before=ovr();for(const p of S.pending.filter(p=>p.date<t.date))resolvePending(p,false);
+function closeDay(){const t=S.today,lines=[],before=ovr();for(const p of S.pending.filter(p=>p.date<addDays(t.date,-1)))resolvePending(p,false);
   if(S.paused){S.history.push({date:t.date,due:0,done:0,paused:true});S.week.paused=(S.week.paused||0)+1;for(const a of S.areas)if(S.attrs[a])S.attrs[a].prev=S.attrs[a].ema;
     if(dow(t.date)===0)weekClose(lines);const next=addDays(t.date,1);if(weekKey(next)!==S.week.key)S.week=newWeek(next);if(S.paused.until&&next>S.paused.until){S.paused=null;log("Pausa encerrada.")}S.today=newDay(next);return{date:t.date,paused:true,lines}}
   let n=0,d=0,pend=0,score=0;const hr={};
@@ -830,7 +834,7 @@ function strip(){const wk=weekKey(S.today.date);return`<section class="win strip
   return`<div class="${date===S.today.date?"t":x&&x.due?(x.done+(x.pend||0)>=x.due?"f":"x"):""}"><i></i>${DOW[d]}</div>`}).join("")}</section>`}
 const bar=p=>`<div class="bar"><i style="width:${clamp(p,0,100)}%"></i></div>`;
 const chk=(on)=>`<span class="ck ${on?"on":""}" aria-hidden="true">${on?"✓":""}</span>`;
-function needReview(){if(!S.onboarded||S.paused)return false;const h=H("sono");const sl=h&&S.areas.includes("sono")&&dueOn(h,S.today.date)&&!ent(h).done&&!ent(h).failed&&vmin()>=toMin(S.profile.wake)-90;return sl||S.pending.length>0}
+function needReview(){if(!S.onboarded||S.paused)return false;const h=H("sono");const sl=h&&S.areas.includes("sono")&&dueOn(h,S.today.date)&&!ent(h).done&&!ent(h).failed&&vmin()>=toL(toMin(sleepTargets(S.today.date).wake))-90;return sl||S.pending.length>0}
 function trendOk(tr){const want={perder:-1,ganhar:1,manter:0}[S.profile.goal];return want?Math.sign(tr.kg)===want:Math.abs(tr.kg)<=1}
 function weightTrend(){const L=S.body.log;if(L.length<2)return null;const last=L[L.length-1],ref=L.find(x=>x.date>=addDays(last.date,-28))||L[0];if(ref===last)return null;return{kg:r1(last.kg-ref.kg),days:Math.round((new Date(last.date)-new Date(ref.date))/864e5)}}
 function sparkline(vals,w=300,h=56){if(vals.length<2)return"";const mn=Math.min(...vals),mx=Math.max(...vals),rg=mx-mn||1;
@@ -839,7 +843,7 @@ function recap(){const s=S.stats,y=S.today.date.slice(0,4),P=[[s.habits,"hábito
   return`<section class="win"><div class="tab"><span>Retrospectiva ${y}</span></div><div class="bd">${P.length?`<div class="recap">${P.map(([v,l])=>`<div><b>${num(v)}</b><span>${l}</span></div>`).join("")}</div>`:`<p class="mute">Seus números do ano aparecem aqui conforme você avança.</p>`}
   <p class="mute" style="margin:10px 0 0">Desde ${fmt(s.since)} · recorde de ${S.best} dia(s) seguidos</p></div></section>`}
 function week7(a){const out=[];for(let i=7;i>=1;i--){const d=addDays(S.today.date,-i),x=S.history.find(y=>y.date===d),q=x&&x.a&&x.a[a];out.push(!q||!q[1]?"":q[0]>=q[1]?"f":q[0]>0?"p":"x")}return out}
-function exLine(x){return`<div class="srow"><span>${esc(x.name)}${x.stall>=3?` <span class="tag" style="color:var(--red);border-color:var(--red)">parado</span>`:""}</span><b>${x.weight?`${x.weight} kg · `:""}${x.sets}×${x.min}–${x.max}</b></div>`}
+function exLine(x){return`<div class="srow"><span>${esc(x.name)}${x.stall>=3?` <span class="tag" style="color:var(--red);border-color:var(--red)">parado</span>`:""}</span><b style="white-space:nowrap">${x.weight?`${x.weight} kg · `:""}${x.sets}×${x.min}–${x.max}</b></div>`}
 function viewTreino(){const P=program(),h=H("treino"),s=nextSplit();const sug=P&&P.basic?`<button class="banner" data-do="trainsetup">${ic("edit")}<span><b>Este é um treino sugerido</b><small>Já tem o seu? Cadastre ou cole o seu treino.</small></span>${ic("chev")}</button>`:"";
   if(!P||!P.splits.some(x=>x.ex.length))return`<section class="win"><div class="tab"><span>Treino</span></div><div class="bd"><p style="margin:0">Você ainda não cadastrou seu treino.</p><p class="mute">Cole o treino que você já faz (do personal, do bloco de notas, do WhatsApp) ou monte exercício por exercício.</p>
     <div class="btns"><button class="btn solid full" data-do="impopen">Colar meu treino</button><button class="btn full" data-do="progblank">Montar exercício por exercício</button><button class="btn ghost full" data-do="regen">Usar um treino sugerido pelo meu objetivo</button></div></div></section>`;
@@ -943,7 +947,7 @@ function openReview(){S.today.rv=true;const h=H("sono"),e=h?ent(h):{},p=S.profil
     <div class="two" style="margin-top:8px"><label class="form" style="display:grid;gap:4px"><span class="mute">Dormiu às</span><input id="rBed" type="time" value="${sleepTargets(S.today.date).bed}"></label><label class="form" style="display:grid;gap:4px"><span class="mute">Acordou às</span><input id="rWake" type="time" value="${hm(Math.min(now,toL(toMin(sleepTargets(S.today.date).wake))+180)%1440)}"></label></div>
     <div class="btns"><button class="btn solid full" data-do="rvsleep">Registrar</button></div><p class="mute" style="margin:6px 0 0">Até 30 min de diferença: no horário (+${h.bonus} XP).</p></div>`;
   const yx=S.history[S.history.length-1];if(yx&&dayOk(yx)===false&&!yx.sh)b+=`<p class="note" style="margin:10px 0 0">Ontem não deu, e tudo bem. O que importa é não falhar dois dias seguidos.</p>`;
-  if(S.pending.length){b+=`<p style="margin:14px 0 4px"><b>Ficou sem marcar</b></p>`+S.pending.map((q,i)=>{const x=H(q.id);if(!x)return"";return`<div class="mc"><div class="hd"><b>${esc(x.name)} <span class="mute">(${fmt(q.date)})</span></b></div><div class="acts"><button class="btn solid" data-do="rvok" data-v="${i}" data-g="1">Fiz</button><button class="btn red" data-do="rvok" data-v="${i}" data-g="0">Não fiz</button></div></div>`}).join("")+`<p class="mute" style="margin:6px 0 0">Sem resposta até o fim de hoje, conta como não feito.</p>`}
+  if(S.pending.length){b+=`<p style="margin:14px 0 4px"><b>Ficou sem marcar</b></p>`+S.pending.map((q,i)=>{const x=H(q.id);if(!x)return"";return`<div class="mc"><div class="hd"><b>${esc(x.name)} <span class="mute">(${fmt(q.date)})</span></b></div><div class="acts"><button class="btn solid" data-do="rvok" data-v="${i}" data-g="1">Fiz</button><button class="btn red" data-do="rvok" data-v="${i}" data-g="0">Não fiz</button></div></div>`}).join("")+`<p class="mute" style="margin:6px 0 0">Dá para confirmar até 2 dias depois. Sem resposta, conta como não feito.</p>`}
   if(!S.pending.length&&!(h&&S.areas.includes("sono")&&!e.done&&!e.failed))b+=`<p class="quiet">Tudo em dia.</p>`;
   openSheet(b+`<div class="btns"><button class="btn ghost full" data-do="close">Começar o dia</button></div>`,"__rv")}
 function maybeReview(){if(!S.onboarded||S.today.rv||sheetOpen||showing||wz||S.today.date!==vdate())return;if(needReview()){openReview();save()}}
@@ -974,7 +978,7 @@ function openExEdit(si,ei){const x=ei>=0?pdraft.splits[si].ex[ei]:X("",3,10,12,2
   <div class="two"><label>Repetições (mín.)<input id="xA" type="text" inputmode="numeric" value="${x.min}"></label><label>Repetições (máx.)<input id="xB" type="text" inputmode="numeric" value="${x.max}"></label></div>
   <p class="mute" style="margin:0">Faz sempre o mesmo número? Coloque igual nos dois (ex.: 10 e 10). Quando você bater o máximo em todas as séries, a carga sobe ${num(x.inc)} kg no próximo treino.</p></div>
   <p id="xErr" style="color:var(--red);margin:10px 0 0;font-size:.88rem"></p><div class="btns"><button class="btn solid full" data-do="exsave">Salvar exercício</button><button class="btn ghost full" data-do="exback">Voltar</button></div>`)}
-function parseWorkout(txt){const out=[];let cur=null;const head=/^(treino|dia|ficha|divis[aã]o|semana)\b|^[a-f]\s*[-–:).]\s*|:\s*$/i;
+function parseWorkout(txt){const out=[];let cur=null;const head=/^(treino|dia|ficha|divis[aã]o|semana|segunda|ter[cç]a|quarta|quinta|sexta|s[aá]bado|domingo|seg|ter|qua|qui|sex|s[aá]b|dom)\b|^[a-f]\s*[-–:).]\s*|:\s*$/i;
   for(const raw of String(txt||"").split(/\r?\n/)){const line=raw.trim();if(!line)continue;
     const m=line.match(/(\d+)\s*[x×X*]\s*(\d+)(?:\s*(?:-|–|a|até|\/)\s*(\d+))?/)||line.match(/(\d+)\s*s[ée]ries?\s*(?:de)?\s*(\d+)(?:\s*(?:-|–|a|até)\s*(\d+))?/i);
     if(!m&&(head.test(line)||!cur)){cur={id:uid(),name:line.replace(/:\s*$/,"").replace(/^[-•*·]+\s*/,"").trim()||`Treino ${String.fromCharCode(65+out.length)}`,ex:[]};out.push(cur);continue}
@@ -1121,7 +1125,7 @@ function addMinutes(h,n,act){if(n<=0)return;const e=ent(h);e.lm=e.lm||[];e.lm.pu
 function delMinutes(h,i){const e=ent(h),x=(e.lm||[])[i];if(!x)return;e.lm.splice(i,1);S.week.m[h.id]=Math.max(0,wMin(h)-x.v);S.stats.moveMin=Math.max(0,S.stats.moveMin-x.v);const xp=Math.min(40,Math.round(x.v/3));addXP(-xp);e.xp=Math.max(0,(e.xp||0)-xp);unhit(h.area);e.value=Math.max(0,(e.value||0)-x.v);if(!e.value)e.done=false}
 function delWater(i){const h=H("agua"),e=ent(h),x=(e.log||[])[i];if(!x)return;e.log.splice(i,1);e.value=+Math.max(0,(e.value||0)-x.v).toFixed(3);S.stats.water=+Math.max(0,S.stats.water-x.v).toFixed(3);
   if(e.done&&e.value<waterTarget()){addXP(-(e.xp||0));unhit(h.area);e.done=false;e.xp=0;S.stats.habits=Math.max(0,S.stats.habits-1)}}
-const logRows=(L,fmtv,del)=>L&&L.length?`<div class="lg">${L.map((x,i)=>({x,i})).reverse().map(({x,i})=>`<div class="lgr"><span class="mute">${hm(x.t%1440)}</span><span>${fmtv(x)}</span><button class="ghostx" data-do="${del}" data-v="${i}" aria-label="Apagar registro">${ic("trash")}</button></div>`).join("")}</div>`:`<p class="mute" style="margin:0">Nenhum registro hoje.</p>`;
+const logRows=(L,fmtv,del,extra="")=>L&&L.length?`<div class="lg">${L.map((x,i)=>({x,i})).reverse().map(({x,i})=>`<div class="lgr"><span class="mute">${hm(x.t%1440)}</span><span>${fmtv(x)}</span><button class="ghostx" data-do="${del}" data-v="${i}" ${extra} aria-label="Apagar registro">${ic("trash")}</button></div>`).join("")}</div>`:`<p class="mute" style="margin:0">Nenhum registro hoje.</p>`;
 
 /* ---------- cronômetro (leitura e estudo) ---------- */
 const timerTxt=()=>{if(!S.timer)return"";const s=Math.floor((Date.now()-S.timer.start)/1000);return`${Math.floor(s/60)}:${pad(s%60)}`};
@@ -1141,7 +1145,7 @@ function todayItems(){const L=[],d=S.today.date,wi=(dow(d)+6)%7;
     if(a==="leitura"||a==="estudo"){const h=H(a);if(h&&dueOn(h,d)){const e=ent(h),v=e.value||0,run=S.timer&&S.timer.id===a;
       L.push({id:a,a,done:!!e.done,t:a==="leitura"?"Leitura":esc(h.name),s:run?`<b class="tmr" data-timer>${timerTxt()}</b> cronômetro rodando`:`${num(v)} de ${num(h.target)} ${unitS(h)}${a==="leitura"&&h.book&&h.book.title&&!h.book.done?` · ${esc(h.book.title)}`:""}`,p:v/h.target,btn:run?{l:"Parar",do:"tstop"}:{l:"+",do:"open",v:a,plus:1}})}}
     if(a==="movimento"){const h=H("movimento");if(h&&h.kind==="steps"&&dueOn(h,d)){const e=ent(h),v=e.value||0;L.push({id:"movimento",a,done:!!e.done,t:"Passos",s:`${fmtInt(v)} de ${fmtInt(h.target)} passos`,p:v/h.target,btn:{l:"Registrar",do:"open",v:"movimento"}})}}
-    if(a==="corpo"){const h=H("corpo");if(h&&!wCount(h)){const pm=Math.min(...h.freq.days.map(x=>(x+6)%7));if(wi>=pm)L.push({id:"corpo",a,done:false,t:"Pesagem da semana",s:`último: ${num(S.profile.weight)} kg`,btn:{l:"Pesar",do:"open",v:"corpo"}})}}
+    if(a==="corpo"){const h=H("corpo");if(h&&!wCount(h)){const pm=Math.min(...h.freq.days.map(x=>(x+6)%7));if(wi>=pm)L.push({id:"corpo",a,done:false,t:"Pesagem",s:`da semana · último: ${num(S.profile.weight)} kg`,btn:{l:"Pesar",do:"open",v:"corpo"}})}}
     if(a==="habitos")for(const h of S.habits.filter(x=>x.area==="habitos"&&dueOn(x,d))){const e=ent(h);if(h.kind==="avoid"){L.push({id:h.id,a,avoid:1,done:!e.broken,fail:!!e.broken,t:esc(h.name),s:e.broken?"quebrou hoje":"mantendo · toque em Quebrei se escapar",btn:e.broken?null:{l:"Quebrei",do:"broke",v:h.id}});continue}L.push({id:h.id,a,done:!!e.done,t:esc(h.name),s:freqTxt(h),btn:e.done?null:{l:"Feito",do:"check",v:h.id,chk:1}})}}
   return L}
 function weekItems(){const L=[],inToday=new Set(todayItems().map(x=>x.id));for(const a of orderedAreas()){
@@ -1160,7 +1164,7 @@ function viewHoje(){const L=todayItems(),pend=L.filter(x=>!x.done),done=L.filter
   const half=Math.ceil(L.length/2),okToday=done.length>=half,pl=(n,a,b)=>`${n} ${n===1?a:b}`;
   h+=`<section class="sum"><div class="sum-top"><div class="ringw ${S.today.full?"full":""}">${ring(p)}<b>${done.length}/${L.length}</b></div><div class="sumt"><b>${!L.length?"Escolha suas áreas":pend.length?`Faltam ${pl(pend.length,"item","itens")} hoje`:"Dia completo"}</b>
     <small>${L.length?(okToday?`<span class="okt">${ic("check")} Hoje já conta para a sequência</span>`:`Faça mais ${half-done.length} para hoje contar na sequência`):""}</small></div></div>
-    <div class="sum-stats"><div><span>Sequência</span><b>${pl(S.streak,"dia","dias")}${shieldReady()?`<i class="shd" title="Escudo pronto">escudo</i>`:""}</b></div>
+    <div class="sum-stats"><div><span>Sequência</span><b>${pl(S.streak,"dia","dias")}${S.streakPend?`<i class="shd" style="color:var(--gold);border-color:rgba(255,209,102,.5)" title="Confirme no Bom dia">+${S.streakPend-S.streak} a confirmar</i>`:shieldReady()?`<i class="shd" title="Escudo pronto">escudo</i>`:""}</b></div>
     ${S.best<7?`<div><span>1ª semana</span><b>${Math.min(S.streak,7)}/7</b></div>`:`<div><span>Recorde</span><b>${pl(S.best,"dia","dias")}</b></div>`}
     <div><span>Nível ${S.level}</span><b>${S.xp}/${need(S.level)} XP</b></div></div><span class="mbar"><i style="width:${Math.min(100,S.xp/need(S.level)*100)}%"></i></span></section>`;
   if(S._upd)h+=`<button class="banner" data-do="update">${ic("sun")}<span><b>Nova versão disponível</b><small>v${esc(S._upd)} · toque para atualizar agora</small></span>${ic("chev")}</button>`;
@@ -1210,6 +1214,7 @@ function viewAjustes(){return`<section class="win"><div class="tab"><span>Seus d
   <div class="two"><button class="btn full" data-do="export">Exportar backup</button><button class="btn full" data-do="importb">Importar backup</button></div><input type="file" id="impFile" accept="application/json,.json" class="hide">
   <p class="mute" style="margin:0">Tudo fica só neste aparelho. ${S.lastBackup?`Último backup: ${fmt(S.lastBackup)}.`:"Nenhum backup ainda."}</p></div></section>
   <section class="win"><div class="tab"><span>Pausa</span></div><div class="bd">${S.paused?`<p class="mute" style="margin:0">Pausado ${S.paused.until?`até ${fmt(S.paused.until)}`:"até você voltar"}.</p><div class="btns"><button class="btn solid full" data-do="resume">Voltar agora</button></div>`:`<p class="mute" style="margin:0 0 8px">Férias, doença ou viagem: nada tira ponto e a sequência fica congelada.</p><div class="chips">${[[1,"Hoje"],[3,"3 dias"],[7,"7 dias"],[0,"Até eu voltar"]].map(([v,l])=>`<button class="chip" data-do="pause" data-v="${v}">${l}</button>`).join("")}</div>`}</div></section>
+  ${(S.errors||[]).length?`<section class="win"><div class="tab"><span>Diagnóstico</span></div><div class="bd"><p class="mute" style="margin:0 0 6px">${S.errors.length} erro(s) anotado(s). Se algo travou, copie e me mande.</p>${S.errors.slice(-3).reverse().map(x=>`<div class="srow"><span class="mute">${esc(x.t.slice(5,16).replace("T"," "))} · ${esc(x.w)}</span><b style="font-size:.8rem">${esc(x.m.slice(0,40))}</b></div>`).join("")}<div class="two" style="margin-top:10px"><button class="btn full" data-do="copy" data-v="${esc(JSON.stringify(S.errors.slice(-10)))}">Copiar</button><button class="btn ghost full" data-do="errclear">Limpar</button></div></div></section>`:""}
   <section class="win"><div class="tab"><span>Sobre</span></div><div class="bd"><div class="srow"><span>Versão</span><b>v${APP_VERSION}</b></div><div class="srow"><span>Atualizada em</span><b>${APP_DATE}</b></div>${S._upd?`<div class="btns"><button class="btn solid full" data-do="update">Atualizar para a v${esc(S._upd)}</button></div>`:`<div class="btns"><button class="btn full" data-do="checkupd">Procurar atualização</button></div>`}</div></section>
   <section class="win"><div class="tab"><span>Preferências</span></div><div class="bd form"><label class="check sw"><span>Som</span><input type="checkbox" id="sSound" ${S.sound?"checked":""}></label><label class="check sw"><span>Modo teste<small class="mute" style="display:block">avançar o relógio para testar</small></span><input type="checkbox" id="sTest" ${S.test?"checked":""}></label>
   <button class="btn red full" data-do="reset">${confirmReset?"Toque de novo para apagar tudo":"Apagar tudo e recomeçar"}</button></div></section>`}
@@ -1250,7 +1255,7 @@ function openQty(id){const h=H(id),e=ent(h),v=e.value||0,pages=h.unit==="página
   b+=`<p class="lbl">Adicionar</p><div class="qgrid">${Q.map(n=>`<button class="qb" data-do="qadd" data-id="${id}" data-v="${n}"><b>+${n}</b><span>${unitS(h)}</span></button>`).join("")}</div>
   <div class="inrow"><input id="qIn" type="text" inputmode="numeric" placeholder="Outra quantidade" autocomplete="off"><button class="btn" data-do="qaddv" data-id="${id}">Adicionar</button></div>`;
   if(id==="leitura"&&pages&&bk&&bk.total&&!bk.done)b+=`<p class="lbl">${esc(bk.title||"Livro atual")} · página ${bk.cur||0} de ${bk.total}</p><div class="inrow"><input id="pgIn" type="text" inputmode="numeric" placeholder="Estou na página…" autocomplete="off"><button class="btn" data-do="pgset">Atualizar</button></div>`;
-  b+=`<p class="lbl">Registros de hoje</p>${logRows(e.lq,x=>`+${num(x.v)} ${unitS(h)}`,"qdel")}`;
+  b+=`<p class="lbl">Registros de hoje</p>${logRows(e.lq,x=>`+${num(x.v)} ${unitS(h)}`,"qdel",`data-id="${id}"`)}`;
   openSheet(b+`<div class="btns"><button class="btn ghost full" data-do="close">Fechar</button></div>`,id)}
 const PACE={Caminhada:12,Corrida:6,Bike:3,Natação:25};
 function openMove(){const h=H("movimento");if(h.kind==="steps")return openSteps();const e=ent(h),m=wMin(h),g=wReq(h),run=S.timer&&S.timer.id==="movimento";S._act=S._act||h.name;
@@ -1291,20 +1296,21 @@ function openWeekReview(){const w=(S.weekLog||[]).slice(-1)[0];if(!w)return;S.wk
 function commit(){checkFullDay();save();render();if(sheetOpen&&sheetId){if(sheetId==="__rv")openReview();else if(sheetId!=="__wk")openItem(sheetId)}}
 Object.assign(A,{
   menu(){setMenu(true)},
+  errclear(){S.errors=[];save();render()},
   ordmv(b){const o=orderedAreas(),a=b.dataset.v,k=o.indexOf(a),t=k+(+b.dataset.d);if(t<0||t>=o.length)return;[o[k],o[t]]=[o[t],o[k]];S.order=o;save();render()},
-  stepsave(){const h=H("movimento"),e=ent(h),v=Math.round(pnum(String($("#stIn").value).replace(/\./g,"")));if(!(v>=0))return;const old=e.value||0;e.value=v;S.stats.steps=Math.max(0,(S.stats.steps||0)+v-old);
+  stepsave(){const h=H("movimento");if(!h)return;const e=ent(h),v=Math.round(pnum(String($("#stIn").value).replace(/\./g,"")));if(!(v>=0))return;if(v>100000){toast("Número de passos alto demais","red");return}const old=e.value||0;e.value=v;S.stats.steps=Math.max(0,(S.stats.steps||0)+v-old);
     if(!e.done&&v>=h.target)complete(h,h.xp,`Passos: meta batida · +${h.xp} XP`);else if(e.done&&v<h.target){addXP(-(e.xp||0));unhit(h.area);e.done=false;e.xp=0;toast(`Passos: ${fmtInt(v)}`)}else toast(`Passos: ${fmtInt(v)} de ${fmtInt(h.target)}`);
     if(v>=100000*Math.floor(((S.stats.steps||0))/100000)&&S.stats.steps>=100000)lore("👟",`${fmtInt(Math.floor(S.stats.steps/100000)*100000)} passos registrados`,"sp"+Math.floor(S.stats.steps/100000));commit()},
   movemode(b){const to=b.dataset.v,old=H("movimento");const n=to==="steps"?hb({id:"movimento",area:"movimento",kind:"steps",name:"Passos",unit:"passos",target:7000,xp:20,loss:15}):hb({id:"movimento",area:"movimento",kind:"minutes",name:"Caminhada",unit:"min",freq:{mode:"weekly",times:0,days:[],goal:150},xp:0,bonus:30,loss:30});
     n.created=S.today.date;for(const k in old)delete old[k];Object.assign(old,n);S.today.e.movimento={};delete S.week.m.movimento;log(to==="steps"?"Movimento agora é medido em passos por dia.":"Movimento agora é medido em minutos por semana.");toast(to==="steps"?"Agora é por passos · meta 7.000 por dia":"Agora é por minutos · meta 150 por semana");save();render();openMove()},
-  mkm(){const km=pnum($("#kmIn").value),p=PACE[S._act];if(!(km>0)||!p)return;addMinutes(H("movimento"),Math.round(km*p),S._act);commit()},
+  mkm(){const km=pnum($("#kmIn").value),p=PACE[S._act];if(!(km>0)||!p)return;if(km>100){toast("Distância alta demais","red");return}addMinutes(H("movimento"),Math.round(km*p),S._act);commit()},
   trainsetup:()=>openTrainSetup(),
   impopen(){S._impT=S._impT||"";openImport()},
   impparse(){const t=$("#impT").value;S._impT=t;const r=parseWorkout(t);if(!r.length){toast("Não encontrei exercícios. Use uma linha por exercício, ex.: Supino reto 4x10","red");return}S._imp=r;openImport(r)},
   impsave(){const r=S._imp;if(!r||!r.length)return;S.program={name:"Meu treino",created:S.today.date,basic:false,splits:r,next:0,sessions:(S.program&&S.program.sessions)||[]};delete S._imp;delete S._impT;log(`Treino cadastrado: ${r.length} divisão(ões).`);closeSheet();tab="treino";save();render();toast("Treino salvo")},
   exedit(b){readProg();openExEdit(+b.dataset.s,+b.dataset.v)},
   exback(){renderProg()},
-  exsave(){const g=i=>$("#"+i),n=g("xN").value.trim();if(!n){g("xErr").textContent="Qual é o exercício?";return}const{si,ei}=S._ex,sets=clamp(Math.round(pnum(g("xS").value))||3,1,10),a=clamp(Math.round(pnum(g("xA").value))||10,1,100),bb=clamp(Math.round(pnum(g("xB").value))||a,1,100),w=pnum(g("xW").value);
+  exsave(){const g=i=>$("#"+i),n=g("xN").value.trim();if(!n){g("xErr").textContent="Qual é o exercício?";return}const{si,ei}=S._ex,sets=clamp(Math.round(pnum(g("xS").value))||3,1,10),a=clamp(Math.round(pnum(g("xA").value))||10,1,100),bb=clamp(Math.round(pnum(g("xB").value))||a,1,100),w=Math.min(500,pnum(g("xW").value));
     const base=ei>=0?pdraft.splits[si].ex[ei]:X(n,sets,a,bb,/agach|terra|leg|stiff|pélv|pelv/i.test(n)?5:2.5);Object.assign(base,{name:n,sets,min:Math.min(a,bb),max:Math.max(a,bb),weight:w>0?w:0});if(ei<0)pdraft.splits[si].ex.push(base);renderProg()},
   update(){toast("Atualizando…");const go=()=>location.reload();if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration)navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{}).finally(()=>setTimeout(go,400));else go()},
   checkupd(){checkUpdate(true)},
@@ -1312,20 +1318,20 @@ Object.assign(A,{
   sgapply(b){const x=(S._sg||[])[+b.dataset.k];if(!x)return;if(x.act==="ics"){A.ics();return}const h=H(x.id);if(!h)return;if(x.f==="target")h.target=x.v;if(x.f==="times")h.freq.times=x.v;if(x.f==="goal")h.freq.goal=x.v;log(`Meta ajustada: ${h.name}.`);toast("Meta ajustada");save();render();openWeekReview()},
   photo2(){const i=$("#photoFile2");if(i)i.click()},
   photodel(){if(!confirm("Remover a foto da sua carta?"))return;S.photo=null;save();render();toast("Foto removida")},open(b){openItem(b.dataset.v)},
-  wq(b){addWater(+b.dataset.v/1000);commit()},wqv(){const ml=Math.round(pnum($("#wml").value));if(ml>0){addWater(ml>=20?ml/1000:ml);commit()}},wdel(b){delWater(+b.dataset.v);commit()},
+  wq(b){addWater(+b.dataset.v/1000);commit()},wqv(){const ml=Math.round(pnum($("#wml").value));if(ml>5000){toast("Valor alto demais para um registro (máx. 5 L)","red");return}if(ml>0){addWater(ml>=20?ml/1000:ml);commit()}},wdel(b){delWater(+b.dataset.v);commit()},
   fui(){const h=H("treino");if(h&&!ent(h).done){addSession(h);const P=program(),e=ent(h);if(P&&P.splits.length){const k=S._split!=null?S._split:P.next%P.splits.length;e.splitIdx=k;e.split=P.splits[k].name;P.next=(k+1)%P.splits.length;delete S._split}}commit()},
   fuilog(){const h=H("treino");if(h&&!ent(h).done)addSession(h);save();render();closeSheet();setTimeout(openSession,200)},
   pick(b){S._split=+b.dataset.v;if(sheetId==="treino")openTrain();else openSession()},
   broke(b){const h=H(b.dataset.v);if(!h)return;ent(h).broken=true;log(`${h.name}: quebrou hoje.`);toast("Anotado. Amanhã é outro dia.","red");commit()},unbroke(b){const h=H(b.dataset.v);if(!h)return;ent(h).broken=false;toast("Desfeito");commit()},
-  qadd(b){addQty(H(b.dataset.id),+b.dataset.v);commit()},qaddv(b){const v=pnum($("#qIn").value);if(v>0){addQty(H(b.dataset.id),v);commit()}},qdel(b){delQty(H(sheetId),+b.dataset.v);commit()},
-  pgset(){const h=H("leitura"),pg=Math.round(pnum($("#pgIn").value)),d=pg-(h.book.cur||0);if(pg>0&&d>0){addQty(h,d);commit()}else toast("Informe uma página depois da atual","red")},
+  qadd(b){const h=H(b.dataset.id);if(!h)return;addQty(h,+b.dataset.v);commit()},qaddv(b){const v=pnum($("#qIn").value);if(v>1000){toast("Valor alto demais para um registro","red");return}if(v>0&&H(b.dataset.id)){addQty(H(b.dataset.id),v);commit()}},qdel(b){const h=H(b.dataset.id||sheetId);if(!h)return;delQty(h,+b.dataset.v);commit()},
+  pgset(){const h=H("leitura");if(!h||!h.book)return;const pg=Math.round(pnum($("#pgIn").value)),d=pg-(h.book.cur||0);if(pg>0&&d>0){addQty(h,d);commit()}else toast("Informe uma página depois da atual","red")},
   tstart(b){S.timer={id:b.dataset.v,start:Date.now()};save();commit();toast("Cronômetro iniciado · pode fechar o app")},
   tcancel(){S.timer=null;commit()},
   tstop(){const t=S.timer;if(!t)return;const min=Math.max(1,Math.round((Date.now()-t.start)/60000)),h=H(t.id);S.timer=null;if(!h){commit();return}
     if(h.kind==="minutes"){addMinutes(h,min,S._act||h.name);commit()}else if(h.unit==="min"){addQty(h,min);commit()}else{save();render();openSheet(shHd(h.id,"Leitura",`Você leu por ${min} min`)+`<p class="lbl">Quantas páginas?</p><div class="inrow"><input id="qIn" type="text" inputmode="numeric" autocomplete="off" placeholder="páginas"><button class="btn solid" data-do="qaddv" data-id="${h.id}">Registrar</button></div><div class="btns"><button class="btn ghost full" data-do="close">Fechar</button></div>`,h.id)}},
-  mact(b){S._act=b.dataset.v;openMove()},madd(b){addMinutes(H("movimento"),+b.dataset.v,S._act);commit()},maddv(){const v=Math.round(pnum($("#mIn").value));if(v>0){addMinutes(H("movimento"),v,S._act);commit()}},mdel(b){delMinutes(H("movimento"),+b.dataset.v);commit()},
+  mact(b){S._act=b.dataset.v;openMove()},madd(b){addMinutes(H("movimento"),+b.dataset.v,S._act);commit()},maddv(){const v=Math.round(pnum($("#mIn").value));if(v>600){toast("Máximo de 600 min por registro","red");return}if(v>0){addMinutes(H("movimento"),v,S._act);commit()}},mdel(b){delMinutes(H("movimento"),+b.dataset.v);commit()},
   check(b){const h=H(b.dataset.v||b.dataset.id);if(!h)return;const e=ent(h);if(e.done)return;if(isWeekly(h))S.week.c[h.id]=wCount(h)+1;complete(h,h.xp);commit()},
-  hundo(b){const h=H(b.dataset.v||b.dataset.id),e=ent(h);if(!h||!e.done||e.logged)return;addXP(-(e.xp||0));unhit(h.area);if(isWeekly(h))S.week.c[h.id]=Math.max(0,wCount(h)-1);if(h.area==="treino")S.stats.workouts=Math.max(0,S.stats.workouts-1);
+  hundo(b){const h=H(b.dataset.v||b.dataset.id);if(!h)return;const e=ent(h);if(!e.done||e.logged)return;addXP(-(e.xp||0));unhit(h.area);if(isWeekly(h))S.week.c[h.id]=Math.max(0,wCount(h)-1);if(h.area==="treino")S.stats.workouts=Math.max(0,S.stats.workouts-1);
     e.done=false;e.xp=0;S.stats.habits=Math.max(0,S.stats.habits-1);toast("Desfeito");commit()},
   task1(){const i=$("#tOne"),t=(i.value||"").trim();if(!t)return;S.tasks.push({id:uid(),t:t.slice(0,120),pri:2,done:false,c:S.today.date});save();render();const n=$("#tOne");if(n)n.focus()}
 });
@@ -1346,19 +1352,33 @@ function urlAction(){const q=new URLSearchParams(location.search);if(!q.toString
   if(a==="agua"&&H("agua")){addWater(v>0?(v>10?v/1000:v):S.profile.glass/1000);commit()}else if(a==="treino"&&H("treino"))train();else if(a==="ler"&&H("leitura")){addQty(H("leitura"),v||H("leitura").steps[0]);commit()}
   else if(a==="estudo"&&H("estudo")){addQty(H("estudo"),v||15);commit()}else if(a==="mover"&&H("movimento")){addMinutes(H("movimento"),v||30);commit()}else if(a==="acordei")openReview();else if(a)toast("Ação do Atalho não reconhecida","red")}
 document.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(g){tab=g.dataset.go;confirmReset=false;setMenu(false);if(sheetOpen)closeSheet();render();scrollTo(0,0);return}
-  const b=e.target.closest("[data-do]");if(!b)return;const f=A[b.dataset.do];if(f)f(b)});
+  const b=e.target.closest("[data-do]");if(!b)return;const f=A[b.dataset.do];if(f){try{f(b)}catch(err){reportErr(err,b.dataset.do)}}});
 document.addEventListener("change",e=>{const t=e.target;
-  if(t.id==="impFile"&&t.files[0]){t.files[0].text().then(tx=>{try{const d=migrate(JSON.parse(tx));if(!d)throw 0;S=d;save();render();toast("Backup restaurado")}catch(x){toast("Arquivo de backup inválido","red")}});return}
+  if(t.id==="impFile"&&t.files[0]){t.files[0].text().then(tx=>{try{const d=migrate(JSON.parse(tx));if(!d)throw 0;S=repairState(d);S._av=(S._av||0)+1;save();render();toast("Backup restaurado")}catch(x){toast("Arquivo de backup inválido","red")}});return}
   if(t.id==="photoFile2"&&t.files[0]){resizePhoto(t.files[0]).then(u=>{S.photo=u;save();render();toast("Foto atualizada")}).catch(()=>toast("Não consegui ler essa foto","red"));return}
   if(t.id==="photoFile"&&t.files[0]){resizePhoto(t.files[0]).then(u=>{wz.d.photo=u;render()}).catch(()=>toast("Não consegui ler essa foto","red"));return}
   if(t.id==="wWeOn"&&wz){wzRead();wz.d.weOn=t.checked;render();return}if(t.id==="sSound"){S.sound=t.checked;save()}if(t.id==="sTest"){S.test=t.checked;if(!S.test)S.offset=0;save();render()}if(t.dataset.rh&&hdraft){readHabitEdit();renderHabitEdit()}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(sheetOpen)closeSheet();setMenu(false)}if(e.key==="Enter"&&e.target.id==="tOne"){e.preventDefault();A.task1()}});
 $("#dov").onclick=()=>setMenu(false);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden){loop();checkUpdate()}});
+function repairState(d){const df=defaultState();if(!d||typeof d!=="object")return df;
+  for(const k of ["areas","habits","tasks","lore","history","pending","log"])if(!Array.isArray(d[k]))d[k]=[];
+  d.profile=Object.assign(PROFILE0(),d.profile||{});d.stats=Object.assign({},df.stats,d.stats||{});for(const k in d.stats)if(k!=="since"&&!Number.isFinite(d.stats[k]))d.stats[k]=0;
+  if(!d.today||!d.today.date)d.today=newDay(todayIso());d.today.e=d.today.e||{};d.today.ah=d.today.ah||{};
+  if(!d.week||!d.week.key)d.week=newWeek(d.today.date);d.week.c=d.week.c||{};d.week.m=d.week.m||{};
+  d.areas=[...new Set(d.areas)].filter(a=>AREAS[a]);d.habits=d.habits.filter(h=>h&&h.id&&AREAS[h.area]&&h.freq);for(const h of d.habits){if(!Array.isArray(h.freq.days))h.freq.days=[];if(!Number.isFinite(h.xp))h.xp=10;if(!Number.isFinite(h.loss))h.loss=10}
+  const ids=new Set(d.habits.map(h=>h.id));d.pending=d.pending.filter(p=>p&&p.date&&ids.has(p.id));d.tasks=d.tasks.filter(t=>t&&t.id&&typeof t.t==="string");
+  if(!Number.isFinite(d.xp)||d.xp<0)d.xp=0;if(!Number.isFinite(d.level)||d.level<1)d.level=1;if(!Number.isFinite(d.streak)||d.streak<0)d.streak=0;if(!Number.isFinite(d.best))d.best=0;
+  if(d.timer&&(!ids.has(d.timer.id)||!Number.isFinite(d.timer.start)))d.timer=null;
+  if(d.program){if(!Array.isArray(d.program.splits))d.program=null;else{d.program.splits=d.program.splits.filter(s=>s&&typeof s.name==="string");for(const s of d.program.splits)if(!Array.isArray(s.ex))s.ex=[];d.program.sessions=Array.isArray(d.program.sessions)?d.program.sessions:[];if(!Number.isFinite(d.program.next))d.program.next=0;if(!d.program.splits.length)d.program=null}}
+  d.body=d.body&&Array.isArray(d.body.log)?d.body:{log:[],start:null,goalKg:null};d.attrs=d.attrs||{};return d}
+function reportErr(err,where){try{S.errors=(S.errors||[]).concat([{t:new Date().toISOString(),w:where||"",m:String(err&&err.message||err).slice(0,200),v:APP_VERSION}]).slice(-20);save()}catch(_){}
+  try{toast("Algo deu errado nessa ação. Anotei o erro; tente de novo.","red")}catch(_){}try{render()}catch(_){}}
+window.addEventListener("error",e=>{if(e&&e.message&&/Script error/.test(e.message))return;reportErr(e.error||e.message,"tela")});
 function checkUpdate(manual){if(!window.fetch||location.protocol==="file:")return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json()).then(j=>{if(j&&j.v&&j.v!==APP_VERSION){S._upd=j.v;render()}else{delete S._upd;if(manual)toast("Você já está na versão mais nova")}}).catch(()=>{if(manual)toast("Sem internet para verificar","red")})}
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
-if(S.onboarded&&!S.rulesV){S.rulesV=2;S.attrBase={};for(const a in (S.attrs||{}))S.attrBase[a]=S.attrs[a].ema;S.attrFrom=S.today.date;for(const h of S.habits){if(h.id==="agua"&&h.xp===20)h.xp=15;if(h.area==="habitos"&&h.kind==="check"&&!isWeekly(h)&&/^(sem|não|nao|parar de|evitar)\s/i.test(h.name))h.kind="avoid"}save()}
+S=repairState(S);if(S.onboarded&&!S.rulesV){rulesMigrate(S);save()}
 delete S._upd;setTimeout(()=>checkUpdate(),1500);
 setInterval(()=>{loop();restTick();timerTick();const k=$("#clk");if(k)k.textContent=hm(vmin()%1440)},1000);render();loop();urlAction();
 
