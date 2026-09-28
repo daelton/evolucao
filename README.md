@@ -1,38 +1,18 @@
 # Evolução
 
-App pessoal de rotina inspirado no Sistema de Solo Leveling: nível, rank, missões de rotina com horário, missões relâmpago (a qualquer hora acordado) e trilha de desafios.
+App pessoal de evolução: sua rotina real alimenta uma **carta com a sua foto** que sobe de nota com a sua constância.
 
-**Abrir:** https://daelton.github.io/evolucao
+**Abrir:** https://daelton.github.io/evolucao · no iPhone: Safari → Compartilhar → Adicionar à Tela de Início.
 
-## Instalar no iPhone
-Safari → abrir o link → Compartilhar → Adicionar à Tela de Início.
+## Módulos
+- **Perfil:** peso, altura (opcional), objetivo, se já treina e dias por semana. Configurado na primeira vez, editável em Perfil.
+- **Água:** peso × 35 ml (25 ml/kg se IMC ≥ 30) + 0,5 L por treino ou esporte no dia, dividida em rodadas (manhã, tarde, treino, noite). Estimativa; quem tem problema renal ou cardíaco segue o médico.
+- **Treino:** programa inicial gerado pelo objetivo e pelos dias (2–3: corpo inteiro · 4: superior/inferior · 5: superior/inferior + empurrar/puxar/pernas · 6: empurrar/puxar/pernas) ou o seu próprio treino. Segue em sequência, calibra a carga no primeiro treino, progride por repetições, detecta recordes e estagnação. Programa básico: revise a cada 8–12 semanas.
+- **Corpo:** pesagem semanal atualiza a água e mostra a tendência do peso.
+- **Rotina:** missões por tipo de tempo: no horário (acordar, dormir), do dia (ler, estudar) e da semana (treino, esporte, pesagem). Bom dia confirma o que ficou sem marcar.
+- **Carta:** 5 atributos (Físico, Mente, Disciplina, Saúde, Carreira) = sua forma recente. Bronze < 65, prata 65–74, ouro ≥ 75, "Em forma" com 90% da rotina em 7 dias. Nível por XP (não cumprir tira XP).
 
 ## Links para o app Atalhos
-| Ação | Link |
-|---|---|
-| Acordei | `https://daelton.github.io/evolucao/?acao=acordei` |
-| Cheguei na academia | `https://daelton.github.io/evolucao/?acao=academia` |
-| +250 ml de água | `https://daelton.github.io/evolucao/?acao=agua` |
-| Ler N páginas | `https://daelton.github.io/evolucao/?acao=ler&v=10` |
-| Indo dormir | `https://daelton.github.io/evolucao/?acao=dormir` |
+`?acao=acordei` · `?acao=academia` · `?acao=agua` (ou `&v=500` ml) · `?acao=ler&v=10` · `?acao=dormir`
 
-## Como as missões funcionam (v0.6)
-- **No horário** (acordar, dormir): no horário = bônus; atrasado = XP normal; muito atrasado = não cumprida. Dá para registrar depois com a hora real.
-- **Do dia** (ler, água): qualquer hora do dia; no momento sugerido (ex.: ônibus) = bônus. O que ficar sem marcar é confirmado no **Bom dia** da manhã seguinte.
-- **Da semana** (academia, vôlei): N vezes por semana, em qualquer dia. Cobrança no domingo, por sessão que faltou. "Não teve" não conta.
-- Não cumprida tira XP e zera a sequência. Escudo, pausa e desfazer continuam valendo.
-
-## Integrações (grátis)
-- **Calendário do iPhone**: Rotina → Integrações → gera eventos recorrentes com alerta nativo e link que marca a missão.
-- **E-mail**: resumo da semana pronto no app Mail.
-- **Localização**: salve o local da academia; com o app aberto, a presença é marcada sozinha.
-- **Atalhos**: links `?acao=` para automações (alarme, chegar a um local, Modo Sono).
-- **Google Agenda (beta)**: lê os compromissos do dia (precisa de um Client ID gratuito do Google).
-- **Pausa**: férias ou doença sem perder pontos nem sequência.
-
-## Estrutura
-- `index.html` — app completo (camadas: agenda → regras → motor → efeitos → telas → ações)
-- `sw.js` — funcionamento offline
-- `manifest.webmanifest` + `icons/` — instalação na Tela de Início
-
-Dados ficam salvos no próprio aparelho (use Ajustes → Exportar backup).
+Dados ficam só no aparelho (Perfil → Ajustes → Exportar backup).
