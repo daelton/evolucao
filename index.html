@@ -405,6 +405,12 @@ summary.sec{cursor:pointer;list-style:none}.donegrp{border:0;padding:0}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:middle}
 .ri .ic{color:var(--mute);width:18px;height:18px}
 .toast{top:calc(env(safe-area-inset-top,0px) + 70px);border-radius:12px;font-family:Barlow,sans-serif}
+.pc-photo{background:none;border:0;padding:0;position:relative;cursor:pointer}
+.pc-add{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#1a1206;opacity:.8}.pc-add .ic{width:30px;height:30px}.pc-add small{font:600 .78rem Barlow,sans-serif}
+.pc-photo .ph0{font-size:0}
+.btn .ic{vertical-align:-4px;margin-right:4px}
+details.how{margin-top:12px;border:0}details.how summary{color:#9cc6ff;font-weight:600;cursor:pointer;list-style:none}details.how p{margin:8px 0 0}
+button.dw-hd{width:100%;background:none;border:0;border-bottom:1px solid var(--hair);color:var(--ink);text-align:left}
 </style>
 </head>
 <body>
@@ -669,7 +675,7 @@ const photoHTML=(cls,ph=S.photo,nm=S.name)=>ph?`<img class="${cls}" src="${ph}" 
 const goalTag=()=>({perder:"DEFINIÇÃO",ganhar:"MASSA",manter:"SAÚDE"})[S.profile.goal]||"EVOLUÇÃO";
 function bigCard(){const v=ovr(),t=cardTheme(),A=S.areas.slice(),cols=A.length<=5?Math.max(1,A.length):A.length===6?3:4;
   return`<div class="pcard t-${t.id}" role="img" aria-label="Carta de ${esc(S.name)}: ${v}, ${t.l}"><div class="pc-top"><div class="pc-ovr">${v}</div><div class="pc-pos">${goalTag()}</div><div class="pc-lvl">NV ${S.level}</div></div>
-  <div class="pc-photo">${photoHTML("pc-img")}</div><div class="pc-name">${esc((S.name||"Você").split(" ")[0].toUpperCase())}</div>
+  <button class="pc-photo" data-do="photo2" aria-label="${S.photo?"Trocar foto":"Adicionar foto"}">${photoHTML("pc-img")}${S.photo?"":`<span class="pc-add">${ic("cam")}<small>Adicionar foto</small></span>`}</button><div class="pc-name">${esc((S.name||"Você").split(" ")[0].toUpperCase())}</div>
   <div class="pc-attrs" style="grid-template-columns:repeat(${cols},1fr)">${A.map(a=>`<div><b>${attrVal(a)}</b><span>${esc(areaShort(a))}</span></div>`).join("")||"<div><b>50</b><span>—</span></div>"}</div><div class="pc-tier">${t.l}</div></div>`}
 function strip(){const wk=weekKey(S.today.date);return`<section class="win strip">${[1,2,3,4,5,6,0].map((d,i)=>{const date=addDays(wk,i),x=S.history.find(y=>y.date===date);
   return`<div class="${date===S.today.date?"t":x&&x.due?(x.done+(x.pend||0)>=x.due?"f":"x"):""}"><i></i>${DOW[d]}</div>`}).join("")}</section>`}
@@ -776,7 +782,7 @@ function wzApply(){const d=wz.d,first=!S.onboarded,p=S.profile;S.name=d.name||S.
     S.program=d.gymKind==="programa"?{name:"Meu treino",created:S.today.date,basic:false,splits:[{id:uid(),name:"Treino A",ex:[]}],next:0,sessions:[]}:genProgram(mp)}
   if(S.body.start==null){S.body.start=p.weight;S.body.log.push({date:S.today.date,kg:p.weight})}
   if(first){S.onboarded=true;delete S.migrated;S.today=newDay(vdate());S.week=newWeek(S.today.date,daysLeft());S.stats.since=S.today.date;lore("🚀",`${S.name} começou a evolução`,"start")}
-  const mode=wz.mode;wz=null;save();fx("lvl");render();
+  const mode=wz.mode;wz=null;if(mode==="edit")tab="evolucao";save();fx("lvl");render();
   if(first)queue({k:"msg",tab:"Evolução",title:"Sua carta nasceu",lines:["Ela começa em 50 e sobe com a sua constância. Cada área é um atributo.","Na tela Hoje fica cada área com o que falta e botões de um toque.","Esqueceu de marcar? De manhã o app pergunta o que ficou de ontem."]});
   else toast("Salvo");if(mode==="new"||mode==="update")tab="hoje";if(A.includes("treino")&&S.program&&!S.program.splits.some(x=>x.ex.length)){tab="treino";render();openProg()}}
 
@@ -904,7 +910,7 @@ function resizePhoto(file){return new Promise((res,rej)=>{const r=new FileReader
    v3 · Interface: barra superior + menu lateral, Hoje como checklist,
    registros rápidos sem campos obrigatórios (ex.: treino = "Fui")
    ===================================================================== */
-const IC={drop:"M12 2.7s-6 6.6-6 11a6 6 0 0 0 12 0c0-4.4-6-11-6-11z",dumb:"M6 6v12M18 6v12M3 9v6M21 9v6M6 12h12",act:"M22 12h-4l-3 9L9 3l-3 9H2",moon:"M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z",
+const IC={grid:"M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z",cam:"M4 8h3l2-3h6l2 3h3v12H4zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",edit:"M4 20h4L19 9l-4-4L4 16zM13 7l4 4",drop:"M12 2.7s-6 6.6-6 11a6 6 0 0 0 12 0c0-4.4-6-11-6-11z",dumb:"M6 6v12M18 6v12M3 9v6M21 9v6M6 12h12",act:"M22 12h-4l-3 9L9 3l-3 9H2",moon:"M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z",
   book:"M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z",cap:"M22 10 12 5 2 10l10 5 10-5zM6 12v5c3 2 9 2 12 0v-5",scale:"M4 20h16M5 20l1-12h12l1 12M9 8a3 3 0 0 1 6 0M12 12v3",
   check:"M20 6 9 17l-5-5",list:"M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",home:"M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z",
   trophy:"M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3",user:"M20 21a8 8 0 0 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
@@ -914,7 +920,7 @@ const IC={drop:"M12 2.7s-6 6.6-6 11a6 6 0 0 0 12 0c0-4.4-6-11-6-11z",dumb:"M6 6v
 const ic=(k,cls="")=>`<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${IC[k]||IC.check}"/></svg>`;
 const AREA_IC={agua:"drop",treino:"dumb",movimento:"act",sono:"moon",leitura:"book",estudo:"cap",corpo:"scale",habitos:"check"};
 const AREA_C={agua:"#4cc3ff",treino:"#ff8a5c",movimento:"#5ff0b0",sono:"#a98bff",leitura:"#ffd166",estudo:"#7fdcff",corpo:"#f78fb3",habitos:"#9be15d"};
-const PAGES={hoje:["Hoje","home"],tarefas:["Tarefas","list"],treino:["Treino","dumb"],evolucao:["Sua carta","trophy"],historia:["História","hist"],perfil:["Perfil e áreas","user"],ajustes:["Ajustes","gear"]};
+const PAGES={hoje:["Hoje","home"],tarefas:["Tarefas","list"],treino:["Treino","dumb"],evolucao:["Seu perfil","user"],historia:["História","hist"],perfil:["Áreas e lembretes","grid"],ajustes:["Ajustes","gear"]};
 const IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),STANDALONE=navigator.standalone===true||!!(window.matchMedia&&matchMedia("(display-mode: standalone)").matches);
 function safariBar(){return IOS&&!STANDALONE?`<div class="note warnc" style="margin:0 0 14px">Você está no <b>Safari</b>. Use o Evolução pelo <b>ícone da Tela de Início</b>: o iPhone guarda os dados do Safari e do ícone separados.</div>`:""}
 const unitS=h=>h.unit==="min"?"min":h.unit==="páginas"?"páginas":h.unit;
@@ -987,19 +993,21 @@ function viewTarefas(){const T=S.tasks.slice().sort((a,b)=>a.done-b.done||a.pri-
   <textarea id="tIn" rows="3" placeholder="pagar a conta de luz&#10;comprar ração&#10;responder o João"></textarea><div class="btns" style="margin-top:8px"><button class="btn solid full" data-do="taskadd">Adicionar</button></div></div></section>
   ${T.length?`<div class="list">${T.map(x=>taskRow(x,x===top)).join("")}</div>`:`<p class="mute" style="text-align:center">Nenhuma tarefa. Mente leve.</p>`}
   <p class="mute" style="margin:12px 0 0">Tarefas feitas somem no dia seguinte. As abertas continuam com você, sem perder pontos.</p>`}
-function viewEvolucao(){let h=`<div class="cardwrap">${bigCard()}</div>`;
+function viewEvolucao(){const p=S.profile;let h=`<div class="cardwrap">${bigCard()}</div><input type="file" id="photoFile2" accept="image/*" class="hide">
+  <div class="two" style="margin:-4px 0 16px"><button class="btn full" data-do="photo2">${ic("cam")} ${S.photo?"Trocar foto":"Adicionar foto"}</button><button class="btn full" data-do="me">${ic("edit")} Editar perfil</button></div>`;
+  h+=`<section class="win"><div class="tab"><span>Você</span></div><div class="bd"><div class="srow"><span>Nome</span><b>${esc(S.name)}</b></div><div class="srow"><span>Objetivo</span><b>${GOALS[p.goal]}</b></div>
+    <div class="srow"><span>Peso · altura</span><b>${num(p.weight)} kg${p.height?` · ${p.height} cm`:""}</b></div><div class="srow"><span>Acorda · dorme</span><b>${p.wake} · ${p.sleep}</b></div>
+    <div class="srow"><span>Nível</span><b>${S.level} · ${S.xp}/${need(S.level)} XP</b></div><div class="srow"><span>Sequência</span><b>${S.streak} dia(s) · recorde ${S.best}</b></div>
+    ${S.photo?`<div class="btns"><button class="btn ghost full" data-do="photodel">Remover foto</button></div>`:""}</div></section>`;
   h+=`<section class="win"><div class="tab"><span>Atributos</span></div><div class="bd">${S.areas.map(a=>{const v=attrVal(a),dl=v-attrPrev(a);return`<div class="stat"><b><span class="dot" style="background:${AREA_C[a]}"></span>${esc(areaLabel(a))}</b><div class="bar" style="margin:0"><i style="width:${(v-40)/59*100}%"></i></div><span>${v}${dl?` <small style="color:${dl>0?"var(--ok)":"var(--red)"}">${dl>0?"+":""}${dl}</small>`:""}</span></div>`}).join("")||`<p class="mute">Escolha áreas para ganhar atributos.</p>`}
     ${S.history.some(x=>x.a)?`<p style="margin:14px 0 6px"><b>Últimos 7 dias</b></p>${S.areas.map(a=>`<div class="w7"><span>${esc(areaLabel(a))}</span><span class="w7d">${week7(a).map(c=>`<i class="${c}"></i>`).join("")}</span></div>`).join("")}`:""}
-    <p class="mute" style="margin:10px 0 0">Cada área vira um atributo. A nota mostra sua forma recente: sobe com constância e cai quando você falha. Bronze até 64, prata de 65 a 74, ouro a partir de 75. Com 90% dos itens em 7 dias, a carta fica <b style="color:var(--glow)">Em forma</b>.</p></div></section>`;
+    <details class="how"><summary>Como a nota funciona</summary><p class="mute">Cada área vira um atributo. A nota mostra sua forma recente: sobe com constância e cai quando você falha. Bronze até 64, prata de 65 a 74, ouro a partir de 75. Com 90% dos itens em 7 dias, a carta fica <b style="color:var(--glow)">Em forma</b>.</p></details></div></section>`;
   if(S.areas.includes("corpo")||S.body.log.length>1){const L=S.body.log;h+=`<section class="win"><div class="tab"><span>Peso</span></div><div class="bd">${sparkline(L.slice(-16).map(x=>x.kg))||`<p class="mute">Registre o peso para ver a curva.</p>`}<p class="mute" style="margin:4px 0 0">${L.length?`Início ${num(S.body.start)} kg · agora ${num(S.profile.weight)} kg`:""}</p></div></section>`}
   return h}
 function viewHistoria(){return recap()+`<section class="win"><div class="tab"><span>Sua história</span></div><div class="bd">${S.lore.length?`<div class="lore">${S.lore.slice(0,80).map(x=>`<div class="li"><span class="lic">${x.i}</span><div><b>${esc(x.t)}</b><br><span class="mute">${fmt(x.d)}${x.d.slice(0,4)!==S.today.date.slice(0,4)?" "+x.d.slice(0,4):""}</span></div></div>`).join("")}</div>`:`<p class="mute">Suas conquistas aparecem aqui.</p>`}
   <div class="btns"><button class="btn full" data-do="loreadd">Adicionar um momento</button></div></div></section>`}
 function viewPerfil(){const p=S.profile;
-  return`<section class="win"><div class="tab"><span>Você</span></div><div class="bd"><div style="display:flex;gap:14px;align-items:center">${photoHTML("pf-img")}<div><b>${esc(S.name)}</b><br><span class="mute">${GOALS[p.goal]}</span></div></div>
-    <div class="srow" style="margin-top:10px"><span>Peso · altura</span><b>${num(p.weight)} kg${p.height?` · ${p.height} cm`:""}</b></div><div class="srow"><span>Acorda · dorme</span><b>${p.wake} · ${p.sleep}</b></div>
-    <div class="btns"><button class="btn full" data-do="me">Editar dados e foto</button></div></div></section>
-  <section class="win"><div class="tab"><span>Suas áreas</span></div><div class="bd">${S.areas.map(a=>`<button class="ri" data-do="areacfg" data-v="${a}"><span style="display:flex;gap:10px;align-items:center"><span class="ico sm" style="--ac:${AREA_C[a]}">${ic(AREA_IC[a])}</span><span><b>${esc(areaLabel(a))}</b><br><span class="mute">${areaSummary(a)}</span></span></span>${ic("chev")}</button>`).join("")}
+  return`<section class="win"><div class="tab"><span>Suas áreas</span></div><div class="bd">${S.areas.map(a=>`<button class="ri" data-do="areacfg" data-v="${a}"><span style="display:flex;gap:10px;align-items:center"><span class="ico sm" style="--ac:${AREA_C[a]}">${ic(AREA_IC[a])}</span><span><b>${esc(areaLabel(a))}</b><br><span class="mute">${areaSummary(a)}</span></span></span>${ic("chev")}</button>`).join("")}
     <div class="btns"><button class="btn solid full" data-do="areas">Adicionar ou remover áreas</button>${S.areas.includes("habitos")?`<button class="btn full" data-do="hnew">Novo hábito</button>`:""}</div></div></section>
   <section class="win"><div class="tab"><span>Lembretes e Atalhos</span></div><div class="bd"><p class="mute" style="margin:0 0 8px">Cria eventos com alerta no Calendário do iPhone para suas áreas, mesmo com o app fechado. Ao importar, escolha um calendário novo chamado Evolução. Mudou algo? Apague esse calendário e importe de novo.</p>
     <div class="two"><button class="btn full" data-do="ics">Compartilhar</button><button class="btn full" data-do="icsopen">Abrir direto</button></div>
@@ -1012,7 +1020,7 @@ function viewAjustes(){return`<section class="win"><div class="tab"><span>Seus d
   <button class="btn red full" data-do="reset">${confirmReset?"Toque de novo para apagar tudo":"Apagar tudo e recomeçar"}</button></div></section>`}
 function topbar(){const t=cardTheme(),[title]=PAGES[tab]||PAGES.hoje;return`<button class="tb-b" data-do="menu" aria-label="Abrir menu">${ic("menu")}</button><div class="tb-t"><b>${title}</b><small>${fmt(S.today.date)}</small></div><button class="tb-card t-${t.id}" data-go="evolucao" aria-label="Sua carta: ${ovr()}">${ovr()}</button>`}
 function drawer(){const t=cardTheme(),pages=Object.keys(PAGES).filter(k=>k!=="treino"||S.areas.includes("treino"));
-  return`<div class="dw-hd">${photoHTML("pf-img")}<div><b>${esc(S.name||"Você")}</b><small>Nível ${S.level} · carta ${ovr()} ${t.l}</small><span class="mbar"><i style="width:${Math.min(100,S.xp/need(S.level)*100)}%"></i></span></div></div>
+  return`<button class="dw-hd" data-go="evolucao">${photoHTML("pf-img")}<div><b>${esc(S.name||"Você")}</b><small>Nível ${S.level} · carta ${ovr()} ${t.l}</small><span class="mbar"><i style="width:${Math.min(100,S.xp/need(S.level)*100)}%"></i></span></div></button>
   <nav class="dw-nav">${pages.map(k=>`<button data-go="${k}" ${k===tab?'aria-current="page"':""}>${ic(PAGES[k][1])}<span>${PAGES[k][0]}</span>${k==="tarefas"&&S.tasks.some(x=>!x.done)?`<em>${S.tasks.filter(x=>!x.done).length}</em>`:""}</button>`).join("")}</nav>
   <p class="dw-ft mute">Evolução · seus dados ficam neste aparelho</p>`}
 function setMenu(on){$("#drawer").classList.toggle("on",on);$("#dov").classList.toggle("on",on);$("#drawer").setAttribute("aria-hidden",on?"false":"true")}
@@ -1058,7 +1066,9 @@ function openHabit(id){const h=H(id),e=ent(h);openSheet(shHd("habitos",esc(h.nam
   <button class="btn ghost full" data-do="hedit" data-id="${id}">Editar hábito</button><button class="btn ghost full" data-do="close">Fechar</button></div>`,id)}
 function commit(){save();render();if(sheetOpen&&sheetId){if(sheetId==="__rv")openReview();else openItem(sheetId)}}
 Object.assign(A,{
-  menu(){setMenu(true)},open(b){openItem(b.dataset.v)},
+  menu(){setMenu(true)},
+  photo2(){const i=$("#photoFile2");if(i)i.click()},
+  photodel(){if(!confirm("Remover a foto da sua carta?"))return;S.photo=null;save();render();toast("Foto removida")},open(b){openItem(b.dataset.v)},
   wq(b){addWater(+b.dataset.v/1000);commit()},wqv(){const ml=Math.round(pnum($("#wml").value));if(ml>0){addWater(ml>=20?ml/1000:ml);commit()}},wdel(b){delWater(+b.dataset.v);commit()},
   fui(){const h=H("treino");if(h&&!ent(h).done)addSession(h);commit()},fuilog(){const h=H("treino");if(h&&!ent(h).done)addSession(h);save();render();closeSheet();setTimeout(openSession,200)},
   qadd(b){addQty(H(b.dataset.id),+b.dataset.v);commit()},qaddv(b){const v=pnum($("#qIn").value);if(v>0){addQty(H(b.dataset.id),v);commit()}},qdel(b){delQty(H(sheetId),+b.dataset.v);commit()},
@@ -1093,6 +1103,7 @@ document.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(g
   const b=e.target.closest("[data-do]");if(!b)return;const f=A[b.dataset.do];if(f)f(b)});
 document.addEventListener("change",e=>{const t=e.target;
   if(t.id==="impFile"&&t.files[0]){t.files[0].text().then(tx=>{try{const d=migrate(JSON.parse(tx));if(!d)throw 0;S=d;save();render();toast("Backup restaurado")}catch(x){toast("Arquivo de backup inválido","red")}});return}
+  if(t.id==="photoFile2"&&t.files[0]){resizePhoto(t.files[0]).then(u=>{S.photo=u;save();render();toast("Foto atualizada")}).catch(()=>toast("Não consegui ler essa foto","red"));return}
   if(t.id==="photoFile"&&t.files[0]){resizePhoto(t.files[0]).then(u=>{wz.d.photo=u;render()}).catch(()=>toast("Não consegui ler essa foto","red"));return}
   if(t.id==="sSound"){S.sound=t.checked;save()}if(t.id==="sTest"){S.test=t.checked;if(!S.test)S.offset=0;save();render()}if(t.dataset.rh&&hdraft){readHabitEdit();renderHabitEdit()}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(sheetOpen)closeSheet();setMenu(false)}if(e.key==="Enter"&&e.target.id==="tOne"){e.preventDefault();A.task1()}});
