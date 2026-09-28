@@ -545,7 +545,7 @@ input,select,textarea{min-height:48px}
             5 Efeitos · 6 Telas · 7 Onboarding · 8 Sheets · 9 Ações · 10 Integrações
    ===================================================================== */
 const $=s=>document.querySelector(s);
-const APP_VERSION="4.6.0",APP_DATE="28/09/2026";
+const APP_VERSION="4.7.0",APP_DATE="28/09/2026";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid=()=>Math.random().toString(36).slice(2,9);
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -569,7 +569,7 @@ function tone(fs,d=.09){if(!S.sound)return;try{AC=AC||new(window.AudioContext||w
   g.gain.exponentialRampToValueAtTime(.14,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d+.03);t+=d*.85})}catch(e){}}
 const SFX={ok:()=>{tone([880,1320]);navigator.vibrate?.(25)},ping:()=>{tone([1175,1175],.07);navigator.vibrate?.([30,40,30])},flash:()=>{tone([1320,1760,1320,1760],.06);navigator.vibrate?.([60,40,60,40,60])},
   lvl:()=>{tone([660,880,1100,1320,1760],.12);navigator.vibrate?.([40,40,80])},bad:()=>{tone([300,200],.18);navigator.vibrate?.([80,60,80])}};
-const fx=k=>S.sound&&SFX[k]&&SFX[k]();
+const fx=k=>{if(NATIVE)nativePost({t:"haptic",k});return S.sound&&SFX[k]&&SFX[k]()};
 const TQ=[];let tBusy=false;
 function toast(t,kind){TQ.push([t,kind]);if(TQ.length>4)TQ.splice(0,TQ.length-4);if(!tBusy)nextToast()}
 function nextToast(){const x=TQ.shift(),e=$("#toast");if(!x){tBusy=false;e.classList.remove("on");return}tBusy=true;e.textContent=x[0];
@@ -619,8 +619,12 @@ function defaultState(){const iso=todayIso();return{v:8,rulesV:2,updatedAt:Date.
   level:1,xp:0,streak:0,best:0,sound:true,test:false,offset:0,paused:null,program:null,body:{log:[],start:null,goalKg:null},tasks:[],lore:[],
   stats:{habits:0,workouts:0,water:0,pages:0,studyMin:0,moveMin:0,tasks:0,books:0,levels:0,since:iso},
   week:newWeek(iso),pending:[],history:[],log:[],today:{date:iso,e:{},ah:{},trained:false,rv:false,wr:{}}}}
+/* Ponte com o app nativo: dentro do app (Expo), os dados moram no armazenamento do iPhone e o app nativo cuida de backup, compartilhar e vibração. No site, nada disso existe e tudo segue igual. */
+const NATIVE=typeof window!=="undefined"&&!!window.ReactNativeWebView;
+function nativePost(m){try{window.ReactNativeWebView.postMessage(JSON.stringify(m))}catch(_){}}
+let _nsT=null;function nativeSave(){if(!NATIVE)return;clearTimeout(_nsT);_nsT=setTimeout(()=>nativePost({t:"save",data:JSON.stringify(S)}),300)}
 const LS="evolucao-v8";let S;try{localStorage.removeItem("evolucao-v4")}catch(e){}
-try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
+try{S=JSON.parse((NATIVE&&window.__EVO_BOOT)||localStorage.getItem(LS))}catch(e){}
 /* Migração da versão anterior (v7): mantém nível, XP, histórico, foto, peso, programa e cargas */
 function rulesMigrate(d){if(d&&d.onboarded&&!d.rulesV){d.rulesV=2;d.attrBase={};for(const a in (d.attrs||{}))d.attrBase[a]=d.attrs[a].ema;d.attrFrom=d.today&&d.today.date;for(const h of (d.habits||[])){if(h.id==="agua"&&h.xp===20)h.xp=15;if(h.area==="habitos"&&h.kind==="check"&&h.freq&&h.freq.mode!=="weekly"&&/^(sem|não|nao|parar de|evitar)\s/i.test(h.name))h.kind="avoid"}}return d}
 function migrate(d){if(!d||typeof d!=="object")return null;if(d.v===8)return rulesMigrate(d);
@@ -638,7 +642,7 @@ function migrate(d){if(!d||typeof d!=="object")return null;if(d.v===8)return rul
   if(A.includes("sono")&&d.attrs&&d.attrs.DIS)n.attrs.sono=clone(d.attrs.DIS);for(const a of A)n.attrs[a]=n.attrs[a]||{ema:.17,prev:.17};
   n.onboarded=false;n.migrated=true;n.lore=[{d:(d.history&&d.history[0]&&d.history[0].date)||n.today.date,i:"🚀",t:"Começou a jornada"}];return n}
 S=migrate(S)||defaultState();
-let _saveWarn=false;function save(){S.updatedAt=Date.now();try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){S.log=(S.log||[]).slice(0,60);S.errors=(S.errors||[]).slice(-5);try{localStorage.setItem(LS,JSON.stringify(S))}catch(x){if(!_saveWarn){_saveWarn=true;setTimeout(()=>{try{toast("Não consegui salvar: memória do navegador cheia. Faça um backup em Ajustes.","red")}catch(_){}},50)}}}}
+let _saveWarn=false;function save(){S.updatedAt=Date.now();nativeSave();try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){S.log=(S.log||[]).slice(0,60);S.errors=(S.errors||[]).slice(-5);try{localStorage.setItem(LS,JSON.stringify(S))}catch(x){if(!_saveWarn){_saveWarn=true;setTimeout(()=>{try{toast("Não consegui salvar: memória do navegador cheia. Faça um backup em Ajustes.","red")}catch(_){}},50)}}}}
 
 /* Cada área gera os seus hábitos com metas inteligentes */
 function hb(o){return Object.assign({id:uid(),kind:"check",unit:"",target:1,steps:[1],freq:{mode:"daily",days:[],times:1,goal:0},xp:10,bonus:0,loss:10},o)}
@@ -1077,13 +1081,13 @@ const A={
   pause(b){const v=+b.dataset.v;S.paused={from:S.today.date,until:v>0?addDays(S.today.date,v-1):null};log(v?`Pausado por ${v} dia(s).`:"Pausado.");save();render();toast("Pausado · sem perdas")},
   resume(){S.paused=null;log("Voltou da pausa.");save();render();toast("De volta")},
   adv(b){S.offset+=(+b.dataset.v)*60000;loop();save();render()},nextday(){const d=vnow(),m=d.getHours()*60+d.getMinutes(),dl=((cutoff()-m+1440)%1440)||1440;S.offset+=dl*60000+5000-d.getSeconds()*1000;loop();save();render()},
-  export(){S.lastBackup=S.today.date;save();const blob=new Blob([JSON.stringify(S)],{type:"application/json"}),f=new File([blob],`evolucao-backup-${S.today.date}.json`,{type:"application/json"});
+  export(){S.lastBackup=S.today.date;save();if(NATIVE){nativePost({t:"share",name:`evolucao-backup-${S.today.date}.json`,mime:"application/json",data:JSON.stringify(S)});return}const blob=new Blob([JSON.stringify(S)],{type:"application/json"}),f=new File([blob],`evolucao-backup-${S.today.date}.json`,{type:"application/json"});
     if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],title:"Backup Evolução"}).catch(()=>{});else{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=f.name;a.click()}},
   bksnooze(){S.bkSnooze=addDays(S.today.date,7);save();render()},
-  importb(){$("#impFile").click()},copy(b){const v=b.dataset.v;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast("Link copiado")).catch(()=>prompt("Copie o link:",v))},
+  importb(){if(NATIVE){nativePost({t:"import"});return}$("#impFile").click()},copy(b){const v=b.dataset.v;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast("Link copiado")).catch(()=>prompt("Copie o link:",v))},
   remoff(){S.remOff=true;save();render()},
-  ics(){S.icsDone=true;save();const f=new File([buildICS()],"evolucao.ics",{type:"text/calendar"});if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],title:"Evolução · lembretes"}).catch(()=>{});else A.icsopen()},
-  icsopen(){S.icsDone=true;save();location.href="data:text/calendar;charset=utf-8,"+encodeURIComponent(buildICS())},
+  ics(){S.icsDone=true;save();if(NATIVE){nativePost({t:"share",name:"evolucao.ics",mime:"text/calendar",data:buildICS()});return}const f=new File([buildICS()],"evolucao.ics",{type:"text/calendar"});if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],title:"Evolução · lembretes"}).catch(()=>{});else A.icsopen()},
+  icsopen(){S.icsDone=true;save();if(NATIVE){nativePost({t:"share",name:"evolucao.ics",mime:"text/calendar",data:buildICS()});return}location.href="data:text/calendar;charset=utf-8,"+encodeURIComponent(buildICS())},
   reset(){if(!confirmReset){confirmReset=true;render();return}localStorage.removeItem(LS);S=defaultState();confirmReset=false;wz=null;tab="hoje";save();render()}
 };
 function resizePhoto(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{const s=320,c=document.createElement("canvas");c.width=s;c.height=s;const x=c.getContext("2d"),m=Math.min(img.width,img.height);
@@ -1104,7 +1108,7 @@ const ic=(k,cls="")=>`<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="tr
 const AREA_IC={agua:"drop",treino:"dumb",movimento:"act",sono:"moon",leitura:"book",estudo:"cap",corpo:"scale",habitos:"check"};
 const AREA_C={agua:"#4cc3ff",treino:"#ff8a5c",movimento:"#5ff0b0",sono:"#a98bff",leitura:"#ffd166",estudo:"#7fdcff",corpo:"#f78fb3",habitos:"#9be15d"};
 const PAGES={hoje:["Hoje","home"],tarefas:["Tarefas","list"],treino:["Treino","dumb"],evolucao:["Seu perfil","user"],historia:["História","hist"],perfil:["Áreas e lembretes","grid"],ajustes:["Ajustes","gear"]};
-const IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),STANDALONE=navigator.standalone===true||!!(window.matchMedia&&matchMedia("(display-mode: standalone)").matches);
+const IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),STANDALONE=NATIVE||navigator.standalone===true||!!(window.matchMedia&&matchMedia("(display-mode: standalone)").matches);
 function safariBar(){return IOS&&!STANDALONE?`<div class="note warnc" style="margin:0 0 14px">Você está no <b>Safari</b>. Use o Evolução pelo <b>ícone da Tela de Início</b>: o iPhone guarda os dados do Safari e do ícone separados.</div>`:""}
 const unitS=h=>h.unit==="min"?"min":h.unit==="páginas"?"páginas":h.unit;
 
@@ -1220,7 +1224,7 @@ function viewAjustes(){return integSection()+`<section class="win"><div class="t
   <p class="mute" style="margin:0">Tudo fica só neste aparelho. ${S.lastBackup?`Último backup: ${fmt(S.lastBackup)}.`:"Nenhum backup ainda."}</p></div></section>
   <section class="win"><div class="tab"><span>Pausa</span></div><div class="bd">${S.paused?`<p class="mute" style="margin:0">Pausado ${S.paused.until?`até ${fmt(S.paused.until)}`:"até você voltar"}.</p><div class="btns"><button class="btn solid full" data-do="resume">Voltar agora</button></div>`:`<p class="mute" style="margin:0 0 8px">Férias, doença ou viagem: nada tira ponto e a sequência fica congelada.</p><div class="chips">${[[1,"Hoje"],[3,"3 dias"],[7,"7 dias"],[0,"Até eu voltar"]].map(([v,l])=>`<button class="chip" data-do="pause" data-v="${v}">${l}</button>`).join("")}</div>`}</div></section>
   ${(S.errors||[]).length?`<section class="win"><div class="tab"><span>Diagnóstico</span></div><div class="bd"><p class="mute" style="margin:0 0 6px">${S.errors.length} erro(s) anotado(s). Se algo travou, copie e me mande.</p>${S.errors.slice(-3).reverse().map(x=>`<div class="srow"><span class="mute">${esc(x.t.slice(5,16).replace("T"," "))} · ${esc(x.w)}</span><b style="font-size:.8rem">${esc(x.m.slice(0,40))}</b></div>`).join("")}<div class="two" style="margin-top:10px"><button class="btn full" data-do="copy" data-v="${esc(JSON.stringify(S.errors.slice(-10)))}">Copiar</button><button class="btn ghost full" data-do="errclear">Limpar</button></div></div></section>`:""}
-  <section class="win"><div class="tab"><span>Sobre</span></div><div class="bd"><div class="srow"><span>Versão</span><b>v${APP_VERSION}</b></div><div class="srow"><span>Atualizada em</span><b>${APP_DATE}</b></div>${S._upd?`<div class="btns"><button class="btn solid full" data-do="update">Atualizar para a v${esc(S._upd)}</button></div>`:`<div class="btns"><button class="btn full" data-do="checkupd">Procurar atualização</button></div>`}</div></section>
+  <section class="win"><div class="tab"><span>Sobre</span></div><div class="bd"><div class="srow"><span>Versão</span><b>v${APP_VERSION}</b></div><div class="srow"><span>Atualizada em</span><b>${APP_DATE}</b></div>${S._upd?`<div class="btns"><button class="btn solid full" data-do="update">Atualizar para a v${esc(S._upd)}</button></div>`:(NATIVE?`<p class="mute" style="margin:8px 0 0">No app, as atualizações chegam sozinhas quando você abre.</p>`:`<div class="btns"><button class="btn full" data-do="checkupd">Procurar atualização</button></div>`)}</div></section>
   <section class="win"><div class="tab"><span>Preferências</span></div><div class="bd form"><label class="check sw"><span>Som</span><input type="checkbox" id="sSound" ${S.sound?"checked":""}></label><label class="check sw"><span>Modo teste<small class="mute" style="display:block">avançar o relógio para testar</small></span><input type="checkbox" id="sTest" ${S.test?"checked":""}></label>
   <button class="btn red full" data-do="reset">${confirmReset?"Toque de novo para apagar tudo":"Apagar tudo e recomeçar"}</button></div></section>`}
 function topbar(){const t=cardTheme(),[title]=PAGES[tab]||PAGES.hoje;return`<button class="tb-b" data-do="menu" aria-label="Abrir menu">${ic("menu")}</button><div class="tb-t"><b>${title}</b><small>${fmt(S.today.date)}</small></div><button class="tb-card t-${t.id}" data-go="evolucao" aria-label="Sua carta: ${ovr()}">${ovr()}</button>`}
@@ -1401,7 +1405,7 @@ function urlAction(){const q=new URLSearchParams(location.search);if(!q.toString
 document.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(g){tab=g.dataset.go;confirmReset=false;setMenu(false);if(sheetOpen)closeSheet();render();scrollTo(0,0);return}
   const b=e.target.closest("[data-do]");if(!b)return;const f=A[b.dataset.do];if(f){try{f(b)}catch(err){reportErr(err,b.dataset.do)}}});
 document.addEventListener("change",e=>{const t=e.target;
-  if(t.id==="impFile"&&t.files[0]){t.files[0].text().then(tx=>{try{const d=migrate(JSON.parse(tx));if(!d)throw 0;S=repairState(d);S._av=(S._av||0)+1;save();render();toast("Backup restaurado")}catch(x){toast("Arquivo de backup inválido","red")}});return}
+  if(t.id==="impFile"&&t.files[0]){t.files[0].text().then(importText);return}
   if(t.id==="photoFile2"&&t.files[0]){resizePhoto(t.files[0]).then(u=>{S.photo=u;save();render();toast("Foto atualizada")}).catch(()=>toast("Não consegui ler essa foto","red"));return}
   if(t.id==="photoFile"&&t.files[0]){resizePhoto(t.files[0]).then(u=>{wz.d.photo=u;render()}).catch(()=>toast("Não consegui ler essa foto","red"));return}
   if(t.id==="wWeOn"&&wz){wzRead();wz.d.weOn=t.checked;render();return}if(t.dataset&&t.dataset.integ){integ()[t.dataset.integ]=t.checked;save();return}if(t.id==="sSound"){S.sound=t.checked;save()}if(t.id==="sTest"){S.test=t.checked;if(!S.test)S.offset=0;save();render()}if(t.dataset.rh&&hdraft){readHabitEdit();renderHabitEdit()}});
@@ -1422,9 +1426,11 @@ function repairState(d){const df=defaultState();if(!d||typeof d!=="object")retur
 function reportErr(err,where){try{S.errors=(S.errors||[]).concat([{t:new Date().toISOString(),w:where||"",m:String(err&&err.message||err).slice(0,200),v:APP_VERSION}]).slice(-20);save()}catch(_){}
   try{toast("Algo deu errado nessa ação. Anotei o erro; tente de novo.","red")}catch(_){}try{render()}catch(_){}}
 window.addEventListener("error",e=>{if(e&&e.message&&/Script error/.test(e.message))return;reportErr(e.error||e.message,"tela")});
-function checkUpdate(manual){if(!window.fetch||location.protocol==="file:")return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json()).then(j=>{if(j&&j.v&&j.v!==APP_VERSION){S._upd=j.v;render()}else{delete S._upd;if(manual)toast("Você já está na versão mais nova")}}).catch(()=>{if(manual)toast("Sem internet para verificar","red")})}
+function importText(tx){try{const d=migrate(JSON.parse(tx));if(!d)throw 0;S=repairState(d);S._av=(S._av||0)+1;save();render();toast("Backup restaurado")}catch(x){toast("Arquivo de backup inválido","red")}}
+if(typeof window!=="undefined")window.__evoImport=importText;
+function checkUpdate(manual){if(NATIVE||!window.fetch||location.protocol==="file:")return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json()).then(j=>{if(j&&j.v&&j.v!==APP_VERSION){S._upd=j.v;render()}else{delete S._upd;if(manual)toast("Você já está na versão mais nova")}}).catch(()=>{if(manual)toast("Sem internet para verificar","red")})}
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
-if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+if(!NATIVE&&"serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 S=repairState(S);if(S.onboarded&&!S.rulesV){rulesMigrate(S);save()}
 delete S._upd;setTimeout(()=>checkUpdate(),1500);
 setInterval(()=>{loop();restTick();timerTick();const k=$("#clk");if(k)k.textContent=hm(vmin()%1440)},1000);render();loop();urlAction();

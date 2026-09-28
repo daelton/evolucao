@@ -14,5 +14,5 @@ function onboard(env,areas,o={}){const{E,q,c,d,dm,cs}=env;E(`S.offset=new Date("
     if(st==='movimento'&&o.moveMode==='min')c('[data-do=wzset][data-k=moveMode][data-v=min]');
     if(st==='habitos')for(const h of (o.habits||['Meditar 5 min','Sem doce']))c(`[data-do=wzidea][data-v="${h}"]`);c('[data-do=wznext]')}
   dm();cs();E('S.today.rv=true')}
-function report(){const by={};for(const r of R){(by[r.sec]=by[r.sec]||[]).push(r)}let tot=0,fail=0;for(const s in by){const f=by[s].filter(r=>!r.pass);tot+=by[s].length;fail+=f.length;console.log(`${f.length?'✗':'✓'} ${s}: ${by[s].length-f.length}/${by[s].length}`);for(const x of f)console.log('    FALHOU:',x.name,'→',x.detail.slice(0,220))}console.log(`TOTAL ${tot-fail}/${tot}`)}
+function report(){const by={};for(const r of R){(by[r.sec]=by[r.sec]||[]).push(r)}let tot=0,fail=0;for(const s in by){const f=by[s].filter(r=>!r.pass);tot+=by[s].length;fail+=f.length;console.log(`${f.length?'✗':'✓'} ${s}: ${by[s].length-f.length}/${by[s].length}`);for(const x of f)console.log('    FALHOU:',x.name,'→',x.detail.slice(0,220))}console.log(`TOTAL ${tot-fail}/${tot}`);setTimeout(()=>process.exit(fail?1:0),50)}
 module.exports={mk,onboard,ok,sec,report,R};
