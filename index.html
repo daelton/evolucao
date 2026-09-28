@@ -323,20 +323,103 @@ textarea{font:inherit;color:var(--ink);background:var(--input);border:1px solid 
 .win.tile{padding:12px 14px}.win.tile .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.win.tile .acts .btn{flex:1;min-width:88px;padding:11px 8px}
 .w7{display:flex;justify-content:space-between;align-items:center;padding:4px 0}.w7>span:first-child{font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.w7d{display:flex;gap:4px}.w7d i{width:16px;height:16px;background:var(--input);border:1px solid color-mix(in srgb,var(--line) 30%,transparent)}.w7d i.f{background:var(--ok);border-color:var(--ok)}.w7d i.p{background:color-mix(in srgb,var(--gold) 70%,transparent)}.w7d i.x{background:color-mix(in srgb,var(--red) 55%,transparent)}
 .rest{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:12px}.rest.sticky{position:sticky;top:0;z-index:3;background:var(--bg2);padding:8px 0;margin:10px 0 0;border-bottom:1px solid color-mix(in srgb,var(--glow) 30%,transparent)}.rest b{font:700 1.2rem "Chakra Petch",sans-serif;color:var(--glow);margin-left:auto}
+/* ===== v3 · visual mais limpo e profissional ===== */
+:root{--bg:#070b18;--bg2:#0c1328;--panel:#0f1830;--line:#3b82f6;--glow:#7fdcff;--ink:#eaf1ff;--mute:#8b9bbd;--hair:rgba(255,255,255,.08);--card:#101a33}
+body{background:var(--bg);font-family:Barlow,system-ui,sans-serif}
+.app{padding:calc(64px + env(safe-area-inset-top,0px)) 16px 40px;max-width:560px}
+:root{padding-top:0}
+#hud,#nav{display:none!important}
+.win{background:var(--card);border:1px solid var(--hair);border-radius:16px;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+.win.red{border-color:rgba(255,93,115,.5);box-shadow:none}
+.tab{justify-content:flex-start;padding:14px 16px 0;margin:0}
+.tab span{border:0;background:none;padding:0;font:600 .74rem Barlow,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);text-shadow:none}
+.win>.bd{padding:12px 16px 16px}
+.btn{border-radius:12px;font:600 .95rem Barlow,sans-serif;letter-spacing:.01em;padding:12px 16px;border-color:rgba(127,220,255,.45)}
+.btn.solid{background:#3b82f6;border-color:#3b82f6}
+.btn.xl{padding:15px;font-size:1.05rem;display:flex;gap:8px;align-items:center;justify-content:center}
+.btn .ic{width:18px;height:18px}
+.chip{border-radius:999px;padding:6px 12px;font-size:.85rem}
+input,select,textarea{border-radius:12px!important;border-color:var(--hair)!important;background:#0a1124!important}
+.sheet .win{border-radius:20px 20px 0 0;border-bottom:0;background:#0f1832}
+.sheet .win::before{content:"";display:block;width:40px;height:5px;border-radius:3px;background:rgba(255,255,255,.18);margin:10px auto 0}
+.ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+/* barra superior */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:15;display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 8px;background:rgba(7,11,24,.86);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--hair)}
+.topbar.hide{display:none}
+.tb-b{width:44px;height:44px;display:grid;place-items:center;background:none;border:0;color:var(--ink);border-radius:12px}
+.tb-t{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.15}.tb-t b{font:600 1.12rem Barlow,sans-serif}.tb-t small{color:var(--mute);font-size:.8rem}
+.tb-card{width:44px;height:44px;border-radius:12px;border:0;font:700 1.05rem "Chakra Petch",sans-serif;color:#1a1206;background:linear-gradient(160deg,#e9b88b,#8a5230)}
+.tb-card.t-prata{background:linear-gradient(160deg,#eef2f8,#8e9aab)}.tb-card.t-ouro{background:linear-gradient(160deg,#f7df8a,#b8862b)}.tb-card.t-forma{background:linear-gradient(160deg,#2c6fd6,#0a1638);color:#eaf6ff;box-shadow:0 0 12px #7fdcff}
+/* menu lateral */
+.dov{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .2s}.dov.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;bottom:0;left:0;z-index:41;width:min(300px,82vw);background:#0c1430;border-right:1px solid var(--hair);transform:translateX(-102%);transition:transform .25s cubic-bezier(.2,.9,.3,1);
+  padding:calc(env(safe-area-inset-top,0px) + 18px) 14px calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;flex-direction:column;overflow:auto}
+.drawer.on{transform:none}
+.dw-hd{display:flex;gap:12px;align-items:center;padding:4px 6px 18px;border-bottom:1px solid var(--hair)}.dw-hd b{display:block}.dw-hd small{color:var(--mute);font-size:.82rem}.dw-hd .mbar{margin-top:6px;width:150px}
+.dw-hd .pf-img{width:52px;height:52px}
+.drawer nav.dw-nav{position:static;display:grid;gap:4px;padding:14px 0;background:none;border:0;backdrop-filter:none;-webkit-backdrop-filter:none;z-index:auto}
+.drawer nav.dw-nav button{flex:none;box-shadow:none;text-shadow:none;display:flex;align-items:center;gap:14px;width:100%;padding:13px 12px;border:0;border-radius:12px;background:none;color:var(--ink);font:500 1rem Barlow,sans-serif;text-align:left}
+.drawer nav.dw-nav button[aria-current=page]{box-shadow:none;background:rgba(59,130,246,.16);color:#9cc6ff}
+.dw-nav em{margin-left:auto;font-style:normal;font-size:.8rem;background:#3b82f6;color:#fff;border-radius:999px;padding:1px 8px}
+.dw-ft{margin-top:auto;font-size:.78rem;padding:0 6px}
+/* resumo do dia */
+.sum{display:flex;gap:16px;align-items:center;background:var(--card);border:1px solid var(--hair);border-radius:16px;padding:14px 16px;margin-bottom:14px}
+.ringw{position:relative;width:64px;height:64px;flex:0 0 64px}.ringw b{position:absolute;inset:0;display:grid;place-items:center;font:700 1rem "Chakra Petch",sans-serif}
+.ring{width:64px;height:64px;transform:rotate(-90deg)}.ring .rbg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:6}.ring .rfg{fill:none;stroke:#5ff0b0;stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .5s}
+.sumt{flex:1;min-width:0}.sumt b{display:block;font-size:1.05rem}.sumt small{color:var(--mute);font-size:.84rem}.sumt .mbar{margin-top:6px}
+.mbar{display:block;height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:6px}.mbar i{display:block;height:100%;background:var(--ac,#3b82f6);border-radius:2px}
+.banner{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:linear-gradient(90deg,rgba(255,209,102,.14),rgba(255,209,102,.04));border:1px solid rgba(255,209,102,.35);border-radius:14px;padding:12px 14px;margin-bottom:12px;color:var(--ink)}
+.banner span{flex:1}.banner b{display:block}.banner small{color:var(--mute)}.banner>.ic:first-child{color:var(--gold)}
+.sec{display:flex;justify-content:space-between;align-items:baseline;font:600 .78rem Barlow,sans-serif!important;letter-spacing:.09em;text-transform:uppercase;color:var(--mute)!important;margin:22px 4px 8px!important;text-shadow:none!important}
+.sec span{letter-spacing:0;text-transform:none;font-weight:500}
+summary.sec{cursor:pointer;list-style:none}.donegrp{border:0;padding:0}
+/* lista de itens */
+.list{background:var(--card);border:1px solid var(--hair);border-radius:16px;overflow:hidden}
+.row{display:flex;align-items:center;gap:8px;padding:4px 10px 4px 4px;border-bottom:1px solid var(--hair)}.row:last-child{border-bottom:0}
+.row-main{flex:1;min-width:0;display:flex;align-items:center;gap:12px;background:none;border:0;color:var(--ink);text-align:left;padding:10px 6px}
+.ico{width:40px;height:40px;flex:0 0 40px;border-radius:12px;display:grid;place-items:center;color:var(--ac);background:color-mix(in srgb,var(--ac) 16%,transparent)}
+.ico.sm{width:34px;height:34px;flex-basis:34px}.ico.sm .ic{width:18px;height:18px}
+.rt{flex:1;min-width:0}.rt b{display:block;font-weight:600;font-size:1rem}.rt small{display:block;color:var(--mute);font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rt .mbar{max-width:220px}
+.rbtn{min-width:44px;height:40px;padding:0 14px;border-radius:12px;border:1px solid rgba(59,130,246,.55);background:rgba(59,130,246,.14);color:#cfe1ff;font:600 .9rem Barlow,sans-serif;white-space:nowrap;display:grid;place-items:center}
+.rbtn.plus{padding:0;width:44px}.rbtn.chk{width:44px;padding:0;border-color:rgba(95,240,176,.5);background:rgba(95,240,176,.1);color:var(--ok)}
+.okc{width:44px;height:40px;display:grid;place-items:center;color:var(--ok)}.okc.bad{color:var(--red)}
+.row.done .rt b{color:var(--mute)}.row.done .ico{filter:saturate(.5);opacity:.75}
+.tmr{color:var(--glow);font-family:"Chakra Petch",sans-serif}
+.tadd{display:flex;gap:8px;padding:10px;border-bottom:1px solid var(--hair)}.tadd input{flex:1}
+.list .task{margin:0;border:0;border-bottom:1px solid var(--hair);border-radius:0;background:none}.list .task:last-child{border-bottom:0}
+.more{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:12px;background:none;border:0;color:#9cc6ff;font-weight:600}.more .ic{width:18px;height:18px}
+.task.now{box-shadow:inset 3px 0 0 var(--glow)}
+.lnk{background:none;border:0;color:#9cc6ff;font-weight:600;padding:0}
+/* folhas de registro */
+.sh-hd{display:flex;gap:12px;align-items:center;margin:4px 0 12px}.sh-hd h3{margin:0;font:600 1.2rem Barlow,sans-serif}.sh-hd p{margin:2px 0 0}
+.bigbar{height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}.bigbar i{display:block;height:100%;background:var(--glow);border-radius:4px}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px;margin-top:12px}
+.qb{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 6px;border-radius:14px;border:1px solid var(--hair);background:#0a1124;color:var(--ink)}
+.qb b{font:700 1.05rem "Chakra Petch",sans-serif}.qb span{font-size:.72rem;color:var(--mute)}.qb:active{background:rgba(59,130,246,.2)}
+.inrow{display:flex;gap:8px;margin-top:10px}.inrow input{flex:1;min-width:0}
+.lbl{font:600 .74rem Barlow,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);margin:18px 0 6px}
+.lg{display:grid}.lgr{display:grid;grid-template-columns:52px 1fr 36px;align-items:center;padding:6px 0;border-bottom:1px solid var(--hair)}.lgr:last-child{border-bottom:0}.lgr .ghostx .ic{width:18px;height:18px}
+.timerbox{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding:12px;border:1px solid rgba(127,220,255,.35);border-radius:14px}
+.timerbox b{font:700 1.8rem "Chakra Petch",sans-serif;color:var(--glow);margin-right:auto}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:middle}
+.ri .ic{color:var(--mute);width:18px;height:18px}
+.toast{top:calc(env(safe-area-inset-top,0px) + 70px);border-radius:12px;font-family:Barlow,sans-serif}
 </style>
 </head>
 <body>
+<header id="top" class="topbar hide"></header>
 <div class="app">
   <header class="win hud" id="hud"></header>
   <main id="view"></main>
 </div>
 <nav id="nav"><div></div></nav>
+<div class="dov" id="dov"></div><aside class="drawer" id="drawer" aria-hidden="true"></aside>
 <div class="ov" id="ov"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="win"><div class="bd" id="sheetBody"></div></div></div>
 <div class="modal" id="modal" role="dialog" aria-modal="true"><div class="win"><div class="tab"><span id="mTab">Notificação</span></div><div class="bd" id="mBody"></div></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script>
-"use strict";
+<script>"use strict";
 /* =====================================================================
    EVOLUÇÃO v2 — evolução pessoal por áreas que VOCÊ escolhe
    Cada área vira um atributo da sua carta. Nada aparece se você não escolheu.
@@ -469,7 +552,7 @@ function waterTarget(){const h=H("agua");return h?r1(h.target+(S.today.trained?.
 function waterRounds(){const p=S.profile,W=toL(toMin(p.wake));let SL=toL(toMin(p.sleep));if(SL<=W)SL+=1440;const end=SL-60,len=(end-W)/3,tot=waterTarget();
   const R=[["inicio","Início",.35],["meio","Meio",.35],["fim","Fim",.30]].map(([id,l,f],i)=>({id,l,a:W+len*i,b:W+len*(i+1),t:r1(tot*f)}));
   R[2].t=r1(tot-R[0].t-R[1].t);let c=0;R.forEach(r=>{c=r1(c+r.t);r.cum=c});return R}
-function drunkBy(e,min){return r1((e.log||[]).filter(x=>x.t<=min).reduce((s,x)=>s+x.v,0))}
+function drunkBy(e,min){return +((e.log||[]).filter(x=>x.t<=min).reduce((s,x)=>s+x.v,0)).toFixed(3)}
 
 /* ---------- Treino (programa inicial pelo objetivo) ---------- */
 const X=(name,sets,min,max,inc,c=0)=>({name,weight:0,inc,sets,min,max,fails:0,last:null,best:0,stall:0,hist:[],c});
@@ -510,14 +593,8 @@ function hist(date){return S.history.find(x=>x.date===date)}
 function recomputeStreak(){let s=0;for(let i=S.history.length-1;i>=0;i--){const x=S.history[i];if(x.paused||!x.due)continue;if(x.done+(x.pend||0)>=x.due)s++;else break}
   if(s>S.streak&&[7,30,100,365].includes(s))lore("🔥",`${s} dias seguidos cumprindo tudo`,"st"+s);S.streak=s;S.best=Math.max(S.best,s)}
 /* Quantidade (leitura, estudo…) */
-function addQty(h,n){const e=ent(h);e.value=Math.max(0,r1((e.value||0)+n));if(h.id==="leitura"){if(h.unit==="páginas")S.stats.pages+=Math.max(0,n);
-    if(h.book&&h.unit==="páginas"){h.book.cur=clamp((h.book.cur||0)+n,0,h.book.total||99999);if(h.book.total&&h.book.cur>=h.book.total&&!h.book.done){h.book.done=true;S.stats.books++;lore("📚",`Terminou o livro "${h.book.title||"sem título"}"`,"bk"+uid());queue({k:"msg",tab:"Leitura",title:"Livro terminado",lines:[`"${h.book.title||"Seu livro"}" concluído.`,"Cadastre o próximo em Perfil → Leitura."]})}}}
-  if(h.id==="estudo"&&n>0){S.stats.studyMin+=n;const hrs=Math.floor(S.stats.studyMin/600)*10;if(hrs>=10)lore("🧠",`${hrs} horas de ${h.name.toLowerCase()}`,"sh"+hrs)}
-  if(!e.done&&e.value>=h.target){complete(h,h.xp,`${h.name}: meta do dia · +${h.xp} XP`);return}
-  if(e.done&&!e.extra&&e.value>=h.target*1.5){e.extra=true;const b=Math.round(h.xp/2);e.xp+=b;addXP(b);fx("lvl");toast(`Foi além · +${b} XP`,"gold");return}
-  fx("ok");toast(`${h.name}: ${num(e.value)}/${num(h.target)} ${h.unit}`)}
 /* Água em rodadas */
-function addWater(v){const h=H("agua");if(!h)return;const e=ent(h);e.log=e.log||[];const now=vmin();e.log.push({t:now,v});e.value=r1((e.value||0)+v);S.stats.water=r1(S.stats.water+v);
+function addWater(v){const h=H("agua");if(!h)return;const e=ent(h);e.log=e.log||[];const now=vmin();e.log.push({t:now,v});e.value=+((e.value||0)+v).toFixed(3);S.stats.water=+(S.stats.water+v).toFixed(3);
   const R=waterRounds(),got=e.value,T=waterTarget();let msg=`Água: ${num(e.value)}/${num(T)} L`;S.today.wr=S.today.wr||{};
   for(const r of R){if(now<r.b&&got>=r.cum&&!S.today.wr[r.id]){S.today.wr[r.id]=1;addXP(3);msg=`Rodada ${r.l.toLowerCase()} fechada · +3 XP`;break}}
   if(!e.done&&e.value>=T){complete(h,h.xp,`Meta de água batida · +${h.xp} XP`);return}fx("ok");toast(msg)}
@@ -530,9 +607,6 @@ function logSleep(bed,wake){const h=H("sono");if(!h)return;const e=ent(h);if(e.d
   complete(h,h.xp+(g==="on"?h.bonus:0),g==="on"?`Sono no horário · ${dur(durM*60)} · +${h.xp+h.bonus} XP`:`Sono · ${dur(durM*60)} · +${h.xp} XP`)}
 /* Semana: sessões (treino, esporte), minutos (movimento) e pesagem */
 function addSession(h,xtra=0){const e=ent(h);if(e.done)return false;S.week.c[h.id]=wCount(h)+1;complete(h,h.xp+xtra,`${h.name}: ${wCount(h)}/${wReq(h)} na semana · +${h.xp+xtra} XP`);if(h.area==="treino"){S.stats.workouts++;markTrained();if(S.stats.workouts===1)lore("🏋️","Primeiro treino registrado","wk1")}return true}
-function addMinutes(h,n){if(n<=0)return;S.week.m[h.id]=wMin(h)+n;S.stats.moveMin+=n;const x=Math.min(40,Math.round(n/3));const e=ent(h);e.value=(e.value||0)+n;e.done=true;addXP(x);hit(h.area,true);
-  if(n>=20)markTrained();log(`${h.name}: ${n} min. +${x} XP.`);fx("ok");toast(`${h.name}: ${wMin(h)}/${wReq(h)} min na semana · +${x} XP`);
-  const k=Math.floor(S.stats.moveMin/1000)*1000;if(k>=1000)lore("👟",`${k} minutos de movimento`,"mv"+k)}
 function logWeight(kg){const p=S.profile,old=p.weight;p.weight=r1(kg);S.body.log.push({date:S.today.date,kg:p.weight});S.body.log=S.body.log.slice(-104);if(S.body.start==null)S.body.start=p.weight;
   const h=H("corpo");if(h&&!ent(h).done){S.week.c[h.id]=wCount(h)+1;complete(h,h.xp,`Peso: ${num(p.weight)} kg`)}
   const a=H("agua");if(a){a.target=waterBaseFor(p)}const diff=r1(p.weight-S.body.start),want={perder:-1,ganhar:1,manter:0}[p.goal];
@@ -597,52 +671,11 @@ function bigCard(){const v=ovr(),t=cardTheme(),A=S.areas.slice(),cols=A.length<=
   return`<div class="pcard t-${t.id}" role="img" aria-label="Carta de ${esc(S.name)}: ${v}, ${t.l}"><div class="pc-top"><div class="pc-ovr">${v}</div><div class="pc-pos">${goalTag()}</div><div class="pc-lvl">NV ${S.level}</div></div>
   <div class="pc-photo">${photoHTML("pc-img")}</div><div class="pc-name">${esc((S.name||"Você").split(" ")[0].toUpperCase())}</div>
   <div class="pc-attrs" style="grid-template-columns:repeat(${cols},1fr)">${A.map(a=>`<div><b>${attrVal(a)}</b><span>${esc(areaShort(a))}</span></div>`).join("")||"<div><b>50</b><span>—</span></div>"}</div><div class="pc-tier">${t.l}</div></div>`}
-function hud(){const h=$("#hud"),v=ovr(),t=cardTheme();h.style.setProperty("--rk",t.c);
-  h.innerHTML=`<button class="mini t-${t.id}" data-go="evolucao" aria-label="Abrir sua carta"><span class="mini-ovr">${v}</span>${photoHTML("mini-img")}</button>
-  <div><div class="lvrow"><b>Nível ${S.level}</b><span class="fire" title="Dias seguidos cumprindo tudo">◆ ${S.streak}</span></div><div class="bar" style="margin:6px 0"><i style="width:${Math.min(100,S.xp/need(S.level)*100)}%"></i></div>
-  <div class="lvrow mute"><span>${S.xp}/${need(S.level)} XP</span><span>${fmt(S.today.date)}</span></div></div>`}
 function strip(){const wk=weekKey(S.today.date);return`<section class="win strip">${[1,2,3,4,5,6,0].map((d,i)=>{const date=addDays(wk,i),x=S.history.find(y=>y.date===date);
   return`<div class="${date===S.today.date?"t":x&&x.due?(x.done+(x.pend||0)>=x.due?"f":"x"):""}"><i></i>${DOW[d]}</div>`}).join("")}</section>`}
 const bar=p=>`<div class="bar"><i style="width:${clamp(p,0,100)}%"></i></div>`;
 const chk=(on)=>`<span class="ck ${on?"on":""}" aria-hidden="true">${on?"✓":""}</span>`;
-function areaCard(a){const I=AREAS[a],hd=(r)=>`<div class="tl-hd"><b>${I.i} ${esc(areaLabel(a))}</b><span class="mute">${r||""}</span></div>`;let b="";
-  if(a==="agua"){const h=H("agua"),e=ent(h),T=waterTarget(),R=waterRounds(),now=vmin(),got=e.value||0,cur=R.find(r=>now<r.b)||R[2],nd=r1(Math.max(0,cur.cum-got)),gl=S.profile.glass;
-    b=hd(`${num(got)}/${num(T)} L`)+bar(got/T*100)+`<div class="rounds">${R.map(r=>`<span class="rd ${got>=r.cum?"ok":now>=r.b?"late":r===cur?"cur":""}">${r.l} ${num(r.t)} L</span>`).join("")}</div>
-    <p class="mute" style="margin:6px 0 0">${e.done?"Meta de hoje batida.":nd>0?`Rodada ${cur.l.toLowerCase()}: faltam ${num(nd)} L até ${hm(cur.b%1440)}`:`Rodada ${cur.l.toLowerCase()} em dia`}</p>
-    <div class="acts"><button class="btn solid" data-do="water" data-v="${gl/1000}">+${gl} ml</button><button class="btn solid" data-do="water" data-v=".5">+500 ml</button><button class="btn" data-do="hsheet" data-id="agua">Outro</button></div>`}
-  if(a==="treino"){const h=H("treino"),e=ent(h),c=wCount(h),r=wReq(h),s=nextSplit(),pref=h.freq.days.includes(dow(S.today.date));
-    const line=e.done?`Treino de hoje feito${program()&&!e.logged?" · registre as cargas":""}`:c>=r?"Meta da semana batida. Sessão extra ainda vale XP.":`${pref?"Hoje":"Próximo"}: ${s?`${esc(s.name)} · ${s.ex.length} exercícios · ~${estMin(s)} min`:"treino"}`;
-    b=hd(`${c}/${r} na semana`)+bar(c/Math.max(1,r)*100)+`<p style="margin:8px 0 0">${line}</p><p class="mute" style="margin:2px 0 0">${pref||e.done?"":`Dia de descanso previsto · faltam ${Math.max(0,r-c)} em ${daysLeft()} dia(s)`}</p>
-    <div class="acts">${e.done?(program()&&!e.logged?`<button class="btn solid" data-do="session">Registrar cargas</button>`:""):`<button class="btn ${pref?"solid":""}" data-do="train">Treinar agora</button>`}<button class="btn" data-go="treino">Ver treino</button></div>`}
-  if(a==="movimento"){const h=H("movimento"),m=wMin(h),g=wReq(h),e=ent(h);b=hd(`${m}/${g} min na semana`)+bar(m/Math.max(1,g)*100)+`<p class="mute" style="margin:8px 0 0">${m>=g?"Meta da semana batida.":`Faltam ${g-m} min em ${daysLeft()} dia(s) · uns ${Math.ceil((g-m)/daysLeft())} min por dia`}${e.value?` · hoje: ${e.value} min`:""}</p>
-    <div class="acts"><button class="btn solid" data-do="move" data-v="15">+15 min</button><button class="btn solid" data-do="move" data-v="30">+30 min</button><button class="btn" data-do="hsheet" data-id="movimento">Outro</button></div>`}
-  if(a==="sono"){const h=H("sono"),e=ent(h),p=S.profile;b=hd(`meta ${p.sleep} → ${p.wake}`)+(e.done||e.failed?`<p style="margin:6px 0 0;color:${e.failed?"var(--red)":"var(--ok)"}">Dormiu ${e.bed} · acordou ${e.wake} · ${dur(e.dur*60)}${e.grade==="on"?" · no horário":e.grade==="late"?" · um pouco fora":" · fora do horário"}</p>`:
-    `<p class="mute" style="margin:6px 0 0">Conte como foi a noite: que horas dormiu e acordou.</p><div class="acts"><button class="btn solid" data-do="review">Registrar sono</button></div>`)}
-  if(a==="leitura"){const h=H("leitura"),e=ent(h),v=e.value||0,bk=h.book;b=hd(`${num(v)}/${num(h.target)} ${h.unit}`)+bar(v/h.target*100)+(bk&&bk.total?`<p class="mute" style="margin:6px 0 0">${esc(bk.title||"Livro atual")}: ${bk.cur||0}/${bk.total} págs${bk.done?" · terminado":` · ${Math.round((bk.cur||0)/bk.total*100)}%`}</p>`:"")+
-    `<div class="acts">${h.steps.map(s=>`<button class="btn solid" data-do="qty" data-id="leitura" data-v="${s}">+${s} ${h.unit==="min"?"min":"págs"}</button>`).join("")}<button class="btn" data-do="hsheet" data-id="leitura">Outro</button></div>`}
-  if(a==="estudo"){const h=H("estudo");if(!dueOn(h,S.today.date))b=hd("folga hoje")+`<p class="mute" style="margin:6px 0 0">Sem ${esc(h.name.toLowerCase())} programado hoje (${freqTxt(h)}).</p>`;else{const e=ent(h),v=e.value||0;
-    b=hd(`${num(v)}/${num(h.target)} min`)+bar(v/h.target*100)+`<div class="acts">${h.steps.map(s=>`<button class="btn solid" data-do="qty" data-id="estudo" data-v="${s}">+${s} min</button>`).join("")}<button class="btn" data-do="hsheet" data-id="estudo">Outro</button></div>`}}
-  if(a==="corpo"){const h=H("corpo"),tr=weightTrend(),done=wCount(h)>0,pref=h.freq.days.includes(dow(S.today.date));
-    b=hd(`${num(S.profile.weight)} kg`)+`<p class="mute" style="margin:6px 0 0">${tr?`${tr.kg>0?"+":""}${num(tr.kg)} kg em ${tr.days} dias${trendOk(tr)?" · no rumo do seu objetivo":""}`:"Pese uma vez por semana para ver a tendência."}</p>
-    ${done?`<p class="mute" style="margin:2px 0 0">Pesagem da semana feita ✓</p>`:`<div class="acts"><button class="btn ${pref?"solid":""}" data-do="weigh">Registrar peso</button></div>`}`}
-  if(a==="habitos"){const L=S.habits.filter(h=>h.area==="habitos");const td=L.filter(h=>dueOn(h,S.today.date)),wk=L.filter(isWeekly);
-    b=hd(`${td.filter(h=>ent(h).done).length}/${td.length} hoje`)+(td.length+wk.length?`<div class="hlist">${td.map(h=>{const e=ent(h);return`<button class="hrow" data-do="${e.done?"hsheet":"check"}" data-id="${h.id}">${chk(e.done)}<span>${esc(h.name)}</span></button>`}).join("")}
-      ${wk.map(h=>{const e=ent(h);return`<button class="hrow" data-do="${e.done?"hsheet":"check"}" data-id="${h.id}">${chk(e.done)}<span>${esc(h.name)}</span><small class="mute">${wCount(h)}/${wReq(h)} na semana</small></button>`}).join("")}</div>`:`<p class="mute">Nenhum hábito. Adicione em Perfil.</p>`)}
-  return`<section class="win tile" data-area="${a}">${b}</section>`}
-function tasksCard(){const T=S.tasks.slice().sort((a,b)=>a.done-b.done||a.pri-b.pri||a.c-b.c),top=T.find(x=>!x.done);
-  return`<section class="win"><div class="tab"><span>Tarefas do dia</span></div><div class="bd"><p class="mute" style="margin:0 0 8px">Cabeça cheia? Despeje tudo aqui, uma coisa por linha. Depois toque na cor para priorizar.</p>
-  <textarea id="tIn" rows="2" placeholder="pagar a conta de luz&#10;comprar ração&#10;responder o João"></textarea><div class="btns" style="margin-top:8px"><button class="btn full" data-do="taskadd">Adicionar</button></div>
-  ${T.length?`<div class="tasks">${T.map(x=>`<div class="task ${x.done?"done":""} ${x===top?"now":""}"><button class="ckb" data-do="taskdone" data-v="${x.id}" aria-label="Concluir">${chk(x.done)}</button><span class="tt">${x===top?`<b class="tagnow">Agora</b> `:""}${esc(x.t)}${x.c<S.today.date&&!x.done?` <small class="mute">desde ${fmt(x.c)}</small>`:""}</span><button class="pri" data-do="taskpri" data-v="${x.id}" style="color:${PRI[x.pri].c};border-color:${PRI[x.pri].c}">${PRI[x.pri].l}</button><button class="ghostx" data-do="taskdel" data-v="${x.id}" aria-label="Apagar">✕</button></div>`).join("")}</div>`:""}
-  </div></section>`}
 function needReview(){if(!S.onboarded||S.paused)return false;const h=H("sono");const sl=h&&S.areas.includes("sono")&&dueOn(h,S.today.date)&&!ent(h).done&&!ent(h).failed&&vmin()>=toMin(S.profile.wake)-90;return sl||S.pending.length>0}
-function viewHoje(){let h=strip();
-  if(needReview())h+=`<section class="win flash" style="animation:none"><div class="tab"><span>Bom dia</span></div><div class="bd"><p class="quiet">${[H("sono")&&S.areas.includes("sono")&&!ent(H("sono")).done&&!ent(H("sono")).failed?"como foi a noite":"",S.pending.length?`${S.pending.length} coisa(s) de ontem para confirmar`:""].filter(Boolean).join(" · ")}</p><div class="btns"><button class="btn solid full" data-do="review" style="background:var(--gold);border-color:var(--gold);color:#1a1000">Abrir (30 segundos)</button></div></div></section>`;
-  if(S.paused)h+=`<section class="win"><div class="tab"><span>Pausado</span></div><div class="bd"><p class="quiet">${S.paused.until?`Até ${fmt(S.paused.until)}`:"Até você voltar"}. Nada tira ponto e a sequência fica congelada.</p><div class="btns"><button class="btn solid full" data-do="resume">Voltar agora</button></div></div></section>`;
-  if(!S.areas.length)h+=`<section class="win"><div class="bd"><p class="quiet">Você ainda não escolheu áreas para evoluir.</p><div class="btns"><button class="btn solid full" data-do="areas">Escolher áreas</button></div></div></section>`;
-  h+=S.areas.filter(a=>S.habits.some(x=>x.area===a)).map(areaCard).join("");h+=tasksCard();
-  const since=S.lastBackup||S.stats.since;if(S.history.length>=14&&addDays(since,14)<=S.today.date&&(!S.bkSnooze||S.bkSnooze<=S.today.date))h+=`<section class="win"><div class="bd"><p class="quiet">Seus dados ficam só neste iPhone. Que tal salvar um backup?</p><div class="two" style="margin-top:10px"><button class="btn solid full" data-do="export">Fazer backup</button><button class="btn ghost full" data-do="bksnooze">Depois</button></div></div></section>`;
-  if(S.test)h+=`<div class="demo"><span>Modo teste · relógio <b id="clk">${hm(vmin()%1440)}</b> · ${fmt(S.today.date)}</span><button class="btn" data-do="adv" data-v="60">+1 h</button><button class="btn" data-do="adv" data-v="180">+3 h</button><button class="btn" data-do="nextday">Próximo dia</button></div>`;
-  return h}
 function trendOk(tr){const want={perder:-1,ganhar:1,manter:0}[S.profile.goal];return want?Math.sign(tr.kg)===want:Math.abs(tr.kg)<=1}
 function weightTrend(){const L=S.body.log;if(L.length<2)return null;const last=L[L.length-1],ref=L.find(x=>x.date>=addDays(last.date,-28))||L[0];if(ref===last)return null;return{kg:r1(last.kg-ref.kg),days:Math.round((new Date(last.date)-new Date(ref.date))/864e5)}}
 function sparkline(vals,w=300,h=56){if(vals.length<2)return"";const mn=Math.min(...vals),mx=Math.max(...vals),rg=mx-mn||1;
@@ -651,14 +684,6 @@ function recap(){const s=S.stats,y=S.today.date.slice(0,4),P=[[s.habits,"hábito
   return`<section class="win"><div class="tab"><span>Retrospectiva ${y}</span></div><div class="bd">${P.length?`<div class="recap">${P.map(([v,l])=>`<div><b>${num(v)}</b><span>${l}</span></div>`).join("")}</div>`:`<p class="mute">Seus números do ano aparecem aqui conforme você avança.</p>`}
   <p class="mute" style="margin:10px 0 0">Desde ${fmt(s.since)} · recorde de ${S.best} dia(s) seguidos</p></div></section>`}
 function week7(a){const out=[];for(let i=7;i>=1;i--){const d=addDays(S.today.date,-i),x=S.history.find(y=>y.date===d),q=x&&x.a&&x.a[a];out.push(!q||!q[1]?"":q[0]>=q[1]?"f":q[0]>0?"p":"x")}return out}
-function viewEvolucao(){let h=`<div class="cardwrap">${bigCard()}</div>`;
-  h+=`<section class="win"><div class="tab"><span>Atributos</span></div><div class="bd">${S.areas.map(a=>{const v=attrVal(a),dl=v-attrPrev(a);return`<div class="stat"><b>${AREAS[a].i} ${esc(areaLabel(a))}</b><div class="bar" style="margin:0"><i style="width:${(v-40)/59*100}%"></i></div><span>${v}${dl?` <small style="color:${dl>0?"var(--ok)":"var(--red)"}">${dl>0?"+":""}${dl}</small>`:""}</span></div>`}).join("")||`<p class="mute">Escolha áreas para ganhar atributos.</p>`}
-    ${S.history.some(x=>x.a)?`<p style="margin:14px 0 6px"><b>Últimos 7 dias</b></p>${S.areas.map(a=>`<div class="w7"><span>${AREAS[a].i} ${esc(areaLabel(a))}</span><span class="w7d">${week7(a).map(c=>`<i class="${c}"></i>`).join("")}</span></div>`).join("")}`:""}
-    <p class="mute" style="margin:10px 0 0">Cada área que você escolheu vira um atributo. A nota mostra sua forma recente: sobe com constância e cai quando você falha. Bronze até 64, prata de 65 a 74, ouro a partir de 75. Com 90% dos hábitos em 7 dias, a carta fica <b style="color:var(--glow)">Em forma</b>.</p></div></section>`;
-  if(S.areas.includes("corpo")||S.body.log.length>1){const L=S.body.log;h+=`<section class="win"><div class="tab"><span>Peso</span></div><div class="bd">${sparkline(L.slice(-16).map(x=>x.kg))||`<p class="mute">Registre o peso para ver a curva.</p>`}<p class="mute" style="margin:4px 0 0">${L.length?`Início ${num(S.body.start)} kg · agora ${num(S.profile.weight)} kg`:""}</p></div></section>`}
-  h+=recap();
-  h+=`<section class="win"><div class="tab"><span>Sua história</span></div><div class="bd">${S.lore.length?`<div class="lore">${S.lore.slice(0,60).map(x=>`<div class="li"><span class="lic">${x.i}</span><div><b>${esc(x.t)}</b><br><span class="mute">${fmt(x.d)}${x.d.slice(0,4)!==S.today.date.slice(0,4)?" "+x.d.slice(0,4):""}</span></div></div>`).join("")}</div>`:`<p class="mute">Suas conquistas aparecem aqui.</p>`}
-    <div class="btns"><button class="btn full" data-do="loreadd">Adicionar um momento</button></div></div></section>`;return h}
 function exLine(x){return`<div class="srow"><span>${esc(x.name)}${x.stall>=3?` <span class="tag" style="color:var(--red);border-color:var(--red)">parado</span>`:""}</span><b>${x.weight?`${x.weight} kg · `:""}${x.sets}×${x.min}–${x.max}</b></div>`}
 function viewTreino(){const P=program(),h=H("treino"),s=nextSplit();
   if(!P)return`<section class="win"><div class="tab"><span>Treino</span></div><div class="bd"><p style="margin:0">Você ainda não tem um programa.</p><p class="mute">Gere um inicial pelo seu objetivo ou cadastre o treino que já faz.</p>
@@ -667,41 +692,17 @@ function viewTreino(){const P=program(),h=H("treino"),s=nextSplit();
     ${P.basic?`<p class="note">Programa inicial básico, feito para começar com segurança. Conforme evoluir, ajuste exercícios, séries e cargas. Revise a cada 8 a 12 semanas ou quando parar de evoluir.</p>`:""}
     ${wks>=8?`<p class="note warnc">Seu programa já tem ${wks} semanas. Bom momento para revisar.</p>`:""}${st.length?`<p class="note warnc">Parado há 3 treinos: ${esc(st.join(", "))}. Tente baixar 10% da carga e subir de novo, ou trocar a variação.</p>`:""}</div></section>`;
   if(s)out+=`<section class="win"><div class="tab"><span>Próximo treino</span></div><div class="bd"><p style="margin:0 0 6px"><b>${esc(s.name)}</b> <span class="mute">· ${s.ex.length} exercícios · ~${estMin(s)} min</span></p>${s.ex.map(exLine).join("")}
-    <div class="btns">${e.done&&!e.logged?`<button class="btn solid full" data-do="session">Registrar cargas de hoje</button>`:!e.done?`<button class="btn solid full" data-do="train">Treinar agora</button>`:`<p class="mute" style="text-align:center">Treino de hoje registrado ✓</p>`}</div>
+    <div class="btns">${e.done&&!e.logged?`<button class="btn solid full" data-do="session">Registrar cargas de hoje</button>`:!e.done?`<button class="btn solid full" data-do="fuilog">Começar treino e registrar cargas</button>`:`<p class="mute" style="text-align:center">Treino de hoje registrado ✓</p>`}</div>
     ${s.ex.some(x=>!x.weight)?`<p class="mute" style="margin:8px 0 0">Sem carga ainda? No primeiro treino, use um peso com que você faria 2 repetições a mais. O app parte daí.</p>`:""}</div></section>`;
   out+=`<section class="win"><div class="tab"><span>Divisões</span></div><div class="bd">${P.splits.map((x,k)=>`<details${k===P.next%P.splits.length?" open":""}><summary><b>${esc(x.name)}</b>${k===P.next%P.splits.length?' <span class="tag">próximo</span>':""}</summary>${x.ex.map(exLine).join("")}</details>`).join("")}
     <div class="btns"><button class="btn full" data-do="progedit">Editar programa</button><button class="btn ghost full" data-do="regen">Gerar novo pelo meu perfil</button></div></div></section>`;
   const last=P.sessions.slice(-6).reverse();if(last.length)out+=`<section class="win"><div class="tab"><span>Últimos treinos</span></div><div class="bd">${last.map(x=>`<div class="srow"><span>${fmt(x.date)} · ${esc(x.split)}</span><b>${x.prs?`${x.prs} recorde(s)`:"—"}</b></div>`).join("")}</div></section>`;
   return out}
-function viewPerfil(){const p=S.profile,base=location.origin+location.pathname;
-  const links=[["agua","Beber água (+copo)","agua"],["treino","Treinar agora","treino"],["leitura","Li 10 páginas","ler&v=10"],["estudo","Estudei 15 min","estudo&v=15"],["movimento","+30 min de movimento","mover&v=30"],["sono","Bom dia (registrar sono)","acordei"]].filter(x=>S.areas.includes(x[0]));
-  return`<section class="win"><div class="tab"><span>Você</span></div><div class="bd"><div style="display:flex;gap:14px;align-items:center">${photoHTML("pf-img")}<div><b>${esc(S.name)}</b><br><span class="mute">${GOALS[p.goal]}</span></div></div>
-    <div class="srow" style="margin-top:10px"><span>Peso · altura</span><b>${num(p.weight)} kg${p.height?` · ${p.height} cm`:""}</b></div><div class="srow"><span>Acorda · dorme</span><b>${p.wake} · ${p.sleep}</b></div>
-    <div class="btns"><button class="btn full" data-do="me">Editar dados e foto</button></div></div></section>
-  <section class="win"><div class="tab"><span>Suas áreas</span></div><div class="bd">${S.areas.map(a=>`<button class="ri" data-do="areacfg" data-v="${a}"><span><b>${AREAS[a].i} ${esc(areaLabel(a))}</b><br><span class="mute">${areaSummary(a)}</span></span><span class="tag">Ajustar</span></button>`).join("")}
-    <div class="btns"><button class="btn solid full" data-do="areas">Adicionar ou remover áreas</button></div></div></section>
-  <section class="win"><div class="tab"><span>Lembretes no iPhone</span></div><div class="bd"><p class="mute" style="margin:0 0 8px">Cria eventos com alerta no Calendário para suas áreas (água, treino, sono…), mesmo com o app fechado. Ao importar, escolha um calendário novo chamado Evolução. Mudou algo? Apague esse calendário e importe de novo.</p>
-    <div class="two"><button class="btn full" data-do="ics">Compartilhar</button><button class="btn full" data-do="icsopen">Abrir direto</button></div>
-    <p style="margin:16px 0 4px"><b>Atalhos do iPhone</b></p><p class="mute" style="margin:0">Use a ação <b>Abrir App → Evolução</b> (não "Abrir URL": links abrem no Safari, que guarda dados separados do app). Ideias de automação:</p>
-    <div class="srow"><span>Ao parar o alarme</span><b>abre o Bom dia</b></div><div class="srow"><span>Ao chegar na academia</span><b>abre com o treino</b></div><div class="srow"><span>Widget ou Botão de Ação</span><b>abre em 1 toque</b></div></div></section>
-  <section class="win"><div class="tab"><span>Ajustes</span></div><div class="bd form">
-    <div class="two"><button class="btn full" data-do="export">Exportar backup</button><button class="btn full" data-do="importb">Importar backup</button></div><input type="file" id="impFile" accept="application/json,.json" class="hide">
-    <p class="mute" style="margin:0">Seus dados ficam só neste aparelho.</p>
-    ${S.paused?`<button class="btn full" data-do="resume">Voltar da pausa</button>`:`<label>Pausar (férias, doença, viagem)</label><div class="chips" style="margin-top:-6px">${[[1,"Hoje"],[3,"3 dias"],[7,"7 dias"],[0,"Até eu voltar"]].map(([v,l])=>`<button class="chip" data-do="pause" data-v="${v}">${l}</button>`).join("")}</div>`}
-    <label class="check"><input type="checkbox" id="sSound" ${S.sound?"checked":""}> Som e vibração</label><label class="check"><input type="checkbox" id="sTest" ${S.test?"checked":""}> Modo teste (avançar o relógio)</label>
-    <button class="btn red full" data-do="reset">${confirmReset?"Toque de novo para apagar tudo":"Apagar tudo e recomeçar"}</button></div></section>`}
 function areaSummary(a){const h=a==="habitos"?null:S.habits.find(x=>x.area===a);if(a==="agua")return`${num(H("agua").target)} L/dia + 0,5 L quando treina · copo ${S.profile.glass} ml`;
   if(a==="treino")return`${h.freq.times}× por semana${program()?` · ${esc(program().name)}`:""}`;if(a==="movimento")return`${esc(h.name)} · ${h.freq.goal} min por semana`;
   if(a==="sono")return`dormir ${S.profile.sleep} · acordar ${S.profile.wake}`;if(a==="leitura")return`${h.target} ${h.unit} por dia${h.book&&h.book.title?` · ${esc(h.book.title)}`:""}`;
   if(a==="estudo")return`${esc(h.name)} · ${h.target} min · ${freqTxt(h)}`;if(a==="corpo")return`pesagem semanal · objetivo: ${GOALS[S.profile.goal].toLowerCase()}`;
   const L=S.habits.filter(x=>x.area==="habitos");return L.length?esc(L.map(x=>x.name).join(", ")):"nenhum hábito ainda"}
-const IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),STANDALONE=navigator.standalone===true||!!(window.matchMedia&&matchMedia("(display-mode: standalone)").matches);
-function safariBar(){return IOS&&!STANDALONE?`<section class="win red"><div class="bd"><p class="quiet" style="color:var(--ink)">Você está no <b>Safari</b>. Use o Evolução pelo <b>ícone da Tela de Início</b>: o iPhone guarda os dados do Safari e do ícone separados, e só os do ícone ficam protegidos.</p></div></section>`:""}
-function render(){if(!S.onboarded||wz){renderWizard();const v=$("#view");if(v&&IOS&&!STANDALONE)v.insertAdjacentHTML("afterbegin",safariBar());return}$("#hud").classList.remove("hide");$("#nav").classList.remove("hide");hud();
-  const tabs=[["hoje","Hoje"],["evolucao","Evolução"],...(S.areas.includes("treino")?[["treino","Treino"]]:[]),["perfil","Perfil"]];if(!tabs.some(t=>t[0]===tab))tab="hoje";
-  $("#nav div").innerHTML=tabs.map(([k,l])=>`<button data-tab="${k}" ${k===tab?'aria-current="page"':""}>${l}</button>`).join("");
-  $("#view").innerHTML=safariBar()+(tab==="hoje"?viewHoje():tab==="evolucao"?viewEvolucao():tab==="treino"?viewTreino():viewPerfil());const k=$("#clk");if(k)k.textContent=hm(vmin()%1440)}
-
 /* ---------- 7. Onboarding: só pergunta o que importa para as áreas que você escolher ---------- */
 function wzDraft(){const p=S.profile,h=id=>H(id),rd=h("leitura"),st=h("estudo"),tr=h("treino"),mv=h("movimento");
   return{name:S.name||"",photo:S.photo||null,areas:S.areas.slice(),weight:p.weight,height:p.height||"",goal:p.goal,glass:p.glass,wake:p.wake,sleep:p.sleep,
@@ -780,16 +781,6 @@ function wzApply(){const d=wz.d,first=!S.onboarded,p=S.profile;S.name=d.name||S.
   else toast("Salvo");if(mode==="new"||mode==="update")tab="hoje";if(A.includes("treino")&&S.program&&!S.program.splits.some(x=>x.ex.length)){tab="treino";render();openProg()}}
 
 /* ---------- 8. Sheets ---------- */
-function openH(id){const h=H(id),e=ent(h);let b=`<h3>${AREAS[h.area].i} ${esc(h.name)}</h3><p class="mute" style="margin:0 0 10px">${freqTxt(h)} · +${h.xp||"XP por minuto"}${h.xp?" XP":""} · −${h.loss} XP se não cumprir</p>`;
-  if(h.kind==="water"||h.kind==="qty"||h.kind==="minutes"){const st=h.kind==="water"?S.profile.glass/1000:h.steps[0]||10,u=h.kind==="water"?"L":h.unit;
-    if(h.kind==="water")b+=waterRounds().map(r=>`<div class="srow"><span>${r.l} · até ${hm(r.b%1440)}</span><b style="color:${(e.value||0)>=r.cum?"var(--ok)":"var(--ink)"}">${num(r.t)} L${(e.value||0)>=r.cum?" ✓":""}</b></div>`).join("");
-    b+=`<p style="margin:10px 0 0">Hoje: <b class="disp" style="color:var(--glow)">${num(e.value||0)}${h.kind==="minutes"?` min · semana ${wMin(h)}/${wReq(h)}`:`/${num(h.kind==="water"?waterTarget():h.target)} ${u}`}</b></p>
-    <div style="display:flex;gap:10px;align-items:center;margin-top:10px">${stepper("qv",h.kind==="minutes"?30:st,false,h.kind==="water"?.05:h.kind==="minutes"?5:st)}<span class="mute">${u}</span></div>
-    <div class="btns"><button class="btn solid full" data-do="hadd" data-id="${id}">Adicionar</button>${(e.value||0)>0?`<button class="btn ghost full" data-do="hundo" data-id="${id}">Desfazer último</button>`:""}</div>`}
-  else if(e.done)b+=`<p style="color:var(--ok)">Feito hoje${e.at?` às ${e.at}`:""}.</p><div class="btns"><button class="btn ghost full" data-do="hundo" data-id="${id}">Marquei errado: desfazer</button></div>`;
-  else b+=`<div class="btns"><button class="btn solid full" data-do="check" data-id="${id}">Feito</button></div>`;
-  if(h.area==="habitos")b+=`<div class="btns"><button class="btn ghost full" data-do="hedit" data-id="${id}">Editar hábito</button></div>`;
-  openSheet(b+`<div class="btns"><button class="btn ghost full" data-do="close">Fechar</button></div>`,id)}
 function openReview(){S.today.rv=true;const h=H("sono"),e=h?ent(h):{},p=S.profile,now=vmin();let b=`<h3>Bom dia${S.name?`, ${esc(S.name.split(" ")[0])}`:""}</h3>`;
   if(h&&S.areas.includes("sono")&&!e.done&&!e.failed)b+=`<div class="mc"><div class="hd"><b>🌙 Como foi a noite?</b><span class="cd">meta ${p.sleep} → ${p.wake}</span></div>
     <div class="two" style="margin-top:8px"><label class="form" style="display:grid;gap:4px"><span class="mute">Dormiu às</span><input id="rBed" type="time" value="${p.sleep}"></label><label class="form" style="display:grid;gap:4px"><span class="mute">Acordou às</span><input id="rWake" type="time" value="${hm(Math.min(now,toL(toMin(p.wake))+180)%1440)}"></label></div>
@@ -831,7 +822,6 @@ function openLoreAdd(){openSheet(`<h3>Adicionar um momento</h3><div class="form"
   <div class="btns" style="margin-top:0"><button class="btn solid full" data-do="loresave">Salvar na sua história</button><button class="btn ghost full" data-do="close">Cancelar</button></div></div>`)}
 
 /* ---------- 9. Ações ---------- */
-function commit(){save();render();if(sheetOpen&&sheetId)sheetId==="__rv"?openReview():H(sheetId)?openH(sheetId):0}
 function saveSession(){const s=nextSplit(),P=program(),h=H("treino");if(!s)return;const notes=[];let prs=0;
   s.ex.forEach((x,i)=>{const w=pnum($(`#sw${i}`).value),r=Array.from({length:x.sets},(_,k)=>Math.round(pnum($(`#g${i}_${k}`).value)));if(!w)return;
     const first=!x.weight;x.weight=w;x.last=r;const best=Math.max(...r.map(v=>e1rm(w,v)));if(x.best&&best>x.best+.01){prs++;notes.push(`Recorde: ${x.name} (${num(r1(best))} kg estimado)`);lore("🏅",`Recorde no ${x.name.toLowerCase()}: ${num(r1(best))} kg estimado`,"pr"+x.name+Math.round(best))}
@@ -847,7 +837,7 @@ const A={
   st(b){const i=$("#"+b.dataset.t);i.value=num(Math.max(0,+(pnum(i.value)+ +b.dataset.d).toFixed(2)))},close(){closeSheet()},
   water(b){addWater(+b.dataset.v);commit()},qty(b){addQty(H(b.dataset.id),+b.dataset.v);commit()},move(b){addMinutes(H("movimento"),+b.dataset.v);commit()},
   check(b){const h=H(b.dataset.id),e=ent(h);if(e.done)return;if(isWeekly(h)){S.week.c[h.id]=wCount(h)+1}complete(h,h.xp);closeSheet();commit()},
-  hsheet:b=>openH(b.dataset.id),
+  hsheet:b=>openItem(b.dataset.id),
   hadd(b){const h=H(b.dataset.id),v=pnum($("#qv").value);if(!(v>0))return;h.kind==="water"?addWater(v):h.kind==="minutes"?addMinutes(h,Math.round(v)):addQty(h,v);commit()},
   hundo(b){const h=H(b.dataset.id),e=ent(h);if(h.kind==="water"){const x=(e.log||[]).pop();if(!x)return;e.value=r1(Math.max(0,e.value-x.v));S.stats.water=r1(S.stats.water-x.v);if(e.done&&e.value<waterTarget()){addXP(-(e.xp||0));unhit(h.area);e.done=false;e.xp=0}}
     else if(h.kind==="minutes"){const v=e.value||0;if(!v)return;S.week.m[h.id]=Math.max(0,wMin(h)-v);S.stats.moveMin-=v;addXP(-Math.min(40,Math.round(v/3)));unhit(h.area);e.value=0;e.done=false}
@@ -910,6 +900,180 @@ const A={
 function resizePhoto(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{const s=320,c=document.createElement("canvas");c.width=s;c.height=s;const x=c.getContext("2d"),m=Math.min(img.width,img.height);
   x.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,s,s);res(c.toDataURL("image/jpeg",.82))};img.onerror=rej;img.src=r.result};r.onerror=rej;r.readAsDataURL(file)})}
 
+/* =====================================================================
+   v3 · Interface: barra superior + menu lateral, Hoje como checklist,
+   registros rápidos sem campos obrigatórios (ex.: treino = "Fui")
+   ===================================================================== */
+const IC={drop:"M12 2.7s-6 6.6-6 11a6 6 0 0 0 12 0c0-4.4-6-11-6-11z",dumb:"M6 6v12M18 6v12M3 9v6M21 9v6M6 12h12",act:"M22 12h-4l-3 9L9 3l-3 9H2",moon:"M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z",
+  book:"M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z",cap:"M22 10 12 5 2 10l10 5 10-5zM6 12v5c3 2 9 2 12 0v-5",scale:"M4 20h16M5 20l1-12h12l1 12M9 8a3 3 0 0 1 6 0M12 12v3",
+  check:"M20 6 9 17l-5-5",list:"M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",home:"M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z",
+  trophy:"M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3",user:"M20 21a8 8 0 0 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
+  gear:"M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6",menu:"M3 6h18M3 12h18M3 18h18",plus:"M12 5v14M5 12h14",
+  clock:"M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2",hist:"M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2",x:"M18 6 6 18M6 6l12 12",chev:"M9 18l6-6-6-6",
+  play:"M7 4l13 8-13 8z",stop:"M6 6h12v12H6z",trash:"M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14",sun:"M12 3v2M12 19v2M5 5l1.5 1.5M17.5 17.5 19 19M3 12h2M19 12h2M5 19l1.5-1.5M17.5 6.5 19 5M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"};
+const ic=(k,cls="")=>`<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${IC[k]||IC.check}"/></svg>`;
+const AREA_IC={agua:"drop",treino:"dumb",movimento:"act",sono:"moon",leitura:"book",estudo:"cap",corpo:"scale",habitos:"check"};
+const AREA_C={agua:"#4cc3ff",treino:"#ff8a5c",movimento:"#5ff0b0",sono:"#a98bff",leitura:"#ffd166",estudo:"#7fdcff",corpo:"#f78fb3",habitos:"#9be15d"};
+const PAGES={hoje:["Hoje","home"],tarefas:["Tarefas","list"],treino:["Treino","dumb"],evolucao:["Sua carta","trophy"],historia:["História","hist"],perfil:["Perfil e áreas","user"],ajustes:["Ajustes","gear"]};
+const IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),STANDALONE=navigator.standalone===true||!!(window.matchMedia&&matchMedia("(display-mode: standalone)").matches);
+function safariBar(){return IOS&&!STANDALONE?`<div class="note warnc" style="margin:0 0 14px">Você está no <b>Safari</b>. Use o Evolução pelo <b>ícone da Tela de Início</b>: o iPhone guarda os dados do Safari e do ícone separados.</div>`:""}
+const unitS=h=>h.unit==="min"?"min":h.unit==="páginas"?"páginas":h.unit;
+
+/* ---------- registros com histórico (dá para apagar um por um) ---------- */
+function addQty(h,n,silent){const e=ent(h);n=r1(n);if(!n)return;e.lq=e.lq||[];e.lq.push({t:vmin(),v:n});e.value=Math.max(0,r1((e.value||0)+n));
+  if(h.id==="leitura"&&h.unit==="páginas")S.stats.pages+=n;if(h.id==="estudo")S.stats.studyMin+=n;
+  if(h.id==="leitura"&&h.book&&h.unit==="páginas"){h.book.cur=clamp((h.book.cur||0)+n,0,h.book.total||99999);if(h.book.total&&h.book.cur>=h.book.total&&!h.book.done){h.book.done=true;S.stats.books++;lore("📚",`Terminou o livro "${h.book.title||"sem título"}"`,"bk"+uid());queue({k:"msg",tab:"Leitura",title:"Livro terminado",lines:[`"${h.book.title||"Seu livro"}" concluído.`,"Cadastre o próximo em Perfil e áreas → Leitura."]})}}
+  if(h.id==="estudo"){const hrs=Math.floor(S.stats.studyMin/600)*10;if(hrs>=10)lore("🧠",`${hrs} horas de ${h.name.toLowerCase()}`,"sh"+hrs)}
+  if(!e.done&&e.value>=h.target){complete(h,h.xp,`${h.name}: meta do dia · +${h.xp} XP`);return}
+  if(e.done&&!e.extra&&e.value>=h.target*1.5){e.extra=true;const b=Math.round(h.xp/2);e.xp+=b;addXP(b);fx("lvl");toast(`Foi além · +${b} XP`,"gold");return}
+  if(!silent){fx("ok");toast(`${h.name}: ${num(e.value)}/${num(h.target)} ${unitS(h)}`)}}
+function delQty(h,i){const e=ent(h),x=(e.lq||[])[i];if(!x)return;e.lq.splice(i,1);e.value=Math.max(0,r1((e.value||0)-x.v));
+  if(h.id==="leitura"&&h.unit==="páginas"){S.stats.pages=Math.max(0,S.stats.pages-x.v);if(h.book)h.book.cur=Math.max(0,(h.book.cur||0)-x.v)}if(h.id==="estudo")S.stats.studyMin=Math.max(0,S.stats.studyMin-x.v);
+  if(e.done&&e.value<h.target){addXP(-(e.xp||0));unhit(h.area);e.done=false;e.xp=0;e.extra=false;S.stats.habits=Math.max(0,S.stats.habits-1)}}
+function addMinutes(h,n,act){if(n<=0)return;const e=ent(h);e.lm=e.lm||[];e.lm.push({t:vmin(),v:n,act:act||h.name});S.week.m[h.id]=wMin(h)+n;S.stats.moveMin+=n;const x=Math.min(40,Math.round(n/3));e.value=(e.value||0)+n;e.done=true;e.xp=(e.xp||0)+x;addXP(x);hit(h.area,true);
+  if(n>=20)markTrained();log(`${act||h.name}: ${n} min. +${x} XP.`);fx("ok");toast(`${act||h.name}: +${n} min · ${wMin(h)}/${wReq(h)} na semana · +${x} XP`);
+  const k=Math.floor(S.stats.moveMin/1000)*1000;if(k>=1000)lore("👟",`${k} minutos de movimento`,"mv"+k)}
+function delMinutes(h,i){const e=ent(h),x=(e.lm||[])[i];if(!x)return;e.lm.splice(i,1);S.week.m[h.id]=Math.max(0,wMin(h)-x.v);S.stats.moveMin=Math.max(0,S.stats.moveMin-x.v);const xp=Math.min(40,Math.round(x.v/3));addXP(-xp);e.xp=Math.max(0,(e.xp||0)-xp);unhit(h.area);e.value=Math.max(0,(e.value||0)-x.v);if(!e.value)e.done=false}
+function delWater(i){const h=H("agua"),e=ent(h),x=(e.log||[])[i];if(!x)return;e.log.splice(i,1);e.value=+Math.max(0,(e.value||0)-x.v).toFixed(3);S.stats.water=+Math.max(0,S.stats.water-x.v).toFixed(3);
+  if(e.done&&e.value<waterTarget()){addXP(-(e.xp||0));unhit(h.area);e.done=false;e.xp=0;S.stats.habits=Math.max(0,S.stats.habits-1)}}
+const logRows=(L,fmtv,del)=>L&&L.length?`<div class="lg">${L.map((x,i)=>({x,i})).reverse().map(({x,i})=>`<div class="lgr"><span class="mute">${hm(x.t%1440)}</span><span>${fmtv(x)}</span><button class="ghostx" data-do="${del}" data-v="${i}" aria-label="Apagar registro">${ic("trash")}</button></div>`).join("")}</div>`:`<p class="mute" style="margin:0">Nenhum registro hoje.</p>`;
+
+/* ---------- cronômetro (leitura e estudo) ---------- */
+const timerTxt=()=>{if(!S.timer)return"";const s=Math.floor((Date.now()-S.timer.start)/1000);return`${Math.floor(s/60)}:${pad(s%60)}`};
+function timerTick(){if(!S.timer)return;document.querySelectorAll("[data-timer]").forEach(el=>el.textContent=timerTxt())}
+
+/* ---------- o que é de hoje e o que é da semana ---------- */
+function waterHint(){const e=ent(H("agua")),now=vmin(),R=waterRounds(),cur=R.find(r=>now<r.b)||R[2],nd=r1(Math.max(0,cur.cum-(e.value||0)));return nd>0?`faltam ${num(nd)} L até ${hm(cur.b%1440)}`:"rodada em dia"}
+function todayItems(){const L=[],d=S.today.date,wi=(dow(d)+6)%7;
+  for(const a of S.areas){
+    if(a==="sono"){const h=H("sono");if(h&&dueOn(h,d)){const e=ent(h),r=e.done||e.failed;L.push({id:"sono",a,done:!!r,fail:!!e.failed,t:"Sono",s:r?`${e.bed} → ${e.wake} · ${dur(e.dur*60)}${e.grade==="on"?" · no horário":e.grade==="late"?" · um pouco fora":" · fora do horário"}`:`meta ${S.profile.sleep} → ${S.profile.wake}`,btn:r?null:{l:"Registrar",do:"review"}})}}
+    if(a==="agua"){const h=H("agua");if(h){const e=ent(h),T=waterTarget(),v=e.value||0;L.push({id:"agua",a,done:!!e.done,t:"Água",s:`${num(v)} de ${num(T)} L${e.done?"":" · "+waterHint()}`,p:v/T,btn:{l:`+${S.profile.glass} ml`,do:"wq",v:S.profile.glass}})}}
+    if(a==="treino"){const h=H("treino");if(h){const e=ent(h),c=wCount(h),r=wReq(h),s=nextSplit(),pref=h.freq.days.includes(dow(d));
+      if(pref||e.done||(c<r&&r-c>=daysLeft()))L.push({id:"treino",a,done:!!e.done,t:"Treino",s:e.done?`feito · ${c}/${r} na semana${program()&&!e.logged?" · cargas opcionais":""}`:`${s&&s.ex.length?esc(s.name)+" · ":""}${c}/${r} na semana`,btn:e.done?null:{l:"Fui",do:"fui"}})}}
+    if(a==="leitura"||a==="estudo"){const h=H(a);if(h&&dueOn(h,d)){const e=ent(h),v=e.value||0,run=S.timer&&S.timer.id===a;
+      L.push({id:a,a,done:!!e.done,t:a==="leitura"?"Leitura":esc(h.name),s:run?`<b class="tmr" data-timer>${timerTxt()}</b> cronômetro rodando`:`${num(v)} de ${num(h.target)} ${unitS(h)}${a==="leitura"&&h.book&&h.book.title&&!h.book.done?` · ${esc(h.book.title)}`:""}`,p:v/h.target,btn:run?{l:"Parar",do:"tstop"}:{l:"+",do:"open",v:a,plus:1}})}}
+    if(a==="corpo"){const h=H("corpo");if(h&&!wCount(h)){const pm=Math.min(...h.freq.days.map(x=>(x+6)%7));if(wi>=pm)L.push({id:"corpo",a,done:false,t:"Pesagem da semana",s:`último: ${num(S.profile.weight)} kg`,btn:{l:"Pesar",do:"open",v:"corpo"}})}}
+    if(a==="habitos")for(const h of S.habits.filter(x=>x.area==="habitos"&&dueOn(x,d))){const e=ent(h);L.push({id:h.id,a,done:!!e.done,t:esc(h.name),s:freqTxt(h),btn:e.done?null:{l:"Feito",do:"check",v:h.id,chk:1}})}}
+  return L}
+function weekItems(){const L=[],inToday=new Set(todayItems().map(x=>x.id));for(const a of S.areas){
+    if(a==="treino"&&!inToday.has("treino")){const h=H("treino"),c=wCount(h),r=wReq(h);L.push({id:"treino",a,t:"Treino",s:`${c} de ${r} na semana`,p:c/Math.max(1,r)})}
+    if(a==="movimento"){const h=H("movimento"),m=wMin(h),g=wReq(h);L.push({id:"movimento",a,t:esc(h.name),s:`${m} de ${g} min${m<g?` · uns ${Math.ceil((g-m)/daysLeft())} min/dia`:" · meta batida"}`,p:m/Math.max(1,g),btn:{l:"+",do:"open",v:"movimento",plus:1}})}
+    if(a==="corpo"&&!inToday.has("corpo")){const h=H("corpo");L.push({id:"corpo",a,t:"Pesagem",s:wCount(h)?`feita · ${num(S.profile.weight)} kg`:"1 vez por semana, de manhã",p:wCount(h)?1:0})}
+    if(a==="habitos")for(const h of S.habits.filter(x=>x.area==="habitos"&&isWeekly(x))){const e=ent(h);L.push({id:h.id,a,t:esc(h.name),s:`${wCount(h)} de ${wReq(h)} na semana${e.done?" · feito hoje":""}`,p:wCount(h)/Math.max(1,wReq(h)),btn:e.done?null:{l:"Fiz hoje",do:"check",v:h.id,chk:1}})}}
+  return L}
+function row(x){const right=x.done?`<span class="okc ${x.fail?"bad":""}">${ic(x.fail?"x":"check")}</span>`:x.btn?`<button class="rbtn ${x.btn.chk?"chk":""} ${x.btn.plus?"plus":""}" data-do="${x.btn.do}" data-v="${x.btn.v??x.id}" aria-label="${esc(x.btn.l)}">${x.btn.plus?ic("plus"):x.btn.chk?ic("check"):esc(x.btn.l)}</button>`:"";
+  return`<div class="row ${x.done?"done":""} ${x.fail?"fail":""}" style="--ac:${AREA_C[x.a]}"><button class="row-main" data-do="open" data-v="${x.id}"><span class="ico">${ic(AREA_IC[x.a])}</span><span class="rt"><b>${x.t}</b><small>${x.s}</small>${x.p!=null&&!x.done?`<span class="mbar"><i style="width:${clamp(x.p*100,0,100)}%"></i></span>`:""}</span></button>${right}</div>`}
+function ring(p){const r=26,c=2*Math.PI*r;return`<svg class="ring" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="${r}" class="rbg"/><circle cx="32" cy="32" r="${r}" class="rfg" stroke-dasharray="${c}" stroke-dashoffset="${c*(1-clamp(p,0,1))}"/></svg>`}
+
+/* ---------- telas ---------- */
+function viewHoje(){const L=todayItems(),pend=L.filter(x=>!x.done),done=L.filter(x=>x.done),p=L.length?done.length/L.length:0,W=weekItems();let h=safariBar();
+  const T=S.tasks.filter(x=>!x.done).sort((a,b)=>a.pri-b.pri||a.c.localeCompare(b.c));
+  h+=`<section class="sum"><div class="ringw">${ring(p)}<b>${done.length}/${L.length}</b></div><div class="sumt"><b>${!L.length?"Escolha suas áreas":pend.length?`Faltam ${pend.length} ${pend.length===1?"item":"itens"} hoje`:"Tudo feito hoje"}</b>
+    <small>Nível ${S.level} · ${S.xp}/${need(S.level)} XP${S.streak?` · ${S.streak} dia(s) seguidos`:""}</small><span class="mbar"><i style="width:${Math.min(100,S.xp/need(S.level)*100)}%"></i></span></div></section>`;
+  if(needReview())h+=`<button class="banner" data-do="review">${ic("sun")}<span><b>Bom dia</b><small>${[H("sono")&&S.areas.includes("sono")&&!ent(H("sono")).done&&!ent(H("sono")).failed?"registre como foi a noite":"",S.pending.length?`confirme ${S.pending.length} item(ns) de ontem`:""].filter(Boolean).join(" · ")}</small></span>${ic("chev")}</button>`;
+  if(S.paused)h+=`<button class="banner" data-do="resume">${ic("clock")}<span><b>Pausado</b><small>${S.paused.until?`até ${fmt(S.paused.until)}`:"até você voltar"} · toque para voltar</small></span>${ic("chev")}</button>`;
+  if(!S.areas.length)h+=`<button class="banner" data-do="areas">${ic("plus")}<span><b>Escolha o que evoluir</b><small>água, treino, sono, leitura…</small></span>${ic("chev")}</button>`;
+  if(pend.length)h+=`<h2 class="sec">Para hoje</h2><div class="list">${pend.map(row).join("")}</div>`;
+  if(done.length)h+=`<details class="donegrp" ${pend.length?"":"open"}><summary class="sec">Feitos hoje <span>${done.length}</span></summary><div class="list">${done.map(row).join("")}</div></details>`;
+  if(W.length)h+=`<h2 class="sec">Esta semana <span>faltam ${daysLeft()} dia(s)</span></h2><div class="list">${W.map(row).join("")}</div>`;
+  h+=`<h2 class="sec">Tarefas <span>${T.length?`${T.length} aberta(s)`:""}</span></h2><div class="list"><div class="tadd"><input id="tOne" placeholder="Adicionar tarefa…" enterkeyhint="done" autocomplete="off"><button class="rbtn plus" data-do="task1" aria-label="Adicionar tarefa">${ic("plus")}</button></div>
+    ${T.slice(0,3).map((x,k)=>taskRow(x,k===0)).join("")}${T.length>3?`<button class="more" data-go="tarefas">Ver todas (${T.length}) ${ic("chev")}</button>`:""}</div>`;
+  const since=S.lastBackup||S.stats.since;if(S.history.length>=14&&addDays(since,14)<=S.today.date&&(!S.bkSnooze||S.bkSnooze<=S.today.date))h+=`<div class="note" style="margin-top:16px">Seus dados ficam só neste iPhone. <button class="lnk" data-do="export">Fazer backup</button> · <button class="lnk" data-do="bksnooze">depois</button></div>`;
+  if(S.test)h+=`<div class="demo"><span>Modo teste · relógio <b id="clk">${hm(vmin()%1440)}</b> · ${fmt(S.today.date)}</span><button class="btn" data-do="adv" data-v="60">+1 h</button><button class="btn" data-do="adv" data-v="180">+3 h</button><button class="btn" data-do="nextday">Próximo dia</button></div>`;
+  return h}
+function taskRow(x,top){return`<div class="task ${x.done?"done":""} ${top&&!x.done?"now":""}"><button class="ckb" data-do="taskdone" data-v="${x.id}" aria-label="Concluir">${chk(x.done)}</button><span class="tt">${top&&!x.done?`<b class="tagnow">Agora</b> `:""}${esc(x.t)}${x.c<S.today.date&&!x.done?` <small class="mute">desde ${fmt(x.c)}</small>`:""}</span><button class="pri" data-do="taskpri" data-v="${x.id}" style="color:${PRI[x.pri].c};border-color:${PRI[x.pri].c}">${PRI[x.pri].l}</button><button class="ghostx" data-do="taskdel" data-v="${x.id}" aria-label="Apagar">${ic("x")}</button></div>`}
+function viewTarefas(){const T=S.tasks.slice().sort((a,b)=>a.done-b.done||a.pri-b.pri||a.c.localeCompare(b.c)),top=T.find(x=>!x.done);
+  return`<section class="win"><div class="tab"><span>Despeje tudo</span></div><div class="bd"><p class="mute" style="margin:0 0 8px">Uma coisa por linha. Depois toque na cor para priorizar: urgente, importante ou pode esperar. A primeira da lista é o que fazer agora.</p>
+  <textarea id="tIn" rows="3" placeholder="pagar a conta de luz&#10;comprar ração&#10;responder o João"></textarea><div class="btns" style="margin-top:8px"><button class="btn solid full" data-do="taskadd">Adicionar</button></div></div></section>
+  ${T.length?`<div class="list">${T.map(x=>taskRow(x,x===top)).join("")}</div>`:`<p class="mute" style="text-align:center">Nenhuma tarefa. Mente leve.</p>`}
+  <p class="mute" style="margin:12px 0 0">Tarefas feitas somem no dia seguinte. As abertas continuam com você, sem perder pontos.</p>`}
+function viewEvolucao(){let h=`<div class="cardwrap">${bigCard()}</div>`;
+  h+=`<section class="win"><div class="tab"><span>Atributos</span></div><div class="bd">${S.areas.map(a=>{const v=attrVal(a),dl=v-attrPrev(a);return`<div class="stat"><b><span class="dot" style="background:${AREA_C[a]}"></span>${esc(areaLabel(a))}</b><div class="bar" style="margin:0"><i style="width:${(v-40)/59*100}%"></i></div><span>${v}${dl?` <small style="color:${dl>0?"var(--ok)":"var(--red)"}">${dl>0?"+":""}${dl}</small>`:""}</span></div>`}).join("")||`<p class="mute">Escolha áreas para ganhar atributos.</p>`}
+    ${S.history.some(x=>x.a)?`<p style="margin:14px 0 6px"><b>Últimos 7 dias</b></p>${S.areas.map(a=>`<div class="w7"><span>${esc(areaLabel(a))}</span><span class="w7d">${week7(a).map(c=>`<i class="${c}"></i>`).join("")}</span></div>`).join("")}`:""}
+    <p class="mute" style="margin:10px 0 0">Cada área vira um atributo. A nota mostra sua forma recente: sobe com constância e cai quando você falha. Bronze até 64, prata de 65 a 74, ouro a partir de 75. Com 90% dos itens em 7 dias, a carta fica <b style="color:var(--glow)">Em forma</b>.</p></div></section>`;
+  if(S.areas.includes("corpo")||S.body.log.length>1){const L=S.body.log;h+=`<section class="win"><div class="tab"><span>Peso</span></div><div class="bd">${sparkline(L.slice(-16).map(x=>x.kg))||`<p class="mute">Registre o peso para ver a curva.</p>`}<p class="mute" style="margin:4px 0 0">${L.length?`Início ${num(S.body.start)} kg · agora ${num(S.profile.weight)} kg`:""}</p></div></section>`}
+  return h}
+function viewHistoria(){return recap()+`<section class="win"><div class="tab"><span>Sua história</span></div><div class="bd">${S.lore.length?`<div class="lore">${S.lore.slice(0,80).map(x=>`<div class="li"><span class="lic">${x.i}</span><div><b>${esc(x.t)}</b><br><span class="mute">${fmt(x.d)}${x.d.slice(0,4)!==S.today.date.slice(0,4)?" "+x.d.slice(0,4):""}</span></div></div>`).join("")}</div>`:`<p class="mute">Suas conquistas aparecem aqui.</p>`}
+  <div class="btns"><button class="btn full" data-do="loreadd">Adicionar um momento</button></div></div></section>`}
+function viewPerfil(){const p=S.profile;
+  return`<section class="win"><div class="tab"><span>Você</span></div><div class="bd"><div style="display:flex;gap:14px;align-items:center">${photoHTML("pf-img")}<div><b>${esc(S.name)}</b><br><span class="mute">${GOALS[p.goal]}</span></div></div>
+    <div class="srow" style="margin-top:10px"><span>Peso · altura</span><b>${num(p.weight)} kg${p.height?` · ${p.height} cm`:""}</b></div><div class="srow"><span>Acorda · dorme</span><b>${p.wake} · ${p.sleep}</b></div>
+    <div class="btns"><button class="btn full" data-do="me">Editar dados e foto</button></div></div></section>
+  <section class="win"><div class="tab"><span>Suas áreas</span></div><div class="bd">${S.areas.map(a=>`<button class="ri" data-do="areacfg" data-v="${a}"><span style="display:flex;gap:10px;align-items:center"><span class="ico sm" style="--ac:${AREA_C[a]}">${ic(AREA_IC[a])}</span><span><b>${esc(areaLabel(a))}</b><br><span class="mute">${areaSummary(a)}</span></span></span>${ic("chev")}</button>`).join("")}
+    <div class="btns"><button class="btn solid full" data-do="areas">Adicionar ou remover áreas</button>${S.areas.includes("habitos")?`<button class="btn full" data-do="hnew">Novo hábito</button>`:""}</div></div></section>
+  <section class="win"><div class="tab"><span>Lembretes e Atalhos</span></div><div class="bd"><p class="mute" style="margin:0 0 8px">Cria eventos com alerta no Calendário do iPhone para suas áreas, mesmo com o app fechado. Ao importar, escolha um calendário novo chamado Evolução. Mudou algo? Apague esse calendário e importe de novo.</p>
+    <div class="two"><button class="btn full" data-do="ics">Compartilhar</button><button class="btn full" data-do="icsopen">Abrir direto</button></div>
+    <p class="mute" style="margin:14px 0 0">No app Atalhos, use a ação <b>Abrir App → Evolução</b> (não "Abrir URL", que abre no Safari com dados separados). Ideias: ao parar o alarme, ao chegar na academia, no widget ou no Botão de Ação.</p></div></section>`}
+function viewAjustes(){return`<section class="win"><div class="tab"><span>Seus dados</span></div><div class="bd form">
+  <div class="two"><button class="btn full" data-do="export">Exportar backup</button><button class="btn full" data-do="importb">Importar backup</button></div><input type="file" id="impFile" accept="application/json,.json" class="hide">
+  <p class="mute" style="margin:0">Tudo fica só neste aparelho. ${S.lastBackup?`Último backup: ${fmt(S.lastBackup)}.`:"Nenhum backup ainda."}</p></div></section>
+  <section class="win"><div class="tab"><span>Pausa</span></div><div class="bd">${S.paused?`<p class="mute" style="margin:0">Pausado ${S.paused.until?`até ${fmt(S.paused.until)}`:"até você voltar"}.</p><div class="btns"><button class="btn solid full" data-do="resume">Voltar agora</button></div>`:`<p class="mute" style="margin:0 0 8px">Férias, doença ou viagem: nada tira ponto e a sequência fica congelada.</p><div class="chips">${[[1,"Hoje"],[3,"3 dias"],[7,"7 dias"],[0,"Até eu voltar"]].map(([v,l])=>`<button class="chip" data-do="pause" data-v="${v}">${l}</button>`).join("")}</div>`}</div></section>
+  <section class="win"><div class="tab"><span>Preferências</span></div><div class="bd form"><label class="check"><input type="checkbox" id="sSound" ${S.sound?"checked":""}> Som</label><label class="check"><input type="checkbox" id="sTest" ${S.test?"checked":""}> Modo teste (avançar o relógio)</label>
+  <button class="btn red full" data-do="reset">${confirmReset?"Toque de novo para apagar tudo":"Apagar tudo e recomeçar"}</button></div></section>`}
+function topbar(){const t=cardTheme(),[title]=PAGES[tab]||PAGES.hoje;return`<button class="tb-b" data-do="menu" aria-label="Abrir menu">${ic("menu")}</button><div class="tb-t"><b>${title}</b><small>${fmt(S.today.date)}</small></div><button class="tb-card t-${t.id}" data-go="evolucao" aria-label="Sua carta: ${ovr()}">${ovr()}</button>`}
+function drawer(){const t=cardTheme(),pages=Object.keys(PAGES).filter(k=>k!=="treino"||S.areas.includes("treino"));
+  return`<div class="dw-hd">${photoHTML("pf-img")}<div><b>${esc(S.name||"Você")}</b><small>Nível ${S.level} · carta ${ovr()} ${t.l}</small><span class="mbar"><i style="width:${Math.min(100,S.xp/need(S.level)*100)}%"></i></span></div></div>
+  <nav class="dw-nav">${pages.map(k=>`<button data-go="${k}" ${k===tab?'aria-current="page"':""}>${ic(PAGES[k][1])}<span>${PAGES[k][0]}</span>${k==="tarefas"&&S.tasks.some(x=>!x.done)?`<em>${S.tasks.filter(x=>!x.done).length}</em>`:""}</button>`).join("")}</nav>
+  <p class="dw-ft mute">Evolução · seus dados ficam neste aparelho</p>`}
+function setMenu(on){$("#drawer").classList.toggle("on",on);$("#dov").classList.toggle("on",on);$("#drawer").setAttribute("aria-hidden",on?"false":"true")}
+function render(){const top=$("#top");if(!S.onboarded||wz){top.classList.add("hide");renderWizard();const v=$("#view");if(v&&IOS&&!STANDALONE)v.insertAdjacentHTML("afterbegin",safariBar());return}
+  top.classList.remove("hide");if(!PAGES[tab]||(tab==="treino"&&!S.areas.includes("treino")))tab="hoje";top.innerHTML=topbar();$("#drawer").innerHTML=drawer();
+  $("#view").innerHTML=({hoje:viewHoje,tarefas:viewTarefas,treino:viewTreino,evolucao:viewEvolucao,historia:viewHistoria,perfil:viewPerfil,ajustes:viewAjustes}[tab])();const k=$("#clk");if(k)k.textContent=hm(vmin()%1440)}
+
+/* ---------- registro de cada item ---------- */
+const shHd=(a,t,sub)=>`<div class="sh-hd" style="--ac:${AREA_C[a]}"><span class="ico">${ic(AREA_IC[a])}</span><div><h3>${t}</h3><p class="mute">${sub}</p></div></div>`;
+function openItem(id){if(id==="agua")return openWater();if(id==="treino")return openTrain();if(id==="movimento")return openMove();if(id==="sono")return openReview();if(id==="corpo")return openWeigh();
+  if(id==="leitura"||id==="estudo")return openQty(id);const h=H(id);if(h)return openHabit(id)}
+function openWater(){const h=H("agua"),e=ent(h),T=waterTarget(),v=e.value||0,gl=S.profile.glass,Q=[...new Set([gl,500,750,1000])].slice(0,4);
+  openSheet(shHd("agua","Água",`${num(v)} de ${num(T)} L hoje${S.today.trained?" · +0,5 L porque você treinou":""}`)+`<div class="bigbar"><i style="width:${clamp(v/T*100,0,100)}%"></i></div>
+  <div class="qgrid">${Q.map(ml=>`<button class="qb" data-do="wq" data-v="${ml}"><b>+${ml>=1000?num(ml/1000)+" L":ml+" ml"}</b><span>${ml===gl?"seu copo":ml===500?"garrafinha":ml===750?"garrafa":"1 litro"}</span></button>`).join("")}</div>
+  <div class="inrow"><input id="wml" type="text" inputmode="numeric" placeholder="Outra quantidade (ml)" autocomplete="off"><button class="btn" data-do="wqv">Adicionar</button></div>
+  <p class="lbl">Rodadas</p>${waterRounds().map(r=>`<div class="srow"><span>${r.l} · até ${hm(r.b%1440)}</span><b style="color:${v>=r.cum?"var(--ok)":"var(--ink)"}">${num(r.t)} L${v>=r.cum?" ✓":""}</b></div>`).join("")}
+  <p class="lbl">Registros de hoje</p>${logRows(e.log,x=>`${x.v>=1?num(x.v)+" L":Math.round(x.v*1000)+" ml"}`,"wdel")}
+  <div class="btns"><button class="btn ghost full" data-do="close">Fechar</button></div>`,"agua")}
+function openTrain(){const h=H("treino"),e=ent(h),s=nextSplit(),c=wCount(h),r=wReq(h);let b=shHd("treino","Treino",`${c} de ${r} na semana${s&&s.ex.length?` · próximo: ${esc(s.name)}`:""}`);
+  if(!e.done){b+=`<div class="btns"><button class="btn solid full xl" data-do="fui">${ic("check")} Fui treinar</button><p class="mute" style="margin:0;text-align:center">Só isso já conta. Registrar as cargas é opcional.</p>
+    ${program()?`<button class="btn full" data-do="fuilog">Fui e quero registrar as cargas</button>`:""}</div>`;
+    if(s&&s.ex.length)b+=`<p class="lbl">${esc(s.name)} · ~${estMin(s)} min</p>${s.ex.map(exLine).join("")}`}
+  else{b+=`<p style="color:var(--ok);margin:0">Treino de hoje registrado${e.at?` às ${e.at}`:""} · +${e.xp} XP</p><div class="btns">${program()&&!e.logged?`<button class="btn solid full" data-do="session">Registrar as cargas (opcional)</button>`:e.logged?`<p class="mute" style="margin:0;text-align:center">Cargas registradas ✓</p>`:""}
+    ${e.logged?"":`<button class="btn ghost full" data-do="hundo" data-v="treino">Marquei errado: desfazer</button>`}</div>`}
+  openSheet(b+`<div class="btns"><button class="btn ghost full" data-go="treino">Ver programa de treino</button><button class="btn ghost full" data-do="close">Fechar</button></div>`,"treino")}
+function openQty(id){const h=H(id),e=ent(h),v=e.value||0,pages=h.unit==="páginas",run=S.timer&&S.timer.id===id,Q=pages?[5,10,20,30]:[10,15,30,60],bk=h.book;
+  let b=shHd(id,id==="leitura"?"Leitura":esc(h.name),`${num(v)} de ${num(h.target)} ${unitS(h)} hoje`)+`<div class="bigbar"><i style="width:${clamp(v/h.target*100,0,100)}%"></i></div>`;
+  b+=run?`<div class="timerbox"><b data-timer>${timerTxt()}</b><button class="btn solid" data-do="tstop">${ic("stop")} Parar e registrar</button><button class="btn ghost" data-do="tcancel">Cancelar</button></div>`:
+    `<button class="btn full" data-do="tstart" data-v="${id}" style="margin-top:12px">${ic("play")} Iniciar cronômetro</button>`;
+  b+=`<p class="lbl">Adicionar</p><div class="qgrid">${Q.map(n=>`<button class="qb" data-do="qadd" data-id="${id}" data-v="${n}"><b>+${n}</b><span>${unitS(h)}</span></button>`).join("")}</div>
+  <div class="inrow"><input id="qIn" type="text" inputmode="numeric" placeholder="Outra quantidade" autocomplete="off"><button class="btn" data-do="qaddv" data-id="${id}">Adicionar</button></div>`;
+  if(id==="leitura"&&pages&&bk&&bk.total&&!bk.done)b+=`<p class="lbl">${esc(bk.title||"Livro atual")} · página ${bk.cur||0} de ${bk.total}</p><div class="inrow"><input id="pgIn" type="text" inputmode="numeric" placeholder="Estou na página…" autocomplete="off"><button class="btn" data-do="pgset">Atualizar</button></div>`;
+  b+=`<p class="lbl">Registros de hoje</p>${logRows(e.lq,x=>`+${num(x.v)} ${unitS(h)}`,"qdel")}`;
+  openSheet(b+`<div class="btns"><button class="btn ghost full" data-do="close">Fechar</button></div>`,id)}
+function openMove(){const h=H("movimento"),e=ent(h),m=wMin(h),g=wReq(h);S._act=S._act||h.name;
+  openSheet(shHd("movimento","Movimento",`${m} de ${g} min na semana · hoje ${e.value||0} min`)+`<div class="bigbar"><i style="width:${clamp(m/Math.max(1,g)*100,0,100)}%"></i></div>
+  <p class="lbl">Atividade</p><div class="chips">${ACTS.map(a=>`<button class="chip ${S._act===a?"on":""}" data-do="mact" data-v="${a}">${a}</button>`).join("")}</div>
+  <p class="lbl">Quanto tempo</p><div class="qgrid">${[10,20,30,45,60,90].map(n=>`<button class="qb" data-do="madd" data-v="${n}"><b>${n}</b><span>min</span></button>`).join("")}</div>
+  <div class="inrow"><input id="mIn" type="text" inputmode="numeric" placeholder="Outros minutos" autocomplete="off"><button class="btn" data-do="maddv">Adicionar</button></div>
+  <p class="lbl">Registros de hoje</p>${logRows(e.lm,x=>`${esc(x.act||h.name)} · ${x.v} min`,"mdel")}<div class="btns"><button class="btn ghost full" data-do="close">Fechar</button></div>`,"movimento")}
+function openHabit(id){const h=H(id),e=ent(h);openSheet(shHd("habitos",esc(h.name),`${freqTxt(h)} · +${h.xp} XP · −${h.loss} XP se não cumprir`)+
+  `<div class="btns">${e.done?`<p style="color:var(--ok);margin:0">Feito hoje${e.at?` às ${e.at}`:""}.</p><button class="btn ghost full" data-do="hundo" data-v="${id}">Marquei errado: desfazer</button>`:`<button class="btn solid full xl" data-do="check" data-v="${id}">${ic("check")} Feito</button>`}
+  <button class="btn ghost full" data-do="hedit" data-id="${id}">Editar hábito</button><button class="btn ghost full" data-do="close">Fechar</button></div>`,id)}
+function commit(){save();render();if(sheetOpen&&sheetId){if(sheetId==="__rv")openReview();else openItem(sheetId)}}
+Object.assign(A,{
+  menu(){setMenu(true)},open(b){openItem(b.dataset.v)},
+  wq(b){addWater(+b.dataset.v/1000);commit()},wqv(){const ml=Math.round(pnum($("#wml").value));if(ml>0){addWater(ml>=20?ml/1000:ml);commit()}},wdel(b){delWater(+b.dataset.v);commit()},
+  fui(){const h=H("treino");if(h&&!ent(h).done)addSession(h);commit()},fuilog(){const h=H("treino");if(h&&!ent(h).done)addSession(h);save();render();closeSheet();setTimeout(openSession,200)},
+  qadd(b){addQty(H(b.dataset.id),+b.dataset.v);commit()},qaddv(b){const v=pnum($("#qIn").value);if(v>0){addQty(H(b.dataset.id),v);commit()}},qdel(b){delQty(H(sheetId),+b.dataset.v);commit()},
+  pgset(){const h=H("leitura"),pg=Math.round(pnum($("#pgIn").value)),d=pg-(h.book.cur||0);if(pg>0&&d>0){addQty(h,d);commit()}else toast("Informe uma página depois da atual","red")},
+  tstart(b){S.timer={id:b.dataset.v,start:Date.now()};save();commit();toast("Cronômetro iniciado · pode fechar o app")},
+  tcancel(){S.timer=null;commit()},
+  tstop(){const t=S.timer;if(!t)return;const min=Math.max(1,Math.round((Date.now()-t.start)/60000)),h=H(t.id);S.timer=null;if(!h){commit();return}
+    if(h.unit==="min"){addQty(h,min);commit()}else{save();render();openSheet(shHd(h.id,"Leitura",`Você leu por ${min} min`)+`<p class="lbl">Quantas páginas?</p><div class="inrow"><input id="qIn" type="text" inputmode="numeric" autocomplete="off" placeholder="páginas"><button class="btn solid" data-do="qaddv" data-id="${h.id}">Registrar</button></div><div class="btns"><button class="btn ghost full" data-do="close">Fechar</button></div>`,h.id)}},
+  mact(b){S._act=b.dataset.v;openMove()},madd(b){addMinutes(H("movimento"),+b.dataset.v,S._act);commit()},maddv(){const v=Math.round(pnum($("#mIn").value));if(v>0){addMinutes(H("movimento"),v,S._act);commit()}},mdel(b){delMinutes(H("movimento"),+b.dataset.v);commit()},
+  check(b){const h=H(b.dataset.v||b.dataset.id);if(!h)return;const e=ent(h);if(e.done)return;if(isWeekly(h))S.week.c[h.id]=wCount(h)+1;complete(h,h.xp);commit()},
+  hundo(b){const h=H(b.dataset.v||b.dataset.id),e=ent(h);if(!h||!e.done||e.logged)return;addXP(-(e.xp||0));unhit(h.area);if(isWeekly(h))S.week.c[h.id]=Math.max(0,wCount(h)-1);if(h.area==="treino")S.stats.workouts=Math.max(0,S.stats.workouts-1);
+    e.done=false;e.xp=0;S.stats.habits=Math.max(0,S.stats.habits-1);toast("Desfeito");commit()},
+  task1(){const i=$("#tOne"),t=(i.value||"").trim();if(!t)return;S.tasks.push({id:uid(),t:t.slice(0,120),pri:2,done:false,c:S.today.date});save();render();const n=$("#tOne");if(n)n.focus()}
+});
+
 /* ---------- 10. Integrações: lembretes no Calendário e links do Atalhos ---------- */
 function buildICS(){const base=location.origin+location.pathname,BY=["SU","MO","TU","WE","TH","FR","SA"],t=S.today.date,st=new Date().toISOString().replace(/[-:]/g,"").slice(0,15)+"Z",E=[];
   const ev=(k,title,desc,min,days,url)=>{const first=days.map(d=>nextDow(t,d)).sort()[0],dt=m=>first.replace(/-/g,"")+"T"+hm(m).replace(":","")+"00";
@@ -925,17 +1089,18 @@ function buildICS(){const base=location.origin+location.pathname,BY=["SU","MO","
 function urlAction(){const q=new URLSearchParams(location.search);if(!q.toString())return;history.replaceState(null,"",location.pathname);if(!S.onboarded)return;loop();const a=(q.get("acao")||"").toLowerCase(),v=+(q.get("v")||0);
   if(a==="agua"&&H("agua")){addWater(v>0?(v>10?v/1000:v):S.profile.glass/1000);commit()}else if(a==="treino"&&H("treino"))train();else if(a==="ler"&&H("leitura")){addQty(H("leitura"),v||H("leitura").steps[0]);commit()}
   else if(a==="estudo"&&H("estudo")){addQty(H("estudo"),v||15);commit()}else if(a==="mover"&&H("movimento")){addMinutes(H("movimento"),v||30);commit()}else if(a==="acordei")openReview();else if(a)toast("Ação do Atalho não reconhecida","red")}
-document.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(g){tab=g.dataset.go;render();scrollTo(0,0);return}const n=e.target.closest("#nav [data-tab]");if(n){tab=n.dataset.tab;confirmReset=false;render();scrollTo(0,0);return}
+document.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(g){tab=g.dataset.go;confirmReset=false;setMenu(false);if(sheetOpen)closeSheet();render();scrollTo(0,0);return}
   const b=e.target.closest("[data-do]");if(!b)return;const f=A[b.dataset.do];if(f)f(b)});
 document.addEventListener("change",e=>{const t=e.target;
   if(t.id==="impFile"&&t.files[0]){t.files[0].text().then(tx=>{try{const d=migrate(JSON.parse(tx));if(!d)throw 0;S=d;save();render();toast("Backup restaurado")}catch(x){toast("Arquivo de backup inválido","red")}});return}
   if(t.id==="photoFile"&&t.files[0]){resizePhoto(t.files[0]).then(u=>{wz.d.photo=u;render()}).catch(()=>toast("Não consegui ler essa foto","red"));return}
   if(t.id==="sSound"){S.sound=t.checked;save()}if(t.id==="sTest"){S.test=t.checked;if(!S.test)S.offset=0;save();render()}if(t.dataset.rh&&hdraft){readHabitEdit();renderHabitEdit()}});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&sheetOpen)closeSheet()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(sheetOpen)closeSheet();setMenu(false)}if(e.key==="Enter"&&e.target.id==="tOne"){e.preventDefault();A.task1()}});
+$("#dov").onclick=()=>setMenu(false);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)loop()});
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
-setInterval(()=>{loop();restTick();const k=$("#clk");if(k)k.textContent=hm(vmin()%1440)},1000);render();loop();urlAction();
+setInterval(()=>{loop();restTick();timerTick();const k=$("#clk");if(k)k.textContent=hm(vmin()%1440)},1000);render();loop();urlAction();
 
 </script>
 </body>
