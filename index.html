@@ -414,7 +414,7 @@ function defaultState(){const iso=todayIso();return{v:8,updatedAt:Date.now(),onb
   level:1,xp:0,streak:0,best:0,sound:true,test:false,offset:0,paused:null,program:null,body:{log:[],start:null,goalKg:null},tasks:[],lore:[],
   stats:{habits:0,workouts:0,water:0,pages:0,studyMin:0,moveMin:0,tasks:0,books:0,levels:0,since:iso},
   week:newWeek(iso),pending:[],history:[],log:[],today:{date:iso,e:{},ah:{},trained:false,rv:false,wr:{}}}}
-const LS="evolucao-v4";let S;
+const LS="evolucao-v8";let S;try{localStorage.removeItem("evolucao-v4")}catch(e){}
 try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
 /* Migração da versão anterior (v7): mantém nível, XP, histórico, foto, peso, programa e cargas */
 function migrate(d){if(!d||typeof d!=="object")return null;if(d.v===8)return d;
