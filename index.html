@@ -411,6 +411,27 @@ summary.sec{cursor:pointer;list-style:none}.donegrp{border:0;padding:0}
 .btn .ic{vertical-align:-4px;margin-right:4px}
 details.how{margin-top:12px;border:0}details.how summary{color:#9cc6ff;font-weight:600;cursor:pointer;list-style:none}details.how p{margin:8px 0 0}
 button.dw-hd{width:100%;background:none;border:0;border-bottom:1px solid var(--hair);color:var(--ink);text-align:left}
+
+/* ===== acabamento ===== */
+.toast{top:auto!important;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translate(-50%,170%)!important;border-radius:14px;background:#15213f;border:1px solid rgba(127,220,255,.35);box-shadow:0 10px 30px rgba(0,0,0,.45);padding:12px 18px;font:600 .92rem Barlow,sans-serif}
+.toast.on{transform:translate(-50%,0)!important}
+.modal .win{border-radius:22px;background:#0f1832;border:1px solid var(--hair);box-shadow:0 20px 60px rgba(0,0,0,.5);animation:pop .35s cubic-bezier(.2,1.3,.4,1)}
+.modal .huge{font-size:3.2rem}
+.opt{border-radius:12px}.days button{border-radius:10px;border-color:var(--hair)}.days{gap:6px}
+.step{border-radius:12px;overflow:hidden;border-color:var(--hair)}.step.sm{border-radius:10px}
+.srow{border-bottom:1px solid var(--hair)!important}.ex{border-bottom:1px solid var(--hair)!important}details{border-bottom:1px solid var(--hair)}
+.mc{border-bottom:1px solid var(--hair)}
+.sheet .win .win{border-radius:14px;background:#0a1124}.sheet .win .win::before{display:none}
+.ap{grid-template-columns:48px 1fr;border-radius:14px;border-color:var(--hair);padding:12px 14px}.ap .ico{grid-row:1/3;align-self:center}.ap[aria-pressed=true]{border-color:rgba(127,220,255,.6);box-shadow:inset 3px 0 0 var(--glow)}
+.rz{display:grid;gap:4px}.rzr{display:flex;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--hair)}.rzr:last-child{border-bottom:0}.rzr b{display:block}.rzr small{color:var(--mute);font-size:.86rem}
+.wz-prog i{border-radius:2px}
+.form label.check.sw{display:flex!important;align-items:center;justify-content:space-between;gap:12px;color:var(--ink)!important;font-size:1rem!important;padding:8px 0;border-bottom:1px solid var(--hair)}
+.check.sw input[type=checkbox]{-webkit-appearance:none!important;appearance:none!important;width:52px!important;height:32px!important;min-height:32px!important;flex:0 0 52px;border-radius:999px!important;background:#2a3552!important;border:0!important;position:relative;padding:0;transition:background .2s}
+.check.sw input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.4);transition:transform .2s}
+.check.sw input[type=checkbox]:checked{background:#34c759!important}.check.sw input[type=checkbox]:checked::after{transform:translateX(20px)}
+.recap div{border-radius:12px}
+.hrow,.task{border-radius:12px}
+.chips{gap:8px}
 </style>
 </head>
 <body>
@@ -547,7 +568,7 @@ const weeklies=()=>S.habits.filter(h=>S.areas.includes(h.area)&&isWeekly(h));
 const ent=h=>S.today.e[h.id]||(S.today.e[h.id]={});
 const wCount=h=>S.week.c[h.id]||0;
 const wMin=h=>S.week.m[h.id]||0;
-const wReq=h=>{const f=Math.min(1,(S.week.cap-(S.week.paused||0))/7);return h.kind==="minutes"?Math.round(h.freq.goal*f):Math.max(0,Math.round(h.freq.times*f))};
+const wReq=h=>{let f=Math.min(1,(S.week.cap-(S.week.paused||0))/7);if(h.created&&weekKey(h.created)===S.week.key)f=Math.min(f,(7-((dow(h.created)+6)%7))/7);return h.kind==="minutes"?Math.round(h.freq.goal*f):Math.max(0,Math.round(h.freq.times*f))};
 const daysLeft=()=>7-((dow(S.today.date)+6)%7);
 const freqTxt=h=>h.freq.mode==="daily"?"todo dia":h.freq.mode==="days"?daysTxt(h.freq.days):h.kind==="minutes"?`${h.freq.goal} min por semana`:`${h.freq.times}× por semana`;
 
@@ -686,7 +707,7 @@ function trendOk(tr){const want={perder:-1,ganhar:1,manter:0}[S.profile.goal];re
 function weightTrend(){const L=S.body.log;if(L.length<2)return null;const last=L[L.length-1],ref=L.find(x=>x.date>=addDays(last.date,-28))||L[0];if(ref===last)return null;return{kg:r1(last.kg-ref.kg),days:Math.round((new Date(last.date)-new Date(ref.date))/864e5)}}
 function sparkline(vals,w=300,h=56){if(vals.length<2)return"";const mn=Math.min(...vals),mx=Math.max(...vals),rg=mx-mn||1;
   return`<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" role="img" aria-label="Evolução do peso"><polyline points="${vals.map((v,i)=>`${(i/(vals.length-1)*w).toFixed(1)},${(h-6-(v-mn)/rg*(h-12)).toFixed(1)}`).join(" ")}" fill="none" stroke="var(--glow)" stroke-width="2.5" stroke-linejoin="round"/></svg>`}
-function recap(){const s=S.stats,y=S.today.date.slice(0,4),P=[[s.habits,"hábitos cumpridos"],[s.workouts,"treinos"],[s.moveMin,"min de movimento"],[r1(s.water),"litros de água"],[s.pages,"páginas lidas"],[s.books,"livros terminados"],[Math.round(s.studyMin/60),"horas de estudo"],[s.tasks,"tarefas resolvidas"],[S.level,"é o seu nível atual"]].filter(x=>x[0]>0);
+function recap(){const s=S.stats,y=S.today.date.slice(0,4),P=[[s.habits,"hábitos cumpridos"],[s.workouts,"treinos"],[s.moveMin,"min de movimento"],[r1(s.water),"litros de água"],[s.pages,"páginas lidas"],[s.books,"livros terminados"],[Math.round(s.studyMin/60),"horas de estudo"],[s.tasks,"tarefas resolvidas"],[S.level,"nível atual"]].filter(x=>x[0]>0);
   return`<section class="win"><div class="tab"><span>Retrospectiva ${y}</span></div><div class="bd">${P.length?`<div class="recap">${P.map(([v,l])=>`<div><b>${num(v)}</b><span>${l}</span></div>`).join("")}</div>`:`<p class="mute">Seus números do ano aparecem aqui conforme você avança.</p>`}
   <p class="mute" style="margin:10px 0 0">Desde ${fmt(s.since)} · recorde de ${S.best} dia(s) seguidos</p></div></section>`}
 function week7(a){const out=[];for(let i=7;i>=1;i--){const d=addDays(S.today.date,-i),x=S.history.find(y=>y.date===d),q=x&&x.a&&x.a[a];out.push(!q||!q[1]?"":q[0]>=q[1]?"f":q[0]>0?"p":"x")}return out}
@@ -733,12 +754,12 @@ function wzRead(){const g=i=>$("#"+i),d=wz.d,s=wz.steps[wz.i];if(!g("wzOn"))retu
 const dayPick=(key,arr)=>`<div class="days">${DOW.map((x,i)=>`<button type="button" data-do="wzday" data-k="${key}" data-v="${i}" aria-pressed="${arr.includes(i)}">${x}</button>`).join("")}</div>`;
 const opt=(k,v,l,cur)=>`<button class="opt" data-do="wzset" data-k="${k}" data-v="${v}" aria-pressed="${cur===v}">${l}</button>`;
 function renderWizard(){$("#hud").classList.add("hide");$("#nav").classList.add("hide");if(!wz)wzStart(S.migrated?"update":"new");const d=wz.d,s=wz.steps[wz.i];let t="",b="",next="Continuar";
-  const last=wz.i===wz.steps.length-1;if(last)next=wz.mode==="new"?"Começar":"Salvar";
+  const last=wz.i===wz.steps.length-1;if(last&&!(s==="areas"&&(wz.mode==="new"||wz.mode==="update")))next=wz.mode==="new"?"Começar":"Salvar";
   if(s==="intro"){t=wz.mode==="update"?"Evolução, do jeito novo":"Evolução";b=wz.mode==="update"?`<p>O app mudou: agora você escolhe as <b>áreas da vida</b> que quer evoluir, e cada uma vira um atributo da sua carta.</p><p class="mute">Seu nível, XP, histórico, foto, peso e treino continuam. Confira suas áreas.</p>`:
     `<p>Escolha o que você quer evoluir (água, sono, treino, leitura, estudo, hábitos…). O app monta metas inteligentes para cada área, e tudo alimenta uma <b>carta com a sua foto</b>, que sobe de nota com a sua constância.</p><p class="mute">Leva 2 minutos. Tudo fica salvo só no seu aparelho.</p>`;next="Começar"}
   if(s==="eu"){t="Você";b=`<div class="form"><label>Como quer ser chamado<input id="wName" value="${esc(d.name)}" placeholder="Seu nome"></label>
     <div style="display:flex;gap:14px;align-items:center">${photoHTML("pf-img",d.photo,d.name)}<div style="flex:1"><button class="btn full" data-do="photo">${d.photo?"Trocar foto":"Escolher foto"}</button><p class="mute" style="margin:6px 0 0">Vai na sua carta. Opcional.</p></div></div><input type="file" id="photoFile" accept="image/*" class="hide"></div>`}
-  if(s==="areas"){t="O que você quer evoluir?";b=`<p class="mute" style="margin:0 0 10px">Escolha quantas quiser. Só aparece no app o que você marcar, e dá para mudar depois.</p><div class="apick">${AREA_ORDER.map(a=>`<button class="ap" data-do="wzarea" data-v="${a}" aria-pressed="${d.areas.includes(a)}"><span class="api">${AREAS[a].i}</span><b>${AREAS[a].l}</b><span class="mute">${AREAS[a].d}</span></button>`).join("")}</div>`}
+  if(s==="areas"){t="O que você quer evoluir?";b=`<p class="mute" style="margin:0 0 10px">Escolha quantas quiser. Só aparece no app o que você marcar, e dá para mudar depois.</p><div class="apick">${AREA_ORDER.map(a=>`<button class="ap" data-do="wzarea" data-v="${a}" aria-pressed="${d.areas.includes(a)}"><span class="ico" style="--ac:${AREA_C[a]}">${ic(AREA_IC[a])}</span><b>${AREAS[a].l}</b><span class="mute">${AREAS[a].d}</span></button>`).join("")}</div>`}
   if(s==="corpo"){const needGoal=d.areas.some(a=>["corpo","treino","movimento"].includes(a));t="Seu corpo";b=`<div class="form"><div class="two"><label>Peso (kg)<input id="wKg" type="text" inputmode="decimal" value="${num(d.weight)}"></label><label>Altura (cm) · opcional<input id="wCm" type="number" inputmode="numeric" value="${d.height}"></label></div>
     ${needGoal?`<label>Objetivo</label><div class="opts">${Object.entries(GOALS).map(([k,v])=>opt("goal",k,v,d.goal)).join("")}</div>`:""}
     ${d.areas.includes("agua")?`<label>Copo ou garrafa que você mais usa<select id="wGlass">${[200,250,300,500,750].map(v=>`<option value="${v}" ${+d.glass===v?"selected":""}>${v} ml</option>`).join("")}</select></label>
@@ -755,15 +776,15 @@ function renderWizard(){$("#hud").classList.add("hide");$("#nav").classList.add(
     <label>Meta por dia<input id="wRead" type="number" value="${d.readTarget}"></label><p class="mute" style="margin:0">Leia onde quiser. Você registra com um toque.</p>
     <label>Livro atual · opcional<input id="wBook" value="${esc(d.bookTitle)}" placeholder="Título"></label><div class="two"><label>Total de páginas<input id="wBookT" type="number" value="${d.bookTotal}"></label><label>Já leu<input id="wBookC" type="number" value="${d.bookCur}"></label></div></div>`}
   if(s==="estudo"){t="Estudo";b=`<div class="form"><label>O que você vai estudar<input id="wStudyN" value="${esc(d.studyName)}" placeholder="Inglês, faculdade, curso de Excel…"></label><label>Minutos por dia<input id="wStudyM" type="number" value="${d.studyMin}"></label><label>Dias</label>${dayPick("studyDays",d.studyDays)}</div>`}
-  if(s==="habitos"){t="Seus hábitos";b=`<div class="form"><p class="mute" style="margin:0">Toque para escolher ou escreva o seu. Todos começam como diários; mude a frequência depois em Perfil.</p><div class="chips">${HABIT_IDEAS.map(x=>`<button class="chip ${d.custom.some(c=>c.name===x)?"on":""}" data-do="wzidea" data-v="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+  if(s==="habitos"){t="Seus hábitos";b=`<div class="form"><p class="mute" style="margin:0">Toque para escolher ou escreva o seu. Todos começam como diários; mude a frequência depois em Áreas e lembretes.</p><div class="chips">${HABIT_IDEAS.map(x=>`<button class="chip ${d.custom.some(c=>c.name===x)?"on":""}" data-do="wzidea" data-v="${esc(x)}">${esc(x)}</button>`).join("")}</div>
     <div style="display:flex;gap:8px"><input id="wCustom" placeholder="Outro hábito"><button class="btn" data-do="wzcustom">Adicionar</button></div>${d.custom.filter(c=>!HABIT_IDEAS.includes(c.name)).map(c=>`<div class="srow"><span>${esc(c.name)}</span><button class="btn ghost small" data-do="wzcdel" data-v="${esc(c.name)}">remover</button></div>`).join("")}</div>`}
   if(s==="resumo"){t="Seu plano";const A=d.areas,L=[];
-    if(A.includes("agua"))L.push(["💧 Água",`${num(waterBaseFor({weight:d.weight,height:d.height}))} L/dia em 3 rodadas (+0,5 L quando treinar)`]);
-    if(A.includes("treino"))L.push(["🏋️ Treino",`${d.gymTimes}× por semana · ${d.gymKind==="programa"?"seu treino (cadastre na aba Treino)":"programa inicial básico pelo objetivo"}`]);
-    if(A.includes("movimento"))L.push(["👟 "+esc(d.act),`${d.moveGoal} min por semana`]);if(A.includes("sono"))L.push(["🌙 Sono",`dormir ${d.sleep} · acordar ${d.wake}`]);
-    if(A.includes("leitura"))L.push(["📖 Leitura",`${d.readTarget} ${d.readUnit} por dia${d.bookTitle?` · ${esc(d.bookTitle)}`:""}`]);if(A.includes("estudo"))L.push(["🧠 "+esc(d.studyName||"Estudo"),`${d.studyMin} min · ${daysTxt(d.studyDays)}`]);
-    if(A.includes("corpo"))L.push(["⚖️ Corpo",`pesagem 1× por semana · ${GOALS[d.goal].toLowerCase()}`]);if(A.includes("habitos"))L.push(["✅ Hábitos",esc(d.custom.map(c=>c.name).join(", ")||"nenhum")]);
-    b=`${L.map(([k,v])=>`<div class="srow"><span>${k}</span><b>${v}</b></div>`).join("")}<p class="mute" style="margin:10px 0 0">Cada área vira um atributo da sua carta. Hábito não cumprido tira XP e baixa a nota; esqueceu de marcar, o app pergunta na manhã seguinte.</p>`}
+    if(A.includes("agua"))L.push(["agua","Água",`${num(waterBaseFor({weight:d.weight,height:d.height}))} L/dia em 3 rodadas (+0,5 L quando treinar)`]);
+    if(A.includes("treino"))L.push(["treino","Treino",`${d.gymTimes}× por semana · ${d.gymKind==="programa"?"seu treino (cadastre na aba Treino)":"programa inicial básico pelo objetivo"}`]);
+    if(A.includes("movimento"))L.push(["movimento",esc(d.act),`${d.moveGoal} min por semana`]);if(A.includes("sono"))L.push(["sono","Sono",`dormir ${d.sleep} · acordar ${d.wake}`]);
+    if(A.includes("leitura"))L.push(["leitura","Leitura",`${d.readTarget} ${d.readUnit} por dia${d.bookTitle?` · ${esc(d.bookTitle)}`:""}`]);if(A.includes("estudo"))L.push(["estudo",esc(d.studyName||"Estudo"),`${d.studyMin} min · ${daysTxt(d.studyDays)}`]);
+    if(A.includes("corpo"))L.push(["corpo","Corpo",`pesagem 1× por semana · ${GOALS[d.goal].toLowerCase()}`]);if(A.includes("habitos"))L.push(["habitos","Hábitos",esc(d.custom.map(c=>c.name).join(", ")||"nenhum")]);
+    b=`<div class="rz">${L.map(([a,k,v])=>`<div class="rzr"><span class="ico sm" style="--ac:${AREA_C[a]}">${ic(AREA_IC[a])}</span><div><b>${k}</b><small>${v}</small></div></div>`).join("")}</div><p class="mute" style="margin:10px 0 0">Cada área vira um atributo da sua carta. Hábito não cumprido tira XP e baixa a nota; esqueceu de marcar, o app pergunta na manhã seguinte.</p>`}
   const edit=wz.mode.startsWith("area:")||wz.mode==="edit";if(edit&&last)next="Salvar";
   $("#view").innerHTML=`<div class="wz">${wz.steps.length>1?`<div class="wz-prog">${wz.steps.map((_,k)=>`<i class="${k<=wz.i?"on":""}"></i>`).join("")}</div>`:""}<section class="win"><div class="tab"><span>${esc(t)}</span></div><div class="bd"><input type="hidden" id="wzOn" value="1">${b}
     <p id="wzErr" style="color:var(--red);margin:10px 0 0;font-size:.88rem"></p><div class="btns"><button class="btn solid full" data-do="wznext">${next}</button>${wz.i>0?`<button class="btn ghost full" data-do="wzback">Voltar</button>`:""}${S.onboarded?`<button class="btn ghost full" data-do="wzcancel">Cancelar</button>`:""}</div></div></section></div>`}
@@ -771,8 +792,8 @@ function wzApply(){const d=wz.d,first=!S.onboarded,p=S.profile;S.name=d.name||S.
   const A=AREA_ORDER.filter(a=>d.areas.includes(a)),cfg={gymTimes:d.gymTimes,gymDays:d.gymDays,gymTime:d.gymTime,act:d.act,moveGoal:d.moveGoal,readUnit:d.readUnit,readTarget:d.readTarget,
     book:d.bookTitle||d.bookTotal?{title:d.bookTitle,total:+d.bookTotal||0,cur:+d.bookCur||0,done:false}:null,studyName:d.studyName||"Estudo",studyMin:d.studyMin,studyDays:d.studyDays,custom:d.custom};
   const fresh=buildHabits(A,p,cfg),keep=[];
-  for(const n of fresh){if(n.area==="habitos"){const o=S.habits.find(x=>x.area==="habitos"&&x.name===n.name);keep.push(o||n);continue}
-    const o=H(n.id);if(!o){keep.push(n);continue}
+  for(const n of fresh){if(n.area==="habitos"){const o=S.habits.find(x=>x.area==="habitos"&&x.name===n.name);if(!o&&!first)n.created=S.today.date;keep.push(o||n);continue}
+    const o=H(n.id);if(!o){if(!first)n.created=S.today.date;keep.push(n);continue}
     if(n.id==="agua")o.target=n.target;if(n.id==="treino"){o.freq=n.freq;o.time=n.time}if(n.id==="movimento"){o.name=n.name;o.freq.goal=n.freq.goal}
     if(n.id==="leitura"){if(o.unit!==n.unit){o.unit=n.unit;o.steps=n.steps}o.target=n.target;o.book=cfg.book?Object.assign(o.book||{},cfg.book,{done:o.book&&o.book.title===cfg.book.title?o.book.done:false}):null}
     if(n.id==="estudo"){o.name=n.name;o.target=n.target;o.freq=n.freq}keep.push(o)}
@@ -787,11 +808,11 @@ function wzApply(){const d=wz.d,first=!S.onboarded,p=S.profile;S.name=d.name||S.
   else toast("Salvo");if(mode==="new"||mode==="update")tab="hoje";if(A.includes("treino")&&S.program&&!S.program.splits.some(x=>x.ex.length)){tab="treino";render();openProg()}}
 
 /* ---------- 8. Sheets ---------- */
-function openReview(){S.today.rv=true;const h=H("sono"),e=h?ent(h):{},p=S.profile,now=vmin();let b=`<h3>Bom dia${S.name?`, ${esc(S.name.split(" ")[0])}`:""}</h3>`;
-  if(h&&S.areas.includes("sono")&&!e.done&&!e.failed)b+=`<div class="mc"><div class="hd"><b>🌙 Como foi a noite?</b><span class="cd">meta ${p.sleep} → ${p.wake}</span></div>
+function openReview(){S.today.rv=true;const h=H("sono"),e=h?ent(h):{},p=S.profile,now=vmin();let b=`<div class="sh-hd" style="--ac:#ffd166"><span class="ico">${ic("sun")}</span><div><h3>Bom dia${S.name?`, ${esc(S.name.split(" ")[0])}`:""}</h3><p class="mute">30 segundos para fechar o dia de ontem</p></div></div>`;
+  if(h&&S.areas.includes("sono")&&!e.done&&!e.failed)b+=`<div class="mc"><div class="hd"><b>Como foi a noite?</b><span class="cd">meta ${p.sleep} → ${p.wake}</span></div>
     <div class="two" style="margin-top:8px"><label class="form" style="display:grid;gap:4px"><span class="mute">Dormiu às</span><input id="rBed" type="time" value="${p.sleep}"></label><label class="form" style="display:grid;gap:4px"><span class="mute">Acordou às</span><input id="rWake" type="time" value="${hm(Math.min(now,toL(toMin(p.wake))+180)%1440)}"></label></div>
     <div class="btns"><button class="btn solid full" data-do="rvsleep">Registrar</button></div><p class="mute" style="margin:6px 0 0">Até 30 min de diferença: no horário (+${h.bonus} XP).</p></div>`;
-  if(S.pending.length){b+=`<p style="margin:14px 0 4px"><b>Ficou sem marcar</b></p>`+S.pending.map((q,i)=>{const x=H(q.id);if(!x)return"";return`<div class="mc"><div class="hd"><b>${AREAS[x.area].i} ${esc(x.name)} <span class="mute">(${fmt(q.date)})</span></b></div><div class="acts"><button class="btn solid" data-do="rvok" data-v="${i}" data-g="1">Fiz</button><button class="btn red" data-do="rvok" data-v="${i}" data-g="0">Não fiz</button></div></div>`}).join("")+`<p class="mute" style="margin:6px 0 0">Sem resposta até o fim de hoje, conta como não feito.</p>`}
+  if(S.pending.length){b+=`<p style="margin:14px 0 4px"><b>Ficou sem marcar</b></p>`+S.pending.map((q,i)=>{const x=H(q.id);if(!x)return"";return`<div class="mc"><div class="hd"><b>${esc(x.name)} <span class="mute">(${fmt(q.date)})</span></b></div><div class="acts"><button class="btn solid" data-do="rvok" data-v="${i}" data-g="1">Fiz</button><button class="btn red" data-do="rvok" data-v="${i}" data-g="0">Não fiz</button></div></div>`}).join("")+`<p class="mute" style="margin:6px 0 0">Sem resposta até o fim de hoje, conta como não feito.</p>`}
   if(!S.pending.length&&!(h&&S.areas.includes("sono")&&!e.done&&!e.failed))b+=`<p class="quiet">Tudo em dia.</p>`;
   openSheet(b+`<div class="btns"><button class="btn ghost full" data-do="close">Começar o dia</button></div>`,"__rv")}
 function maybeReview(){if(!S.onboarded||S.today.rv||sheetOpen||showing||wz||S.today.date!==vdate())return;if(needReview()){openReview();save()}}
@@ -802,7 +823,7 @@ function openSession(){const s=nextSplit();if(!s||!s.ex.length){toast("Cadastre 
   <div class="mute">${x.sets} séries · ${x.min} a ${x.max} repetições${x.hist&&x.hist.length?` · última vez: ${num(x.hist[x.hist.length-1].w)} kg × ${x.hist[x.hist.length-1].r.join("/")}`:""}</div><div class="sets">${Array.from({length:x.sets},(_,k)=>stepper(`g${i}_${k}`,x.last&&x.last[k]!=null?x.last[k]:x.min,true)).join("")}</div></div>`).join("")}
   <div class="btns"><button class="btn solid full" data-do="sesssave">Salvar treino</button><button class="btn ghost full" data-do="close">Agora não</button></div>`)}
 let restEnd=0;function restTick(){const el=$("#restT");if(!restEnd)return;const s=Math.ceil((restEnd-Date.now())/1000);if(s<=0){restEnd=0;if(el)el.textContent="Bora!";fx("lvl");toast("Descanso acabou · próxima série","gold");return}if(el)el.textContent=`${Math.floor(s/60)}:${pad(s%60)}`}
-function openWeigh(){openSheet(`<h3>⚖️ Pesagem</h3><p class="mute" style="margin:0 0 10px">De manhã, antes de comer, para comparar sempre igual.</p><div style="display:flex;gap:10px;align-items:center">${stepper("kg",S.profile.weight,false,.1)}<span class="mute">kg</span></div>
+function openWeigh(){openSheet(shHd("corpo","Pesagem","De manhã, antes de comer, para comparar sempre igual.")+`<div style="display:flex;gap:10px;align-items:center">${stepper("kg",S.profile.weight,false,.1)}<span class="mute">kg</span></div>
   <div class="btns"><button class="btn solid full" data-do="weighsave">Registrar</button><button class="btn ghost full" data-do="close">Cancelar</button></div>`)}
 function openProg(){const P=program();pdraft=clone(P||{name:"Meu treino",created:S.today.date,basic:false,splits:[{id:uid(),name:"Treino A",ex:[]}],next:0,sessions:[]});pdraft.splits.forEach(s=>{if(!s.ex.length)s.ex.push(X("",3,8,12,2.5))});renderProg()}
 function readProg(){const g=i=>$("#"+i);if(!g("pName"))return;pdraft.name=g("pName").value||"Meu treino";
@@ -890,7 +911,7 @@ const A={
   hedit:b=>openHabitEdit(b.dataset.id),hnew:()=>openHabitEdit(null),
   hday(b){readHabitEdit();const v=+b.dataset.v,a=hdraft.freq.days;hdraft.freq.days=a.includes(v)?a.filter(x=>x!==v):[...a,v].sort();renderHabitEdit()},
   hsave(){readHabitEdit();const d=hdraft;if(!d.name)return $("#hErr").textContent="Dê um nome.";if(d.freq.mode==="days"&&!d.freq.days.length)return $("#hErr").textContent="Escolha os dias.";
-    const isNew=d.isNew;delete d.isNew;if(isNew){S.habits.push(d);if(!S.areas.includes("habitos")){S.areas.push("habitos");S.areas=AREA_ORDER.filter(a=>S.areas.includes(a));S.attrs.habitos=S.attrs.habitos||{ema:.17,prev:.17}}}else S.habits=S.habits.map(x=>x.id===d.id?d:x);closeSheet();save();render();toast("Hábito salvo")},
+    const isNew=d.isNew;delete d.isNew;if(isNew){d.created=S.today.date;S.habits.push(d);if(!S.areas.includes("habitos")){S.areas.push("habitos");S.areas=AREA_ORDER.filter(a=>S.areas.includes(a));S.attrs.habitos=S.attrs.habitos||{ema:.17,prev:.17}}}else S.habits=S.habits.map(x=>x.id===d.id?d:x);closeSheet();save();render();toast("Hábito salvo")},
   hdel(){S.habits=S.habits.filter(x=>x.id!==hdraft.id);if(!S.habits.some(x=>x.area==="habitos"))S.areas=S.areas.filter(a=>a!=="habitos");closeSheet();save();render()},
   pause(b){const v=+b.dataset.v;S.paused={from:S.today.date,until:v>0?addDays(S.today.date,v-1):null};log(v?`Pausado por ${v} dia(s).`:"Pausado.");save();render();toast("Pausado · sem perdas")},
   resume(){S.paused=null;log("Voltou da pausa.");save();render();toast("De volta")},
@@ -1016,7 +1037,7 @@ function viewAjustes(){return`<section class="win"><div class="tab"><span>Seus d
   <div class="two"><button class="btn full" data-do="export">Exportar backup</button><button class="btn full" data-do="importb">Importar backup</button></div><input type="file" id="impFile" accept="application/json,.json" class="hide">
   <p class="mute" style="margin:0">Tudo fica só neste aparelho. ${S.lastBackup?`Último backup: ${fmt(S.lastBackup)}.`:"Nenhum backup ainda."}</p></div></section>
   <section class="win"><div class="tab"><span>Pausa</span></div><div class="bd">${S.paused?`<p class="mute" style="margin:0">Pausado ${S.paused.until?`até ${fmt(S.paused.until)}`:"até você voltar"}.</p><div class="btns"><button class="btn solid full" data-do="resume">Voltar agora</button></div>`:`<p class="mute" style="margin:0 0 8px">Férias, doença ou viagem: nada tira ponto e a sequência fica congelada.</p><div class="chips">${[[1,"Hoje"],[3,"3 dias"],[7,"7 dias"],[0,"Até eu voltar"]].map(([v,l])=>`<button class="chip" data-do="pause" data-v="${v}">${l}</button>`).join("")}</div>`}</div></section>
-  <section class="win"><div class="tab"><span>Preferências</span></div><div class="bd form"><label class="check"><input type="checkbox" id="sSound" ${S.sound?"checked":""}> Som</label><label class="check"><input type="checkbox" id="sTest" ${S.test?"checked":""}> Modo teste (avançar o relógio)</label>
+  <section class="win"><div class="tab"><span>Preferências</span></div><div class="bd form"><label class="check sw"><span>Som</span><input type="checkbox" id="sSound" ${S.sound?"checked":""}></label><label class="check sw"><span>Modo teste<small class="mute" style="display:block">avançar o relógio para testar</small></span><input type="checkbox" id="sTest" ${S.test?"checked":""}></label>
   <button class="btn red full" data-do="reset">${confirmReset?"Toque de novo para apagar tudo":"Apagar tudo e recomeçar"}</button></div></section>`}
 function topbar(){const t=cardTheme(),[title]=PAGES[tab]||PAGES.hoje;return`<button class="tb-b" data-do="menu" aria-label="Abrir menu">${ic("menu")}</button><div class="tb-t"><b>${title}</b><small>${fmt(S.today.date)}</small></div><button class="tb-card t-${t.id}" data-go="evolucao" aria-label="Sua carta: ${ovr()}">${ovr()}</button>`}
 function drawer(){const t=cardTheme(),pages=Object.keys(PAGES).filter(k=>k!=="treino"||S.areas.includes("treino"));
