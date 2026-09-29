@@ -1,0 +1,11 @@
+const {JSDOM}=require('jsdom');const fs=require('fs'),path=require('path');const {ok,sec,report}=require('./lib');
+const HTML=fs.readFileSync(process.env.APP||path.join(__dirname,'../index.html'),'utf8');const msgs=[];
+const dom=new JSDOM(HTML,{runScripts:'dangerously',url:'https://evolucao.app/',pretendToBeVisual:true,beforeParse(w){w.ReactNativeWebView={postMessage:m=>msgs.push(JSON.parse(m))};w.scrollTo=()=>{};w.fetch=()=>Promise.reject()}});
+const w=dom.window,d=w.document,E=s=>w.eval(s),q=s=>d.querySelector(s),c=s=>q(s).click();
+sec('Ligar avisos pelo lembrete de água');
+E('S.offset=new Date("2026-10-05T10:21:00").getTime()-Date.now();S.today=newDay(vdate());render()');c('[data-do=wznext]');q('#wName').value='D';c('[data-do=wznext]');c('[data-do=wzarea][data-v=agua]');c('[data-do=wznext]');let g=0;while(g++<8&&E('!!wz'))c('[data-do=wznext]');
+E('while(Q.length)Q.shift();showing=false;closeSheet();notif().water=true;openWaterRem()');ok('aviso para ligar aparece',q('#sheetBody').textContent.includes('ligue os avisos'));
+c('#sheetBody [data-do=avisoson]');ok('pede permissão ao iPhone',msgs.some(m=>m.t==='notifperm'));E('__evoNotifPerm("granted")');
+ok('depois de liberar, o painel atualiza e o aviso some',E('sheetId')==='__wr'&&!q('#sheetBody').textContent.includes('ligue os avisos'));ok('avisos ligados',E('avisosOn()'));
+E('notif().on=false;notif().asked=false;openAvisosPrime()');c('#sheetBody [data-do=avisoson]');E('__evoNotifPerm("granted")');ok('pelo convite: fecha sozinho depois de liberar',!E('sheetOpen'));
+report();

@@ -575,7 +575,7 @@ button.exl{width:100%;background:none;border:0;border-bottom:1px solid rgba(255,
             5 Efeitos · 6 Telas · 7 Onboarding · 8 Sheets · 9 Ações · 10 Integrações
    ===================================================================== */
 const $=s=>document.querySelector(s);
-const APP_VERSION="4.10.0",APP_DATE="28/09/2026";
+const APP_VERSION="4.10.1",APP_DATE="28/09/2026";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid=()=>Math.random().toString(36).slice(2,9);
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -1581,7 +1581,7 @@ let _spT=null,_spLast="";
 function schedulePlan(force){if(!NATIVE)return;clearTimeout(_spT);_spT=setTimeout(()=>{const list=avisosOn()?planList():[],k=JSON.stringify(list);if(!force&&k===_spLast)return;_spLast=k;nativePost({t:"schedule",list,glass:S.profile.glass})},force?0:1200)}
 window.__evoWaterAction=(k,nid)=>{if(!S.onboarded||!H("agua"))return;if(nid&&seenSample("n:"+nid))return;if(k==="drink"){addWater(S.profile.glass/1000);commit();toast(`+${S.profile.glass} ml registrado pelo aviso`)}};
 window.__evoOpen=id=>{if(!S.onboarded)return;if(id==="bomdia"){tab="hoje";render();openReview();return}if(id==="fim"){tab="hoje";render();return}if(H(id)){tab="hoje";render();openItem(id)}};
-window.__evoNotifPerm=st=>{const n=notif();n.perm=st;n.asked=true;if(st==="granted"){if(S._wantAvisos)toast("Avisos ligados");if(S._wantAvisos)n.on=true}else if(S._wantAvisos)toast("O iPhone não liberou os avisos. Libere em Ajustes do iPhone → Notificações → Expo Go.","red");delete S._wantAvisos;save();render();schedulePlan(true)};
+window.__evoNotifPerm=st=>{const n=notif();n.perm=st;n.asked=true;if(st==="granted"){if(S._wantAvisos)toast("Avisos ligados");if(S._wantAvisos)n.on=true}else if(S._wantAvisos)toast("O iPhone não liberou os avisos. Libere em Ajustes do iPhone → Notificações → Expo Go.","red");delete S._wantAvisos;save();render();schedulePlan(true);if(sheetOpen&&sheetId==="__wr")openWaterRem();else if(sheetOpen&&sheetId==="__prime"&&st==="granted")closeSheet()};
 function openAvisosPrime(){const n=notif();openSheet(`<div class="sh-hd" style="--ac:#7fdcff"><span class="ico">${ic("clock")}</span><div><h3>Avisos na hora certa</h3><p class="mute">O iPhone te lembra só do que ainda não foi feito</p></div></div>
   <div class="srow"><span>Bom dia</span><b>depois de acordar</b></div><div class="srow"><span>Itens com horário</span><b>no horário de cada um</b></div><div class="srow"><span>Fechar o dia</span><b>${n.eveningAt}, se faltar algo</b></div>
   <p class="mute" style="margin:10px 0 0">Você escolhe o que quer em Ajustes → Avisos. Nada é enviado para fora do seu iPhone.</p>
