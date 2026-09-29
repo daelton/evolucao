@@ -550,6 +550,9 @@ body.lock{position:fixed;left:0;right:0;width:100%;overflow:hidden}
 .lx-act{display:flex;gap:18px;margin-top:10px;font-size:.86rem}
 button.exl{width:100%;background:none;border:0;border-bottom:1px solid rgba(255,255,255,.06);color:var(--ink);text-align:left;font:inherit;padding:10px 0}
 #liveRest{gap:6px}#liveRest b{margin-left:auto}
+
+.whenrow{display:flex;align-items:center;gap:12px;width:100%;margin-top:14px;padding:12px 14px;border-radius:14px;border:1px solid rgba(127,220,255,.25);background:rgba(127,220,255,.06);color:var(--ink);text-align:left}
+.whenrow span{flex:1;min-width:0}.whenrow b{display:block;font-weight:600}.whenrow small{display:block;color:#8b9bbd;font-size:.8rem}.whenrow>.ic:first-child{color:#7fdcff}
 </style>
 </head>
 <body>
@@ -572,7 +575,7 @@ button.exl{width:100%;background:none;border:0;border-bottom:1px solid rgba(255,
             5 Efeitos · 6 Telas · 7 Onboarding · 8 Sheets · 9 Ações · 10 Integrações
    ===================================================================== */
 const $=s=>document.querySelector(s);
-const APP_VERSION="4.8.0",APP_DATE="28/09/2026";
+const APP_VERSION="4.9.0",APP_DATE="28/09/2026";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid=()=>Math.random().toString(36).slice(2,9);
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -673,7 +676,7 @@ function migrate(d){if(!d||typeof d!=="object")return null;if(d.v===8)return rul
   if(A.includes("sono")&&d.attrs&&d.attrs.DIS)n.attrs.sono=clone(d.attrs.DIS);for(const a of A)n.attrs[a]=n.attrs[a]||{ema:.17,prev:.17};
   n.onboarded=false;n.migrated=true;n.lore=[{d:(d.history&&d.history[0]&&d.history[0].date)||n.today.date,i:"🚀",t:"Começou a jornada"}];return n}
 S=migrate(S)||defaultState();
-let _saveWarn=false;function save(){S.updatedAt=Date.now();nativeSave();try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){S.log=(S.log||[]).slice(0,60);S.errors=(S.errors||[]).slice(-5);try{localStorage.setItem(LS,JSON.stringify(S))}catch(x){if(!_saveWarn){_saveWarn=true;setTimeout(()=>{try{toast("Não consegui salvar: memória do navegador cheia. Faça um backup em Ajustes.","red")}catch(_){}},50)}}}}
+let _saveWarn=false;function save(){S.updatedAt=Date.now();nativeSave();try{schedulePlan()}catch(_){}try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){S.log=(S.log||[]).slice(0,60);S.errors=(S.errors||[]).slice(-5);try{localStorage.setItem(LS,JSON.stringify(S))}catch(x){if(!_saveWarn){_saveWarn=true;setTimeout(()=>{try{toast("Não consegui salvar: memória do navegador cheia. Faça um backup em Ajustes.","red")}catch(_){}},50)}}}}
 
 /* Cada área gera os seus hábitos com metas inteligentes */
 function hb(o){return Object.assign({id:uid(),kind:"check",unit:"",target:1,steps:[1],freq:{mode:"daily",days:[],times:1,goal:0},xp:10,bonus:0,loss:10},o)}
@@ -1244,6 +1247,7 @@ function todayItems(){const L=[],d=S.today.date,wi=(dow(d)+6)%7;
     if(a==="movimento"){const h=H("movimento");if(h&&h.kind==="steps"&&dueOn(h,d)){const e=ent(h),v=e.value||0;L.push({id:"movimento",a,done:!!e.done,t:"Passos",s:`${fmtInt(v)} de ${fmtInt(h.target)} passos${e.src?" · Saúde":""}`,p:v/h.target,btn:{l:"Registrar",do:"open",v:"movimento"}})}}
     if(a==="corpo"){const h=H("corpo");if(h&&!wCount(h)){const pm=Math.min(...h.freq.days.map(x=>(x+6)%7));if(wi>=pm)L.push({id:"corpo",a,done:false,t:"Pesagem",s:`da semana · último: ${num(S.profile.weight)} kg`,btn:{l:"Pesar",do:"open",v:"corpo"}})}}
     if(a==="habitos")for(const h of S.habits.filter(x=>x.area==="habitos"&&dueOn(x,d))){const e=ent(h);if(h.kind==="avoid"){L.push({id:h.id,a,avoid:1,done:!e.broken,fail:!!e.broken,t:esc(h.name),s:e.broken?"quebrou hoje":"mantendo · toque em Quebrei se escapar",btn:e.broken?null:{l:"Quebrei",do:"broke",v:h.id}});continue}L.push({id:h.id,a,done:!!e.done,t:esc(h.name),s:freqTxt(h),btn:e.done?null:{l:"Feito",do:"check",v:h.id,chk:1}})}}
+  for(const x of L){const h=H(x.id);if(h&&!x.done&&!x.avoid){const t=itemTime(h);if(t)x.s+=` · ${t}`}}
   return L}
 function weekItems(){const L=[],inToday=new Set(todayItems().map(x=>x.id));for(const a of orderedAreas()){
     if(a==="treino"&&!inToday.has("treino")){const h=H("treino"),c=wCount(h),r=wReq(h);L.push({id:"treino",a,t:"Treino",s:`${c} de ${r} na semana`,p:c/Math.max(1,r)})}
@@ -1270,7 +1274,7 @@ function viewHoje(){const L=todayItems(),pend=L.filter(x=>!x.done),done=L.filter
   if(S.paused)h+=`<button class="banner" data-do="resume">${ic("clock")}<span><b>Pausado</b><small>${S.paused.until?`até ${fmt(S.paused.until)}`:"até você voltar"} · toque para voltar</small></span>${ic("chev")}</button>`;
   if(!S.areas.length)h+=`<button class="banner" data-do="areas">${ic("plus")}<span><b>Escolha o que evoluir</b><small>água, treino, sono, leitura…</small></span>${ic("chev")}</button>`;
   const lw=(S.weekLog||[]).slice(-1)[0];if(lw&&S.wkSeen!==lw.key)h+=`<button class="banner" data-do="weekrev" style="border-color:rgba(127,220,255,.4);background:linear-gradient(90deg,rgba(127,220,255,.12),rgba(127,220,255,.03))">${ic("trophy")}<span><b>Sua semana</b><small>${lw.ok} de ${lw.n||7} dias contaram · veja ajustes sugeridos</small></span>${ic("chev")}</button>`;
-  if(S.history.length>=1&&!S.icsDone&&!S.remOff)h+=`<div class="note" style="margin:0 0 12px">Quer avisos no iPhone mesmo com o app fechado? <button class="lnk" data-do="ics">Ativar lembretes</button> · <button class="lnk" data-do="remoff">agora não</button></div>`;
+  if(NATIVE){if(S.history.length>=1&&!avisosOn()&&!notif().asked)h+=`<div class="note" style="margin:0 0 12px">Quer que o iPhone te lembre na hora certa? <button class="lnk" data-do="avisosprime">Ligar avisos</button> · <button class="lnk" data-do="avisosno">agora não</button></div>`}else if(S.history.length>=1&&!S.icsDone&&!S.remOff)h+=`<div class="note" style="margin:0 0 12px">Quer avisos no iPhone mesmo com o app fechado? <button class="lnk" data-do="ics">Ativar lembretes</button> · <button class="lnk" data-do="remoff">agora não</button></div>`;
   const AV=L.filter(x=>x.avoid),pend2=pend.filter(x=>!x.avoid),done2=done.filter(x=>!x.avoid);
   if(pend2.length)h+=`<h2 class="sec">Para hoje</h2><div class="list">${pend2.map(row).join("")}</div>`;
   if(AV.length)h+=`<h2 class="sec">Evitando hoje <span>conta como feito se você não quebrar</span></h2><div class="list">${AV.map(row).join("")}</div>`;
@@ -1313,7 +1317,7 @@ function integSection(){const c=integ(),T=[["steps","Passos"],["sleep","Sono"],[
   <p class="mute" style="margin:0">No app do iPhone, o Evolução lê do Saúde sozinho o que estiver ligado abaixo: passos, sono (do iPhone ou do Watch), treinos do Watch (força marca "Fui", caminhada e esportes viram minutos), peso da balança e água. Aqui no site nada é lido; com o Modo teste ligado dá para simular os dados.</p>
   ${T.map(([k,l])=>`<label class="check sw"><span>${l}</span><input type="checkbox" data-integ="${k}" ${c[k]?"checked":""}></label>`).join("")}
   ${S.test?`<p class="lbl" style="margin-top:14px">Simular dados do Saúde</p><div class="chips">${[["simsteps","8.200 passos"],["simsleep","Sono da noite"],["simforca","Treino de força"],["simwalk","Caminhada 35 min"],["simweight","Peso"],["simwater","Água 500 ml"]].map(([a,l])=>`<button class="chip" data-do="${a}">${l}</button>`).join("")}</div>`:""}</div></section>`}
-function viewAjustes(){return integSection()+`<section class="win"><div class="tab"><span>Seus dados</span></div><div class="bd form">
+function viewAjustes(){return avisosSection()+integSection()+`<section class="win"><div class="tab"><span>Seus dados</span></div><div class="bd form">
   <div class="two"><button class="btn full" data-do="export">Exportar backup</button><button class="btn full" data-do="importb">Importar backup</button></div><input type="file" id="impFile" accept="application/json,.json" class="hide">
   <p class="mute" style="margin:0">Tudo fica só neste aparelho. ${S.lastBackup?`Último backup: ${fmt(S.lastBackup)}.`:"Nenhum backup ainda."}</p></div></section>
   <section class="win"><div class="tab"><span>Pausa</span></div><div class="bd">${S.paused?`<p class="mute" style="margin:0">Pausado ${S.paused.until?`até ${fmt(S.paused.until)}`:"até você voltar"}.</p><div class="btns"><button class="btn solid full" data-do="resume">Voltar agora</button></div>`:`<p class="mute" style="margin:0 0 8px">Férias, doença ou viagem: nada tira ponto e a sequência fica congelada.</p><div class="chips">${[[1,"Hoje"],[3,"3 dias"],[7,"7 dias"],[0,"Até eu voltar"]].map(([v,l])=>`<button class="chip" data-do="pause" data-v="${v}">${l}</button>`).join("")}</div>`}</div></section>
@@ -1333,7 +1337,8 @@ function render(){const top=$("#top");if(!S.onboarded||wz){top.classList.add("hi
 
 /* ---------- registro de cada item ---------- */
 const shHd=(a,t,sub)=>`<div class="sh-hd" style="--ac:${AREA_C[a]}"><span class="ico">${ic(AREA_IC[a])}</span><div><h3>${t}</h3><p class="mute">${sub}</p></div></div>`;
-function openItem(id){if(id==="agua")return openWater();if(id==="treino")return openTrain();if(id==="movimento")return openMove();if(id==="sono")return openReview();if(id==="corpo")return openWeigh();
+function openItem(id){openItem0(id);const h=H(id);if(!h||!sheetOpen||sheetId!==id||!WHEN_AREAS.includes(h.area)||h.kind==="avoid")return;const sb=$("#sheetBody"),bts=sb.querySelectorAll(".btns"),bt=bts[bts.length-1],html=lateNote(h)+whenRow(h);if(bt)bt.insertAdjacentHTML("beforebegin",html);else sb.insertAdjacentHTML("beforeend",html)}
+function openItem0(id){if(id==="agua")return openWater();if(id==="treino")return openTrain();if(id==="movimento")return openMove();if(id==="sono")return openReview();if(id==="corpo")return openWeigh();
   if(id==="leitura"||id==="estudo")return openQty(id);const h=H(id);if(h)return openHabit(id)}
 function openWater(){const h=H("agua"),e=ent(h),T=waterTarget(),v=e.value||0,gl=S.profile.glass,Q=[...new Set([gl,500,750,1000])].slice(0,4);
   openSheet(shHd("agua","Água",`${num(v)} de ${num(T)} L hoje${S.today.trained?" · +0,5 L porque você treinou":""}`)+`<div class="bigbar"><i style="width:${clamp(v/T*100,0,100)}%"></i></div>
@@ -1399,6 +1404,19 @@ function openWeekReview(){const w=(S.weekLog||[]).slice(-1)[0];if(!w)return;S.wk
 function commit(){checkFullDay();save();render();if(sheetOpen&&sheetId){if(sheetId==="__rv")openReview();else if(sheetId==="__live")openLive();else if(sheetId!=="__wk"&&sheetId!=="__exh")openItem(sheetId)}}
 Object.assign(A,{
   menu(){setMenu(true)},
+  when(b){openWhen(b.dataset.v)},
+  whent(b){const h=H(S._wId);if(!h)return;h.time=b.dataset.v;A._afterWhen()},
+  whentime(){const h=H(S._wId),v=$("#wT").value;if(!h||!v)return;h.time=v;A._afterWhen()},
+  whenc(b){const h=H(S._wId);if(!h)return;h.cue=h.cue===b.dataset.v?"":b.dataset.v;A._afterWhen()},
+  whencue(){const h=H(S._wId);if(!h)return;h.cue=String($("#wC").value||"").trim().slice(0,60);A._afterWhen()},
+  whenclear(){const h=H(S._wId);if(!h)return;h.time="";h.cue="";if(S.today.move)delete S.today.move[h.id];A._afterWhen()},
+  whenback(){const id=S._wId;if(NATIVE&&!notif().asked&&!avisosOn()&&H(id)&&H(id).time){openAvisosPrime();return}openItem(id)},
+  _afterWhen(){save();render();schedulePlan();openWhen(S._wId)},
+  move(b){S.today.move=S.today.move||{};S.today.move[b.dataset.id]=b.dataset.v;save();render();schedulePlan();toast(`Movido para ${b.dataset.v}`);openItem(b.dataset.id)},
+  avisosprime(){openAvisosPrime()},
+  avisosno(){notif().asked=true;save();closeSheet();render()},
+  avisoson(){S._wantAvisos=true;notif().asked=true;save();if(NATIVE)nativePost({t:"notifperm"});else closeSheet()},
+  avisosoff(){notif().on=false;save();render();schedulePlan(true);toast("Avisos desligados")},
   live(){openLive()},
   lvdone(b){const L=liveOf();if(!L)return;liveRead(L);const e=L.ex[+b.dataset.e],z=e&&e.sets[+b.dataset.s];if(!z)return;z.done=!z.done;save();
     if(z.done){fx("ok");const sp=liveSplit(L),x=sp&&sp.ex[e.i];const more=L.ex.some(q=>q.sets.some(y=>!y.done));if(more&&!z.wu){const nx=e.sets.find(y=>!y.done)?x:sp.ex[(L.ex.find(q=>q.sets.some(y=>!y.done))||{}).i];restStart(REST_DEF(x),nx&&nx.name)}}openLive()},
@@ -1494,6 +1512,61 @@ function ingest(kind,...args){const cfg=integ();if(!ING[kind])return{ok:false,wh
   try{const r=ING[kind](...args);S._av=(S._av||0)+1;save();try{render()}catch(_){}return r}catch(err){reportErr(err,"integração:"+kind);return{ok:false,why:"erro"}}}
 if(typeof window!=="undefined")window.EvolucaoIngest=ingest;
 
+
+/* =====================================================================
+   AGENDA E AVISOS · referências: Structured (horário no dia, replanejar,
+   avisos), Streaks (lembra quando precisa) e os planos "quando–então".
+   Cada item pode ter horário (h.time) e gancho (h.cue). No app do iPhone,
+   os avisos são locais (agendados no aparelho) e só dos itens não feitos.
+   ===================================================================== */
+const NOTIF0={on:false,asked:false,perm:"unknown",morning:true,evening:true,items:true,water:false,eveningAt:"21:00"};
+const notif=()=>{S.notif=Object.assign({},NOTIF0,S.notif||{});return S.notif};
+const avisosOn=()=>{const n=notif();return n.on&&n.perm==="granted"};
+const itemTime=h=>(S.today.move&&S.today.move[h.id])||h.time||"";
+const whenTxt=h=>{const t=itemTime(h),mv=S.today.move&&S.today.move[h.id];return[t?(mv?`hoje às ${t}`:t):"",h.cue||""].filter(Boolean).join(" · ")};
+const WHEN_AREAS=["treino","leitura","estudo","movimento","habitos","corpo"];
+function whenRow(h){const w=whenTxt(h);return`<button class="whenrow" data-do="when" data-v="${h.id}">${ic("clock")}<span>${w?`<b>${esc(w)}</b><small>toque para mudar</small>`:`<b>Quando você vai fazer?</b><small>horário ou gancho, ex.: depois do café</small>`}</span>${ic("chev")}</button>`}
+function lateNote(h){const t=itemTime(h),e=ent(h);if(!t||e.done)return"";const tm=toL(toMin(t)),now=vmin();if(now<tm+45)return"";const lim=toL(toMin(S.profile.sleep));
+  const opts=[...new Set([60,120,180].map(d=>Math.ceil((now+d)/15)*15).filter(m=>m<lim).map(m=>hm(m%1440)))];
+  return`<div class="note warnc" style="margin:12px 0 0">Passou das ${t}. ${opts.length?`Mover para: ${opts.map(o=>`<button class="lnk" data-do="move" data-id="${h.id}" data-v="${o}">${o}</button>`).join(" · ")}`:"Fica para amanhã no horário de sempre."}</div>`}
+const CUES=["depois de acordar","depois do café","depois do almoço","depois de chegar em casa","depois do jantar","antes de dormir"];
+function openWhen(id){const h=H(id);if(!h)return;S._wId=id;const t=h.time||"",c=h.cue||"";
+  openSheet(`<div class="sh-hd" style="--ac:#7fdcff"><span class="ico">${ic("clock")}</span><div><h3>Quando: ${esc(h.name)}</h3><p class="mute">Decidir quando e onde aumenta muito a chance de fazer.</p></div></div>
+  <p class="lbl">Horário</p><div class="chips">${["07:00","12:30","17:00","20:00","22:00"].map(x=>`<button class="chip ${t===x?"on":""}" data-do="whent" data-v="${x}">${x}</button>`).join("")}</div>
+  <div class="inrow"><input id="wT" type="time" value="${t}" aria-label="Outro horário"><button class="btn" data-do="whentime">Usar</button></div>
+  <p class="lbl">Gancho · opcional</p><div class="chips">${CUES.map(x=>`<button class="chip ${c===x?"on":""}" data-do="whenc" data-v="${x}">${x}</button>`).join("")}</div>
+  <div class="inrow"><input id="wC" type="text" placeholder="ex.: na academia do trabalho" value="${esc(c)}" autocomplete="off" aria-label="Outro gancho"><button class="btn" data-do="whencue">Usar</button></div>
+  <p class="mute" style="margin:10px 0 0">${NATIVE?(avisosOn()?"O iPhone avisa nesse horário se ainda não estiver feito.":"Ligue os avisos em Ajustes para o iPhone lembrar nesse horário."):"No app do iPhone, você recebe um aviso nesse horário."}</p>
+  <div class="btns"><button class="btn solid full" data-do="whenback">Pronto</button>${t||c?`<button class="btn ghost full" data-do="whenclear">Tirar horário e gancho</button>`:""}</div>`,"__when")}
+function itemDetail(h){if(h.area==="treino"){const s=nextSplit();return s?`Hoje: ${s.name}`:"Hora de treinar"}if(h.kind==="qty")return`${num(h.target)} ${unitS(h)}`;if(h.kind==="steps")return`Meta: ${fmtInt(h.target)} passos`;
+  if(h.kind==="minutes")return`${wMin(h)} de ${wReq(h)} min na semana`;if(h.kind==="weigh")return"Pesagem da semana, antes de comer";return"Toque para marcar"}
+function atOf(date,t){const [y,m,d]=date.split("-").map(Number),mn=toMin(t);let ms=new Date(y,m-1,d,0,0,0,0).getTime()+mn*60000;if(mn<cutoff())ms+=86400000;return ms}
+function planList(){const n=notif(),L=[],now=vnow().getTime(),add=(id,at,title,body)=>{if(at>now+30000)L.push({id:"evo-"+id,at,title,body})};
+  for(let off=0;off<3;off++){const D=addDays(S.today.date,off);
+    if(n.items)for(const h of S.habits){if(!S.areas.includes(h.area)||h.kind==="avoid"||h.kind==="sleep"||h.kind==="water")continue;const t=off===0?itemTime(h):h.time;if(!t)continue;
+      const due=isWeekly(h)?((h.freq.days||[]).length?(h.freq.days||[]).includes(dow(D)):true):dueOn(h,D);if(!due)continue;if(off===0&&ent(h).done)continue;
+      if(isWeekly(h)&&off===0&&wCount(h)>=wReq(h)&&h.kind!=="minutes")continue;
+      add(`${h.id}-${D}`,atOf(D,t),h.area==="treino"?"Hora do treino":h.name,[h.cue,itemDetail(h)].filter(Boolean).join(" · "))}
+    if(n.morning&&off>0){const w=sleepTargets(D).wake;add(`bomdia-${D}`,atOf(D,w)+10*60000,"Bom dia","Registre a noite e feche o dia de ontem em 30 segundos")}
+    if(n.evening){if(off===0){const T=todayItems(),left=T.filter(x=>!x.done).length;if(T.length&&left)add(`fim-${D}`,atOf(D,n.eveningAt),"Fechar o dia",`Faltam ${left} ${left===1?"item":"itens"} hoje. Marque agora ou deixe para o Bom dia.`)}else add(`fim-${D}`,atOf(D,n.eveningAt),"Fechar o dia","Veja o que ainda falta hoje")}
+    if(n.water&&S.areas.includes("agua")&&H("agua")&&off<2){const e=off===0?ent(H("agua")):{};for(const r of waterRounds()){if(off===0&&(e.value||0)>=r.cum)continue;add(`agua-${r.l}-${D}`,atOf(D,hm(r.b%1440))-40*60000,"Água",`Rodada ${r.l.toLowerCase()}: ${num(r.cum)} L até ${hm(r.b%1440)}`)}}}
+  return L.sort((a,b)=>a.at-b.at).slice(0,60)}
+let _spT=null,_spLast="";
+function schedulePlan(force){if(!NATIVE)return;clearTimeout(_spT);_spT=setTimeout(()=>{const list=avisosOn()?planList():[],k=JSON.stringify(list);if(!force&&k===_spLast)return;_spLast=k;nativePost({t:"schedule",list})},force?0:1200)}
+window.__evoNotifPerm=st=>{const n=notif();n.perm=st;n.asked=true;if(st==="granted"){if(S._wantAvisos)toast("Avisos ligados");if(S._wantAvisos)n.on=true}else if(S._wantAvisos)toast("O iPhone não liberou os avisos. Libere em Ajustes do iPhone → Notificações → Expo Go.","red");delete S._wantAvisos;save();render();schedulePlan(true)};
+function openAvisosPrime(){const n=notif();openSheet(`<div class="sh-hd" style="--ac:#7fdcff"><span class="ico">${ic("clock")}</span><div><h3>Avisos na hora certa</h3><p class="mute">O iPhone te lembra só do que ainda não foi feito</p></div></div>
+  <div class="srow"><span>Bom dia</span><b>depois de acordar</b></div><div class="srow"><span>Itens com horário</span><b>no horário de cada um</b></div><div class="srow"><span>Fechar o dia</span><b>${n.eveningAt}, se faltar algo</b></div>
+  <p class="mute" style="margin:10px 0 0">Você escolhe o que quer em Ajustes → Avisos. Nada é enviado para fora do seu iPhone.</p>
+  <div class="btns">${NATIVE?`<button class="btn solid full" data-do="avisoson">Ligar avisos</button>`:`<p class="mute" style="margin:0">Os avisos no horário funcionam no app do iPhone. Aqui no site, use os lembretes pelo Calendário.</p><button class="btn full" data-do="ics">Lembretes pelo Calendário</button>`}<button class="btn ghost full" data-do="avisosno">Agora não</button></div>`,"__prime")}
+function avisosSection(){const n=notif();if(!NATIVE)return`<section class="win"><div class="tab"><span>Avisos</span></div><div class="bd"><p class="mute" style="margin:0">Os avisos no horário de cada item funcionam no app do iPhone. Aqui no site, use os lembretes pelo Calendário em Áreas e lembretes.</p></div></section>`;
+  const nx=avisosOn()?planList().slice(0,5):[];
+  return`<section class="win"><div class="tab"><span>Avisos</span></div><div class="bd form">
+  ${avisosOn()?`<div class="srow"><span>Avisos</span><b style="color:var(--ok)">ligados</b></div>`:`<p class="mute" style="margin:0">${n.perm==="denied"?"O iPhone bloqueou os avisos. Libere em Ajustes do iPhone → Notificações.":"O iPhone pode te lembrar na hora certa, só do que ainda falta."}</p><button class="btn solid full" data-do="avisoson">Ligar avisos</button>`}
+  ${[["morning","Bom dia (depois de acordar)"],["items","Itens com horário"],["evening","Fechar o dia"],["water","Rodadas da água"]].map(([k,l])=>`<label class="check sw"><span>${l}</span><input type="checkbox" data-notif="${k}" ${n[k]?"checked":""}></label>`).join("")}
+  <label>Horário do "Fechar o dia"<input id="nEve" type="time" value="${n.eveningAt}"></label>
+  ${nx.length?`<p class="lbl">Próximos avisos</p>${nx.map(x=>{const d=new Date(x.at);return`<div class="srow"><span>${esc(x.title)}</span><b>${fmt(`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`)} ${hm(d.getHours()*60+d.getMinutes())}</b></div>`}).join("")}`:""}
+  ${avisosOn()?`<button class="btn ghost full" data-do="avisosoff">Desligar todos os avisos</button>`:""}</div></section>`}
+
 /* ---------- 10. Integrações: lembretes no Calendário e links do Atalhos ---------- */
 function buildICS(){const base=location.origin+location.pathname,BY=["SU","MO","TU","WE","TH","FR","SA"],t=S.today.date,st=new Date().toISOString().replace(/[-:]/g,"").slice(0,15)+"Z",E=[];
   const ev=(k,title,desc,min,days,url)=>{const first=days.map(d=>nextDow(t,d)).sort()[0],dt=m=>first.replace(/-/g,"")+"T"+hm(m).replace(":","")+"00";
@@ -1515,11 +1588,11 @@ document.addEventListener("change",e=>{const t=e.target;
   if(t.id==="impFile"&&t.files[0]){t.files[0].text().then(importText);return}
   if(t.id==="photoFile2"&&t.files[0]){resizePhoto(t.files[0]).then(u=>{S.photo=u;save();render();toast("Foto atualizada")}).catch(()=>toast("Não consegui ler essa foto","red"));return}
   if(t.id==="photoFile"&&t.files[0]){resizePhoto(t.files[0]).then(u=>{wz.d.photo=u;render()}).catch(()=>toast("Não consegui ler essa foto","red"));return}
-  if(t.id==="wWeOn"&&wz){wzRead();wz.d.weOn=t.checked;render();return}if(t.dataset&&t.dataset.integ){integ()[t.dataset.integ]=t.checked;save();return}if(t.id==="sSound"){S.sound=t.checked;save()}if(t.id==="sTest"){S.test=t.checked;if(!S.test)S.offset=0;save();render()}if(t.dataset.rh&&hdraft){readHabitEdit();renderHabitEdit()}});
+  if(t.id==="wWeOn"&&wz){wzRead();wz.d.weOn=t.checked;render();return}if(t.dataset&&t.dataset.integ){integ()[t.dataset.integ]=t.checked;save();return}if(t.dataset&&t.dataset.notif){notif()[t.dataset.notif]=t.checked;save();schedulePlan(true);render();return}if(t.id==="nEve"&&t.value){notif().eveningAt=t.value;save();schedulePlan(true);render();return}if(t.id==="sSound"){S.sound=t.checked;save()}if(t.id==="sTest"){S.test=t.checked;if(!S.test)S.offset=0;save();render()}if(t.dataset.rh&&hdraft){readHabitEdit();renderHabitEdit()}});
 document.addEventListener("input",e=>{const t=e.target;if(t&&t.dataset&&t.dataset.lv){const L=liveOf();if(L){liveRead(L);clearTimeout(window._lvT);window._lvT=setTimeout(save,400)}}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(sheetOpen)closeSheet();setMenu(false)}if(e.key==="Enter"&&e.target.id==="tOne"){e.preventDefault();A.task1()}});
 $("#dov").onclick=()=>setMenu(false);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden){loop();checkUpdate()}});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){loop();checkUpdate();if(NATIVE)schedulePlan(true)}});
 function repairState(d){const df=defaultState();if(!d||typeof d!=="object")return df;
   for(const k of ["areas","habits","tasks","lore","history","pending","log"])if(!Array.isArray(d[k]))d[k]=[];
   d.profile=Object.assign(PROFILE0(),d.profile||{});d.stats=Object.assign({},df.stats,d.stats||{});for(const k in d.stats)if(k!=="since"&&!Number.isFinite(d.stats[k]))d.stats[k]=0;
@@ -1551,7 +1624,7 @@ function checkUpdate(manual){if(NATIVE||!window.fetch||location.protocol==="file
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
 if(!NATIVE&&"serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 S=repairState(S);if(S.onboarded&&!S.rulesV){rulesMigrate(S);save()}
-delete S._upd;setTimeout(()=>checkUpdate(),1500);
+delete S._upd;setTimeout(()=>checkUpdate(),1500);if(NATIVE){setTimeout(()=>{nativePost({t:"notifstatus"});schedulePlan(true)},800)}
 setInterval(()=>{loop();restTick();timerTick();{const L=liveOf();if(L)document.querySelectorAll("[data-live-el]").forEach(el=>el.textContent=liveEl(L))}const k=$("#clk");if(k)k.textContent=hm(vmin()%1440)},1000);render();loop();urlAction();
 
 </script>
