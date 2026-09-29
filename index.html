@@ -575,7 +575,7 @@ button.exl{width:100%;background:none;border:0;border-bottom:1px solid rgba(255,
             5 Efeitos · 6 Telas · 7 Onboarding · 8 Sheets · 9 Ações · 10 Integrações
    ===================================================================== */
 const $=s=>document.querySelector(s);
-const APP_VERSION="4.9.1",APP_DATE="28/09/2026";
+const APP_VERSION="4.10.0",APP_DATE="28/09/2026";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid=()=>Math.random().toString(36).slice(2,9);
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -1345,6 +1345,7 @@ function openWater(){const h=H("agua"),e=ent(h),T=waterTarget(),v=e.value||0,gl=
   openSheet(shHd("agua","Água",`${num(v)} de ${num(T)} L hoje${S.today.trained?" · +0,5 L porque você treinou":""}`)+`<div class="bigbar"><i style="width:${clamp(v/T*100,0,100)}%"></i></div>
   <div class="qgrid">${Q.map(ml=>`<button class="qb" data-do="wq" data-v="${ml}"><b>+${ml>=1000?num(ml/1000)+" L":ml+" ml"}</b><span>${ml===gl?"seu copo":ml===500?"garrafinha":ml===750?"garrafa":"1 litro"}</span></button>`).join("")}</div>
   <div class="inrow"><input id="wml" type="text" inputmode="numeric" placeholder="Outra quantidade (ml)" autocomplete="off"><button class="btn" data-do="wqv">Adicionar</button></div>
+  <button class="whenrow" data-do="waterrem">${ic("clock")}<span><b>Lembrete de água</b><small>${notif().water?`${notif().waterMode==="sempre"?"a cada":"se atrasar, a cada"} ${+notif().waterEvery%60?(+notif().waterEvery>60?`${Math.floor(notif().waterEvery/60)}h${pad(notif().waterEvery%60)}`:`${notif().waterEvery} min`):`${notif().waterEvery/60} h`}`:"desligado · toque para configurar"}</small></span>${ic("chev")}</button>
   <p class="lbl">Rodadas</p>${waterRounds().map(r=>`<div class="srow"><span>${r.l} · até ${hm(r.b%1440)}</span><b style="color:${v>=r.cum?"var(--ok)":"var(--ink)"}">${num(r.t)} L${v>=r.cum?" ✓":""}</b></div>`).join("")}
   <p class="lbl">Registros de hoje</p>${logRows(e.log,x=>`${x.v>=1?num(x.v)+" L":Math.round(x.v*1000)+" ml"}`,"wdel")}
   <div class="btns"><button class="btn ghost full" data-do="close">Fechar</button></div>`,"agua")}
@@ -1405,6 +1406,10 @@ function openWeekReview(){const w=(S.weekLog||[]).slice(-1)[0];if(!w)return;S.wk
 function commit(){checkFullDay();save();render();if(sheetOpen&&sheetId){if(sheetId==="__rv")openReview();else if(sheetId==="__live")openLive();else if(sheetId!=="__wk"&&sheetId!=="__exh")openItem(sheetId)}}
 Object.assign(A,{
   menu(){setMenu(true)},
+  waterrem(){S._wrBack=sheetId==="agua";openWaterRem()},
+  wrback(){S._wrBack=false;openWater()},
+  wrmode(b){notif().waterMode=b.dataset.v;save();schedulePlan(true);openWaterRem()},
+  wrevery(b){notif().waterEvery=+b.dataset.v;save();schedulePlan(true);openWaterRem()},
   report(){openReport()},
   repsend(){const t=reportText(String(($("#repT")||{}).value||"").trim());if(NATIVE){nativePost({t:"share",name:`evolucao-relatorio-${S.today.date}.txt`,mime:"text/plain",data:t});closeSheet();return}(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{toast("Relatório copiado. Cole na conversa.");closeSheet()}).catch(()=>prompt("Copie o relatório:",t))},
   when(b){openWhen(b.dataset.v)},
@@ -1522,7 +1527,7 @@ if(typeof window!=="undefined")window.EvolucaoIngest=ingest;
    Cada item pode ter horário (h.time) e gancho (h.cue). No app do iPhone,
    os avisos são locais (agendados no aparelho) e só dos itens não feitos.
    ===================================================================== */
-const NOTIF0={on:false,asked:false,perm:"unknown",morning:true,evening:true,items:true,water:false,eveningAt:"21:00"};
+const NOTIF0={on:false,asked:false,perm:"unknown",morning:true,evening:true,items:true,water:false,eveningAt:"21:00",waterEvery:60,waterFrom:"",waterTo:"",waterMode:"atraso"};
 const notif=()=>{S.notif=Object.assign({},NOTIF0,S.notif||{});return S.notif};
 const avisosOn=()=>{const n=notif();return n.on&&n.perm==="granted"};
 const itemTime=h=>(S.today.move&&S.today.move[h.id])||h.time||"";
@@ -1544,7 +1549,25 @@ function openWhen(id){const h=H(id);if(!h)return;S._wId=id;const t=h.time||"",c=
 function itemDetail(h){if(h.area==="treino"){const s=nextSplit();return s?`Hoje: ${s.name}`:"Hora de treinar"}if(h.kind==="qty")return`${num(h.target)} ${unitS(h)}`;if(h.kind==="steps")return`Meta: ${fmtInt(h.target)} passos`;
   if(h.kind==="minutes")return`${wMin(h)} de ${wReq(h)} min na semana`;if(h.kind==="weigh")return"Pesagem da semana, antes de comer";return"Toque para marcar"}
 function atOf(date,t){const [y,m,d]=date.split("-").map(Number),mn=toMin(t);let ms=new Date(y,m-1,d,0,0,0,0).getTime()+mn*60000;if(mn<cutoff())ms+=86400000;return ms}
-function planList(){const n=notif(),L=[],now=vnow().getTime(),add=(id,at,title,body)=>{if(at>now+30000)L.push({id:"evo-"+id,at,title,body})};
+/* Lembrete de água · referências: WaterMinder (intervalo e "nível de água") e apps que não avisam dormindo e pausam na meta.
+   Modo "atraso": só avisa se, naquele horário, você estiver abaixo do ideal (a meta dividida ao longo do dia acordado).
+   Modo "sempre": avisa em todo intervalo. Nunca avisa fora da janela escolhida nem depois de bater a meta. */
+function waterWin(D){const n=notif(),tg=sleepTargets(D),wake=toMin(tg.wake),bed=toMin(tg.bed);return{from:n.waterFrom||hm((wake+30)%1440),to:n.waterTo||hm((bed-60+1440)%1440),W:toL(wake),B:toL(bed)}}
+function waterPlan(off,D){const n=notif(),out=[];if(!n.water||!S.areas.includes("agua")||!H("agua"))return out;const T=waterTarget(),drunk=off===0?(ent(H("agua")).value||0):0;if(off===0&&drunk>=T)return out;
+  const w=waterWin(D),from=toL(toMin(w.from)),to=toL(toMin(w.to)),step=clamp(+n.waterEvery||60,15,240),gl=S.profile.glass;
+  for(let m=from;m<=to&&out.length<16;m+=step){if(off===0&&m<=vmin()+1)continue;const exp=T*clamp((m-w.W)/Math.max(60,w.B-w.W),0,1);if(n.waterMode!=="sempre"&&drunk>=exp-.01)continue;
+    out.push({id:`agua-${D}-${m}`,at:atOf(D,hm(m%1440)),title:"Hora da água",body:off===0?`${num(r1(drunk))} de ${num(T)} L. O ideal até agora é ${num(r1(exp))} L. Um copo de ${gl} ml ajuda.`:`Meta de hoje: ${num(T)} L. Um copo de ${gl} ml agora ajuda.`})}
+  return out}
+function openWaterRem(){const n=notif(),w=waterWin(S.today.date),today=waterPlan(0,S.today.date),nx=today[0];
+  openSheet(`<div class="sh-hd" style="--ac:#4cc3ff"><span class="ico">${ic("drop")}</span><div><h3>Lembrete de água</h3><p class="mute">O iPhone te lembra de beber água ao longo do dia</p></div></div>
+  <div class="form"><label class="check sw"><span>Lembrar de beber água</span><input type="checkbox" data-wr="water" ${n.water?"checked":""}></label></div>
+  ${n.water?`<p class="lbl">Como lembrar</p><div class="opts"><button class="opt" data-do="wrmode" data-v="atraso" aria-pressed="${n.waterMode!=="sempre"}"><b>Só quando eu estiver atrasado</b><br><span class="mute">divide a meta pelo dia e avisa se você ficar para trás</span></button><button class="opt" data-do="wrmode" data-v="sempre" aria-pressed="${n.waterMode==="sempre"}"><b>Em todo intervalo</b><br><span class="mute">avisa sempre, até bater a meta</span></button></div>
+  <p class="lbl">A cada</p><div class="chips">${[[30,"30 min"],[45,"45 min"],[60,"1 h"],[90,"1h30"],[120,"2 h"],[180,"3 h"]].map(([v,l])=>`<button class="chip ${+n.waterEvery===v?"on":""}" data-do="wrevery" data-v="${v}">${l}</button>`).join("")}</div>
+  <div class="form" style="margin-top:12px"><div class="two"><label>Das<input type="time" id="wrFrom" value="${w.from}"></label><label>Até<input type="time" id="wrTo" value="${w.to}"></label></div></div>
+  <p class="mute" style="margin:10px 0 0">Nunca avisa enquanto você dorme e para quando você bate a meta do dia.${today.length?` Hoje: ${today.length} ${today.length===1?"lembrete":"lembretes"}, o próximo às ${hm(new Date(nx.at).getHours()*60+new Date(nx.at).getMinutes())}.`:" Hoje não há mais lembretes."}</p>`:""}
+  ${NATIVE?(avisosOn()?"":`<div class="note warnc" style="margin:12px 0 0">Para o iPhone lembrar, ligue os avisos. <button class="lnk" data-do="avisoson">Ligar avisos</button></div>`):`<p class="note" style="margin:12px 0 0">Os lembretes chegam no app do iPhone. Aqui no site fica salvo o que você escolher.</p>`}
+  <div class="btns"><button class="btn ghost full" data-do="${S._wrBack?"wrback":"close"}">${S._wrBack?"Voltar":"Fechar"}</button></div>`,"__wr")}
+function planList(){const n=notif(),L=[],now=vnow().getTime(),add=(id,at,title,body,cat)=>{if(at>now+30000)L.push(cat?{id:"evo-"+id,at,title,body,cat}:{id:"evo-"+id,at,title,body})};
   for(let off=0;off<3;off++){const D=addDays(S.today.date,off);
     if(n.items)for(const h of S.habits){if(!S.areas.includes(h.area)||h.kind==="avoid"||h.kind==="sleep"||h.kind==="water")continue;const t=off===0?itemTime(h):h.time;if(!t)continue;
       const due=isWeekly(h)?((h.freq.days||[]).length?(h.freq.days||[]).includes(dow(D)):true):dueOn(h,D);if(!due)continue;if(off===0&&ent(h).done)continue;
@@ -1552,10 +1575,12 @@ function planList(){const n=notif(),L=[],now=vnow().getTime(),add=(id,at,title,b
       add(`${h.id}-${D}`,atOf(D,t),h.area==="treino"?"Hora do treino":h.name,[h.cue,itemDetail(h)].filter(Boolean).join(" · "))}
     if(n.morning&&off>0){const w=sleepTargets(D).wake;add(`bomdia-${D}`,atOf(D,w)+10*60000,"Bom dia","Registre a noite e feche o dia de ontem em 30 segundos")}
     if(n.evening){if(off===0){const T=todayItems(),left=T.filter(x=>!x.done).length;if(T.length&&left)add(`fim-${D}`,atOf(D,n.eveningAt),"Fechar o dia",`Faltam ${left} ${left===1?"item":"itens"} hoje. Marque agora ou deixe para o Bom dia.`)}else add(`fim-${D}`,atOf(D,n.eveningAt),"Fechar o dia","Veja o que ainda falta hoje")}
-    if(n.water&&S.areas.includes("agua")&&H("agua")&&off<2){const e=off===0?ent(H("agua")):{};for(const r of waterRounds()){if(off===0&&(e.value||0)>=r.cum)continue;add(`agua-${r.l}-${D}`,atOf(D,hm(r.b%1440))-40*60000,"Água",`Rodada ${r.l.toLowerCase()}: ${num(r.cum)} L até ${hm(r.b%1440)}`)}}}
+    if(off<2)for(const x of waterPlan(off,D))add(x.id,x.at,x.title,x.body,"agua")}
   return L.sort((a,b)=>a.at-b.at).slice(0,60)}
 let _spT=null,_spLast="";
-function schedulePlan(force){if(!NATIVE)return;clearTimeout(_spT);_spT=setTimeout(()=>{const list=avisosOn()?planList():[],k=JSON.stringify(list);if(!force&&k===_spLast)return;_spLast=k;nativePost({t:"schedule",list})},force?0:1200)}
+function schedulePlan(force){if(!NATIVE)return;clearTimeout(_spT);_spT=setTimeout(()=>{const list=avisosOn()?planList():[],k=JSON.stringify(list);if(!force&&k===_spLast)return;_spLast=k;nativePost({t:"schedule",list,glass:S.profile.glass})},force?0:1200)}
+window.__evoWaterAction=(k,nid)=>{if(!S.onboarded||!H("agua"))return;if(nid&&seenSample("n:"+nid))return;if(k==="drink"){addWater(S.profile.glass/1000);commit();toast(`+${S.profile.glass} ml registrado pelo aviso`)}};
+window.__evoOpen=id=>{if(!S.onboarded)return;if(id==="bomdia"){tab="hoje";render();openReview();return}if(id==="fim"){tab="hoje";render();return}if(H(id)){tab="hoje";render();openItem(id)}};
 window.__evoNotifPerm=st=>{const n=notif();n.perm=st;n.asked=true;if(st==="granted"){if(S._wantAvisos)toast("Avisos ligados");if(S._wantAvisos)n.on=true}else if(S._wantAvisos)toast("O iPhone não liberou os avisos. Libere em Ajustes do iPhone → Notificações → Expo Go.","red");delete S._wantAvisos;save();render();schedulePlan(true)};
 function openAvisosPrime(){const n=notif();openSheet(`<div class="sh-hd" style="--ac:#7fdcff"><span class="ico">${ic("clock")}</span><div><h3>Avisos na hora certa</h3><p class="mute">O iPhone te lembra só do que ainda não foi feito</p></div></div>
   <div class="srow"><span>Bom dia</span><b>depois de acordar</b></div><div class="srow"><span>Itens com horário</span><b>no horário de cada um</b></div><div class="srow"><span>Fechar o dia</span><b>${n.eveningAt}, se faltar algo</b></div>
@@ -1567,12 +1592,13 @@ function openReport(){openSheet(`<div class="sh-hd" style="--ac:#ff8a5c"><span c
 function reportText(note){const T=todayItems();return["Evolução · relatório",`versão ${APP_VERSION}${NATIVE?" · app (Expo)":" · site"} · ${new Date().toISOString().slice(0,16).replace("T"," ")}`,`dia ${S.today.date} · tela ${tab} · áreas ${S.areas.join(", ")}`,
   `hoje ${T.filter(x=>x.done).length}/${T.length} · pendências ${S.pending.length} · nível ${S.level} · carta ${ovr()} · sequência ${S.streak} · treino ao vivo ${liveOf()?"sim":"não"} · avisos ${avisosOn()?"ligados":"desligados"}`,
   "", "O que aconteceu:", note||"(sem texto)", "", "Erros anotados:", ...(S.errors||[]).slice(-8).map(x=>`${x.t.slice(5,16)} ${x.w}: ${x.m}`)].join("\n")}
-function avisosSection(){const n=notif();if(!NATIVE)return`<section class="win"><div class="tab"><span>Avisos</span></div><div class="bd"><p class="mute" style="margin:0">Os avisos no horário de cada item funcionam no app do iPhone. Aqui no site, use os lembretes pelo Calendário em Áreas e lembretes.</p></div></section>`;
+function avisosSection(){const n=notif();if(!NATIVE)return`<section class="win"><div class="tab"><span>Avisos</span></div><div class="bd"><p class="mute" style="margin:0">Os avisos no horário de cada item funcionam no app do iPhone. Aqui no site, use os lembretes pelo Calendário em Áreas e lembretes.</p>${S.areas.includes("agua")?`<button class="whenrow" data-do="waterrem">${ic("drop")}<span><b>Lembrete de água</b><small>${n.water?"ligado no app · toque para ajustar":"configure aqui, funciona no app"}</small></span>${ic("chev")}</button>`:""}</div></section>`;
   const nx=avisosOn()?planList().slice(0,5):[];
   return`<section class="win"><div class="tab"><span>Avisos</span></div><div class="bd form">
   ${avisosOn()?`<div class="srow"><span>Avisos</span><b style="color:var(--ok)">ligados</b></div>`:`<p class="mute" style="margin:0">${n.perm==="denied"?"O iPhone bloqueou os avisos. Libere em Ajustes do iPhone → Notificações.":"O iPhone pode te lembrar na hora certa, só do que ainda falta."}</p><button class="btn solid full" data-do="avisoson">Ligar avisos</button>`}
-  ${[["morning","Bom dia (depois de acordar)"],["items","Itens com horário"],["evening","Fechar o dia"],["water","Rodadas da água"]].map(([k,l])=>`<label class="check sw"><span>${l}</span><input type="checkbox" data-notif="${k}" ${n[k]?"checked":""}></label>`).join("")}
+  ${[["morning","Bom dia (depois de acordar)"],["items","Itens com horário"],["evening","Fechar o dia"]].map(([k,l])=>`<label class="check sw"><span>${l}</span><input type="checkbox" data-notif="${k}" ${n[k]?"checked":""}></label>`).join("")}
   <label>Horário do "Fechar o dia"<input id="nEve" type="time" value="${n.eveningAt}"></label>
+  ${S.areas.includes("agua")?`<button class="whenrow" data-do="waterrem" style="margin-top:4px">${ic("drop")}<span><b>Lembrete de água</b><small>${n.water?"ligado · toque para ajustar":"desligado · toque para configurar"}</small></span>${ic("chev")}</button>`:""}
   ${nx.length?`<p class="lbl">Próximos avisos</p>${nx.map(x=>{const d=new Date(x.at);return`<div class="srow"><span>${esc(x.title)}</span><b>${fmt(`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`)} ${hm(d.getHours()*60+d.getMinutes())}</b></div>`}).join("")}`:""}
   ${avisosOn()?`<button class="btn ghost full" data-do="avisosoff">Desligar todos os avisos</button>`:""}</div></section>`}
 
@@ -1597,7 +1623,7 @@ document.addEventListener("change",e=>{const t=e.target;
   if(t.id==="impFile"&&t.files[0]){t.files[0].text().then(importText);return}
   if(t.id==="photoFile2"&&t.files[0]){resizePhoto(t.files[0]).then(u=>{S.photo=u;save();render();toast("Foto atualizada")}).catch(()=>toast("Não consegui ler essa foto","red"));return}
   if(t.id==="photoFile"&&t.files[0]){resizePhoto(t.files[0]).then(u=>{wz.d.photo=u;render()}).catch(()=>toast("Não consegui ler essa foto","red"));return}
-  if(t.id==="wWeOn"&&wz){wzRead();wz.d.weOn=t.checked;render();return}if(t.dataset&&t.dataset.integ){integ()[t.dataset.integ]=t.checked;save();return}if(t.dataset&&t.dataset.notif){notif()[t.dataset.notif]=t.checked;save();schedulePlan(true);render();return}if(t.id==="nEve"&&t.value){notif().eveningAt=t.value;save();schedulePlan(true);render();return}if(t.id==="sSound"){S.sound=t.checked;save()}if(t.id==="sTest"){S.test=t.checked;if(!S.test)S.offset=0;save();render()}if(t.dataset.rh&&hdraft){readHabitEdit();renderHabitEdit()}});
+  if(t.id==="wWeOn"&&wz){wzRead();wz.d.weOn=t.checked;render();return}if(t.dataset&&t.dataset.integ){integ()[t.dataset.integ]=t.checked;save();return}if(t.dataset&&t.dataset.wr){notif().water=t.checked;save();schedulePlan(true);openWaterRem();if(t.checked&&NATIVE&&!avisosOn()&&!notif().asked)openAvisosPrime();return}if(t.id==="wrFrom"||t.id==="wrTo"){const n=notif();if(t.value){if(t.id==="wrFrom")n.waterFrom=t.value;else n.waterTo=t.value}save();schedulePlan(true);openWaterRem();return}if(t.dataset&&t.dataset.notif){notif()[t.dataset.notif]=t.checked;save();schedulePlan(true);render();return}if(t.id==="nEve"&&t.value){notif().eveningAt=t.value;save();schedulePlan(true);render();return}if(t.id==="sSound"){S.sound=t.checked;save()}if(t.id==="sTest"){S.test=t.checked;if(!S.test)S.offset=0;save();render()}if(t.dataset.rh&&hdraft){readHabitEdit();renderHabitEdit()}});
 document.addEventListener("input",e=>{const t=e.target;if(t&&t.dataset&&t.dataset.lv){const L=liveOf();if(L){liveRead(L);clearTimeout(window._lvT);window._lvT=setTimeout(save,400)}}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(sheetOpen)closeSheet();setMenu(false)}if(e.key==="Enter"&&e.target.id==="tOne"){e.preventDefault();A.task1()}});
 $("#dov").onclick=()=>setMenu(false);

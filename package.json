@@ -3,7 +3,7 @@
   "private": true,
   "description": "Evolução · app de evolução pessoal (PWA hoje, Expo depois)",
   "scripts": {
-    "test": "node tests/t1.js && node tests/t2.js && node tests/t3.js && node tests/t4.js && node tests/t5.js && node tests/t6.js && node tests/t7.js && node tests/t8.js && node tests/t9.js && node native/health/health-sync.test.js"
+    "test": "node tests/t1.js && node tests/t2.js && node tests/t3.js && node tests/t4.js && node tests/t5.js && node tests/t6.js && node tests/t7.js && node tests/t8.js && node tests/t9.js && node tests/t10.js && node native/health/health-sync.test.js"
   },
   "devDependencies": {
     "jsdom": "^24.0.0"
